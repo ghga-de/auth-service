@@ -23,7 +23,7 @@ from ghga_service_chassis_lib.config import config_from_yaml
 class Config(ApiConfigBase):
     """Config parameters and their defaults."""
 
-    service_name: str = "auth_service"
+    service_name: str = "auth_adapter"
     path_prefix: str = "/"
 
 
