@@ -3,14 +3,6 @@
   "description": "Modifies the orginal Settings class provided by the user",
   "type": "object",
   "properties": {
-    "service_name": {
-      "title": "Service Name",
-      "default": "auth_adapter",
-      "env_names": [
-        "auth_adapter_service_name"
-      ],
-      "type": "string"
-    },
     "host": {
       "title": "Host",
       "description": "IP of the host.",
@@ -144,6 +136,14 @@
         "type": "string"
       }
     },
+    "service_name": {
+      "title": "Service Name",
+      "default": "auth_adapter",
+      "env_names": [
+        "auth_adapter_service_name"
+      ],
+      "type": "string"
+    },
     "path_prefix": {
       "title": "Path Prefix",
       "default": "/",
@@ -153,6 +153,5 @@
       "type": "string"
     }
   },
-  "required": [],
   "additionalProperties": false
 }
