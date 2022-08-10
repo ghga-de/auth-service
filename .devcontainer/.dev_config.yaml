@@ -1,0 +1,10 @@
+# Please only mention the non-default settings here:
+
+rabbitmq_host: rabbitmq
+rabbitmq_port: 5672
+db_url: postgresql://postgres:postgres@postgres/postgres
+s3_endpoint_url: http://localstack:4566
+s3_access_key_id: test
+s3_secret_access_key: test
+
+language: Greek
