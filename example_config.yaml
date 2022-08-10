@@ -12,3 +12,4 @@ path_prefix: /
 port: 8080
 service_name: auth_adapter
 workers: 1
+
