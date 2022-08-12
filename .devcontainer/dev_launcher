@@ -1,4 +1,3 @@
 #!/bin/bash
 
-# adapt to package name
-my-microservice
+auth-adapter

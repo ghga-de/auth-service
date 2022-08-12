@@ -3,19 +3,12 @@
 
 cd /workspace
 
-
 # install in edit mode
 # use-feature way of installing packages
 # install with testing dependencies
 pip install \
-    --use-feature=in-tree-build \
     -e \
     ".[all]"
 
 # install pre-commit hooks to git:
 pre-commit install
-
-cd db_migration
-
-# Check if the database has been initialized and if not initialize it
-alembic -c alembic.ini upgrade head
