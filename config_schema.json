@@ -23,16 +23,17 @@
     },
     "log_level": {
       "title": "Log Level",
-      "default": "INFO",
+      "default": "info",
       "env_names": [
         "auth_service_log_level"
       ],
       "enum": [
-        "DEBUG",
-        "INFO",
-        "WARNING",
-        "ERROR",
-        "CRITICAL"
+        "critical",
+        "error",
+        "warning",
+        "info",
+        "debug",
+        "trace"
       ],
       "type": "string"
     },

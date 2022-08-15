@@ -9,7 +9,7 @@ cors_allowed_methods: null
 cors_allowed_origins: null
 docs_url: /docs
 host: 127.0.0.1
-log_level: INFO
+log_level: info
 openapi_url: /openapi.json
 port: 8080
 run_auth_adapter: false
