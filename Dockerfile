@@ -27,4 +27,4 @@ USER appuser
 
 ENV PYTHONUNBUFFERED=1
 
-ENTRYPOINT ["auth-adapter"]
+ENTRYPOINT ["auth-service"]
