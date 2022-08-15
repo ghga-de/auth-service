@@ -74,7 +74,7 @@ def print_schema():
 def print_example():
     """Prints an example config yaml."""
     config = get_dev_config()
-    print(yaml.dump(config.dict()))
+    print(yaml.dump(config.dict()).rstrip())
 
 
 if __name__ == "__main__":

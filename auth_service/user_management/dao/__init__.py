@@ -13,18 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.9.6-buster
-
-COPY . /service
-WORKDIR /service
-
-RUN pip install .
-
-# create new user and execute as that user
-RUN useradd --create-home appuser
-WORKDIR /home/appuser
-USER appuser
-
-ENV PYTHONUNBUFFERED=1
-
-ENTRYPOINT ["auth-service"]
+"""This sub-package contains implementations of DAO interfaces."""

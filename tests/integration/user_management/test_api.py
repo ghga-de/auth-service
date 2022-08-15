@@ -13,18 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.9.6-buster
+"""Test the api module"""
 
-COPY . /service
-WORKDIR /service
+from fastapi import status
+from fastapi.testclient import TestClient
 
-RUN pip install .
+from auth_service.user_management.api.main import app
 
-# create new user and execute as that user
-RUN useradd --create-home appuser
-WORKDIR /home/appuser
-USER appuser
 
-ENV PYTHONUNBUFFERED=1
+def test_get_from_root():
+    """Test that a simple GET request passes."""
 
-ENTRYPOINT ["auth-service"]
+    client = TestClient(app)
+    response = client.get("/")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.text == '"Hello World from the User Management."'
+
+
+def test_get_from_some_other_path():
+    """Test that a GET request to a random path raises a not found error."""
+
+    client = TestClient(app)
+    response = client.post("/some/path")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND

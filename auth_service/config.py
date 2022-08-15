@@ -13,18 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.9.6-buster
+"""Config Parameter Modeling and Parsing"""
 
-COPY . /service
-WORKDIR /service
+from typing import Optional
 
-RUN pip install .
+from ghga_service_chassis_lib.api import ApiConfigBase, LogLevel
+from ghga_service_chassis_lib.config import config_from_yaml
 
-# create new user and execute as that user
-RUN useradd --create-home appuser
-WORKDIR /home/appuser
-USER appuser
 
-ENV PYTHONUNBUFFERED=1
+@config_from_yaml(prefix="auth_service")
+class Config(ApiConfigBase):
+    """Config parameters and their defaults."""
 
-ENTRYPOINT ["auth-service"]
+    service_name: str = "auth_service"
+    log_level: LogLevel = "info"
+    run_auth_adapter: bool = False
+    auth_path_prefix: str = "/auth"
+    basic_auth_user: Optional[str] = None
+    basic_auth_pwd: Optional[str] = None
+
+
+CONFIG = Config()

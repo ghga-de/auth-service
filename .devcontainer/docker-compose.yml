@@ -11,7 +11,7 @@ services:
         # [Choice] Install Node.js
         INSTALL_NODE: "true"
         NODE_VERSION: "lts/*"
-        PACKAGE_NAME: "auth_adapter"
+        PACKAGE_NAME: "auth_service"
         # On Linux, you may need to update USER_UID and USER_GID below if not your local UID is not 1000.
         USER_UID: 1000
         USER_GID: 1000
@@ -30,6 +30,16 @@ services:
 
     # define environment variables
     environment:
-      AUTH_ADAPTER_CONFIG_YAML: /workspace/.devcontainer/.dev_config.yaml
+      AUTH_SERVICE_CONFIG_YAML: /workspace/.devcontainer/.dev_config.yaml
     # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+    # Please remove service dependencies that are not needed:
+  mongodb:
+    image: mongo:latest
+    restart: unless-stopped
+    volumes:
+      - mongo_fs:/data/db
+
+volumes:
+  mongo_fs: {}

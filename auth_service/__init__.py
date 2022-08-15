@@ -13,18 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.9.6-buster
+"""Auth Service
 
-COPY . /service
-WORKDIR /service
+The GHGA auth service contains all services needed for the management,
+authentication and authorization of users.
+"""
 
-RUN pip install .
-
-# create new user and execute as that user
-RUN useradd --create-home appuser
-WORKDIR /home/appuser
-USER appuser
-
-ENV PYTHONUNBUFFERED=1
-
-ENTRYPOINT ["auth-service"]
+__version__ = "0.1.0"

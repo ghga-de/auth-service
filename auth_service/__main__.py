@@ -13,18 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.9.6-buster
+"""Entrypoint of the package"""
 
-COPY . /service
-WORKDIR /service
+from ghga_service_chassis_lib.api import run_server
 
-RUN pip install .
+from .config import CONFIG, Config
 
-# create new user and execute as that user
-RUN useradd --create-home appuser
-WORKDIR /home/appuser
-USER appuser
 
-ENV PYTHONUNBUFFERED=1
+def run(config: Config = CONFIG):
+    """Run the service"""
+    service = "auth_adapter" if config.run_auth_adapter else "user_management"
+    print(f"Starting {service} service", service)
+    run_server(app=f"auth_service.{service}.api.main:app", config=config)
 
-ENTRYPOINT ["auth-service"]
+
+if __name__ == "__main__":
+    run()

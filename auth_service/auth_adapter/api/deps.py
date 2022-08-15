@@ -13,18 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.9.6-buster
+"""FastAPI dependencies (used with the `Depends` feature)"""
 
-COPY . /service
-WORKDIR /service
+from ...config import CONFIG
 
-RUN pip install .
 
-# create new user and execute as that user
-RUN useradd --create-home appuser
-WORKDIR /home/appuser
-USER appuser
-
-ENV PYTHONUNBUFFERED=1
-
-ENTRYPOINT ["auth-service"]
+def get_config():
+    """Get runtime configuration."""
+    return CONFIG

@@ -24,7 +24,6 @@
 import sys
 
 import yaml
-
 from auth_adapter.api.main import app
 
 # get openapi spec as dict:

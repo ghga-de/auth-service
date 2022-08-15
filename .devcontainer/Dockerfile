@@ -5,7 +5,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/python:0-${VARIANT}
 ENV PYTHONUNBUFFERED 1
 
 # Name of the python package, overwitten in docker-compose.yaml
-ARG USER_UID=auth_adapter
+ARG USER_UID=auth_service
 
 # Update args in docker-compose.yaml to set the UID/GID of the "vscode" user.
 ARG USER_UID=1000
