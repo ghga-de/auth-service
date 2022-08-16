@@ -26,6 +26,10 @@
 		"python.testing.pytestPath": "/usr/local/py-utils/bin/pytest",
 		"python.testing.unittestEnabled": false,
 		"python.testing.pytestEnabled": true,
+		"python.analysis.extraPaths": [
+			"${workspaceFolder}",
+			"/home/vscode/.local/lib/python3.9/site-packages"
+		],
 		"editor.renderWhitespace": "all",
 		"editor.rulers": [
 			88
