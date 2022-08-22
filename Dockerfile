@@ -13,11 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.9.6-buster
+FROM python:3.10.5-slim-bullseye
 
 COPY . /service
 WORKDIR /service
 
+# install dependencies
+RUN apt update
+RUN apt install libpq-dev python-dev gcc -y
+RUN apt install libgnutls30
 RUN pip install .
 
 # create new user and execute as that user
