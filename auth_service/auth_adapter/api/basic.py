@@ -28,7 +28,7 @@ from .deps import get_config
 __all__ = ["basic_auth_injector"]
 
 
-def basic_auth_injector(app: FastAPI) -> Depends:
+def basic_auth_injector(app: FastAPI):
     """Inject Basic authentication if user and password are set."""
     config = get_config()
     user, pwd = config.basic_auth_user, config.basic_auth_pwd
