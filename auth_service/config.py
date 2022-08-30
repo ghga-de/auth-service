@@ -29,6 +29,7 @@ class Config(ApiConfigBase):
     log_level: LogLevel = "info"
     run_auth_adapter: bool = False
     auth_path_prefix: str = "/auth"
+    token_name: str = "x-ghga-token"
     basic_auth_user: Optional[str] = None
     basic_auth_pwd: Optional[str] = None
 
