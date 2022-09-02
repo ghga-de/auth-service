@@ -2,6 +2,7 @@ api_root_path: /
 auth_path_prefix: /auth
 auto_reload: false
 basic_auth_pwd: null
+basic_auth_realm: GHGA Data Portal
 basic_auth_user: null
 cors_allow_credentials: null
 cors_allowed_headers: null

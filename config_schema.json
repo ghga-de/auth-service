@@ -180,6 +180,14 @@
         "auth_service_basic_auth_pwd"
       ],
       "type": "string"
+    },
+    "basic_auth_realm": {
+      "title": "Basic Auth Realm",
+      "default": "GHGA Data Portal",
+      "env_names": [
+        "auth_service_basic_auth_realm"
+      ],
+      "type": "string"
     }
   },
   "additionalProperties": false

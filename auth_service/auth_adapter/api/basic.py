@@ -33,6 +33,7 @@ def basic_auth(app: FastAPI, config: Config):
     user, pwd = config.basic_auth_user, config.basic_auth_pwd
     if not (user and pwd):
         return None
+    required_credentials = HTTPBasicCredentials(username=user, password=pwd)
 
     realm = config.basic_auth_realm
     if not realm:
@@ -52,11 +53,17 @@ def basic_auth(app: FastAPI, config: Config):
             {"detail": exc.detail}, status_code=exc.status_code, headers=exc.headers
         )
 
-    async def check_basic_auth(credentials: HTTPBasicCredentials = Depends(http_basic)):
+    async def check_basic_auth(
+        passed_credentials: HTTPBasicCredentials = Depends(http_basic),
+    ):
         """Check basic access authentication if username and passwort are set."""
         # checking user and password while avoiding timing attacks
-        user_ok = secrets.compare_digest(credentials.username, user)
-        pwd_ok = secrets.compare_digest(credentials.password, pwd)
+        user_ok = secrets.compare_digest(
+            passed_credentials.username, required_credentials.username
+        )
+        pwd_ok = secrets.compare_digest(
+            passed_credentials.password, required_credentials.password
+        )
         if not (user_ok and pwd_ok):
             www_auth = f'Basic realm="{realm}"'
             raise HTTPException(
