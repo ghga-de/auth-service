@@ -33,12 +33,11 @@ def basic_auth(app: FastAPI, config: Config):
     user, pwd = config.basic_auth_user, config.basic_auth_pwd
     if not (user and pwd):
         return None
-    required_credentials = HTTPBasicCredentials(username=user, password=pwd)
-
     realm = config.basic_auth_realm
     if not realm:
         return None
 
+    required_credentials = HTTPBasicCredentials(username=user, password=pwd)
     http_basic = HTTPBasic(realm=realm)
 
     @app.exception_handler(HTTPException)
