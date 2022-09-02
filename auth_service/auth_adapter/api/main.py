@@ -24,10 +24,12 @@ from typing import Optional
 from fastapi import FastAPI, Header, Response
 from ghga_service_chassis_lib.api import configure_app
 
-from ...config import CONFIG
+from ...config import CONFIG, configure_logging
 from ..core.auth import exchange_token
-from .basic import basic_auth_injector
+from .basic import basic_auth
 from .headers import get_access_token
+
+configure_logging()
 
 app = FastAPI()
 configure_app(app, config=CONFIG)
@@ -46,7 +48,7 @@ async def ext_auth_well_known() -> dict:
 async def ext_auth(
     response: Response,
     authorization: Optional[str] = Header(default=None),
-    _basic_auth: None = basic_auth_injector(app),
+    _basic_auth: None = basic_auth(app, config=CONFIG),
 ) -> dict:
     """Implements the ExtAuth protocol to authenticate users in the API gateway.
 

@@ -23,25 +23,28 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
-from .deps import get_config
+from ...config import Config
 
-__all__ = ["basic_auth_injector"]
+__all__ = ["basic_auth"]
 
 
-def basic_auth_injector(app: FastAPI):
-    """Inject Basic authentication if user and password are set."""
-    config = get_config()
+def basic_auth(app: FastAPI, config: Config):
+    """Inject Basic authentication if this is configured."""
     user, pwd = config.basic_auth_user, config.basic_auth_pwd
     if not (user and pwd):
         return None
 
-    security = HTTPBasic(realm="GHGA Data Portal")
+    realm = config.basic_auth_realm
+    if not realm:
+        return None
+
+    http_basic = HTTPBasic(realm=realm)
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(_request, exc):
         if "WWW-Authenticate" in exc.headers:
             return PlainTextResponse(
-                f"{security.realm}: {exc.detail}",
+                f"{realm}: {exc.detail}",
                 status_code=exc.status_code,
                 headers=exc.headers,
             )
@@ -49,13 +52,13 @@ def basic_auth_injector(app: FastAPI):
             {"detail": exc.detail}, status_code=exc.status_code, headers=exc.headers
         )
 
-    async def check_basic_auth(credentials: HTTPBasicCredentials = Depends(security)):
+    async def check_basic_auth(credentials: HTTPBasicCredentials = Depends(http_basic)):
         """Check basic access authentication if username and passwort are set."""
         # checking user and password while avoiding timing attacks
         user_ok = secrets.compare_digest(credentials.username, user)
         pwd_ok = secrets.compare_digest(credentials.password, pwd)
         if not (user_ok and pwd_ok):
-            www_auth = f'Basic realm="{security.realm}"'
+            www_auth = f'Basic realm="{realm}"'
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password",
