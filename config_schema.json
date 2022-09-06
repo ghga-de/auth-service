@@ -23,7 +23,7 @@
     },
     "log_level": {
       "title": "Log Level",
-      "default": "info",
+      "default": "debug",
       "env_names": [
         "auth_service_log_level"
       ],
