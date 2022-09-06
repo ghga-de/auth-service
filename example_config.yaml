@@ -15,5 +15,4 @@ openapi_url: /openapi.json
 port: 8080
 run_auth_adapter: false
 service_name: auth_service
-token_name: x-ghga-token
 workers: 1
