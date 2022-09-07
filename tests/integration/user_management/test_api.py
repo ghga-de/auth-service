@@ -43,7 +43,7 @@ def test_get_from_some_other_path(client):
 def test_demo_create_user(client_with_db):
     """Test that the demo endpoint for creating a user works."""
 
-    response = client_with_db.get("/create_demo_user")
+    response = client_with_db.post("/create_demo_user")
 
     assert response.status_code == status.HTTP_200_OK
     dto = response.json()

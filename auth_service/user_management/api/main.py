@@ -35,13 +35,13 @@ app = FastAPI()
 configure_app(app, config=CONFIG)
 
 
-@app.get("/", summary="Greet the world")
+@app.get("/", operation_id="greet", summary="Greet the world")
 async def index():
     """Greet the World"""
     return "Hello World from the User Management."
 
 
-@app.get("/create_demo_user", summary="Create demo user")
+@app.post("/create_demo_user", operation_id="demo", summary="Create demo user")
 async def demo_create_user(user_dao: UserDao = Depends(get_user_dao)):
     """Create a new user (for demonstration only)"""
     demo_user = UserCreationDto(
