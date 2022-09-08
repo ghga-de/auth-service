@@ -18,12 +18,12 @@
 
 import logging
 
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Path, Response
 from fastapi.exceptions import HTTPException
 from hexkit.protocols.dao import MultipleHitsFoundError, ResourceNotFoundError
 
 from ...core.utils import is_external_id, is_internal_id
-from ...models.dto import User, UserData
+from ...models.dto import User, UserData, UserModifiableData
 from ...ports.dao import UserDao
 from ..deps import Depends, get_user_dao
 
@@ -84,7 +84,7 @@ async def post_user(
     status_code=200,
 )
 async def get_user(
-    id_: str = Path(  # actually Union[ID, LSID] instead of str
+    id_: str = Path(
         ...,
         alias="id",
         title="Internal ID or LS ID",
@@ -111,3 +111,47 @@ async def get_user(
             status_code=500, detail="The user cannot be requested."
         ) from error
     return user
+
+
+@router.patch(
+    "/users/{id}",
+    operation_id="patch_user",
+    tags=["users"],
+    summary="Modify user data",
+    description="Endpoint used to modify the user data for a specified user."
+    " Can only be performed by a data steward or the same user.",
+    responses={
+        204: {"description": "User data was successfully saved."},
+        404: {"description": "The user was not found."},
+        422: {"description": "Validation error in submitted user data."},
+    },
+    status_code=201,
+)
+async def patch_user(
+    user_data: UserModifiableData,
+    id_: str = Path(
+        ...,
+        alias="id",
+        title="Internal ID",
+    ),
+    user_dao: UserDao = Depends(get_user_dao),
+) -> User:
+    """Modify user data"""
+    try:
+        if not is_internal_id(id_):
+            raise ResourceNotFoundError(id_=id_)
+        user = await user_dao.get(id_=id_)
+        update_data = user_data.dict(exclude_unset=True)
+        user = user.copy(update=update_data)
+        await user_dao.update(user)
+    except ResourceNotFoundError as error:
+        raise HTTPException(
+            status_code=404, detail="The user was not found."
+        ) from error
+    except Exception as error:
+        log.error("Could not modify user: %s", error)
+        raise HTTPException(
+            status_code=500, detail="The user cannot be modified."
+        ) from error
+
+    return Response(status_code=204)

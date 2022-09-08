@@ -56,14 +56,13 @@ components:
       - ls_id
       - status
       - name
-      - title
       - email
       - registration_date
       - id
       title: User
       type: object
     UserData:
-      description: User data
+      description: User data that is fixed
       properties:
         email:
           description: Preferred e-mail address of the user
@@ -106,10 +105,24 @@ components:
       - ls_id
       - status
       - name
-      - title
       - email
       - registration_date
       title: UserData
+      type: object
+    UserModifiableData:
+      description: User data that is modifyable
+      properties:
+        status:
+          allOf:
+          - $ref: '#/components/schemas/UserStatus'
+          description: Registration status of the user
+          title: Status
+        title:
+          allOf:
+          - $ref: '#/components/schemas/AcademicTitle'
+          description: Academic title of the user
+          title: Academic title
+      title: UserModifiableData
       type: object
     UserStatus:
       description: User status enum
@@ -195,6 +208,38 @@ paths:
         '422':
           description: Validation error in submitted user identification.
       summary: Get user data
+      tags:
+      - users
+    patch:
+      description: Endpoint used to modify the user data for a specified user. Can
+        only be performed by a data steward or the same user.
+      operationId: patch_user
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          title: Internal ID
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserModifiableData'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '204':
+          description: User data was successfully saved.
+        '404':
+          description: The user was not found.
+        '422':
+          description: Validation error in submitted user data.
+      summary: Modify user data
       tags:
       - users
 tags:

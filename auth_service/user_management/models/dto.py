@@ -47,27 +47,25 @@ class UserData(BaseModel):
     """User data"""
 
     ls_id: EmailStr = Field(
-        ...,
+        default=...,
         title="LS ID",
         description="Life Science ID",
         example="user@lifescience-ri.eu",
     )
-
     status: UserStatus = Field(
-        ..., title="Status", description="Registration status of the user"
+        default=..., title="Status", description="Registration status of the user"
     )
-
     name: str = Field(
-        ...,
+        default=...,
         title="Name",
         description="Full name of the user",
         example="Rosalind Franklin",
     )
-    title: AcademicTitle = Field(
-        title="Academic title", description="Academic title of the user"
+    title: Optional[AcademicTitle] = Field(
+        default=None, title="Academic title", description="Academic title of the user"
     )
     email: EmailStr = Field(
-        ...,
+        default=...,
         title="E-Mail",
         description="Preferred e-mail address of the user",
         example="user@home.org",
@@ -85,7 +83,24 @@ class UserData(BaseModel):
         use_enum_values = True
 
 
+class UserModifiableData(BaseModel):
+    """User data that is modifiable"""
+
+    status: Optional[UserStatus] = Field(
+        None, title="Status", description="Registration status of the user"
+    )
+    title: Optional[AcademicTitle] = Field(
+        None, title="Academic title", description="Academic title of the user"
+    )
+
+    class Config:  # pylint: disable=missing-class-docstring
+        frozen = True
+        use_enum_values = True
+
+
 class User(UserData):
     """User"""
 
-    id: str = Field(..., title="ID", description="Internally used ID")  # actually UUID4
+    id: str = Field(  # actually UUID
+        default=..., title="ID", description="Internally used ID"
+    )

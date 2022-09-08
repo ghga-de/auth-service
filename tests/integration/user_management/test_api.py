@@ -24,16 +24,21 @@ from .fixtures import (  # noqa: F401; pylint: disable=unused-import
     fixture_client_with_db,
 )
 
-FULL_USER_DATA = dict(
-    ls_id="max@ls.org",
-    status="activated",
-    name="Max Headroom",
-    title="Dr.",
-    email="max@example.org",
-    research_topics="genes",
-    registration_reason="for testing",
-    registration_date="2022-09-01T12:00:00",
-)
+MIN_USER_DATA = {
+    "ls_id": "max@ls.org",
+    "status": "activated",
+    "name": "Max Headroom",
+    "email": "max@example.org",
+    "registration_date": "2022-09-01T12:00:00",
+}
+
+OPT_USER_DATA = {
+    "title": "Dr.",
+    "research_topics": "genes",
+    "registration_reason": "for testing",
+}
+
+MAX_USER_DATA = {**MIN_USER_DATA, **OPT_USER_DATA}
 
 
 def test_get_from_root(client):
@@ -56,7 +61,7 @@ def test_get_from_some_other_path(client):
 def test_post_user(client_with_db):
     """Test that registering a user works."""
 
-    user_data = FULL_USER_DATA
+    user_data = MAX_USER_DATA
     response = client_with_db.post("/users", json=user_data)
 
     user = response.json()
@@ -74,6 +79,38 @@ def test_post_user(client_with_db):
     assert error == {"detail": "User was already registered."}
 
 
+def test_post_user_with_minimal_data(client_with_db):
+    """Test that registering a user with minimal data works."""
+
+    user_data = MIN_USER_DATA
+    response = client_with_db.post("/users", json=user_data)
+
+    user = response.json()
+    assert response.status_code == status.HTTP_201_CREATED, user
+
+    id_ = user.pop("id", None)
+    assert is_internal_id(id_)
+
+    assert user == {**MIN_USER_DATA, **dict.fromkeys(OPT_USER_DATA)}  # type: ignore
+
+    response = client_with_db.post("/users", json=user_data)
+
+    error = response.json()
+    assert response.status_code == status.HTTP_409_CONFLICT, error
+    assert error == {"detail": "User was already registered."}
+
+
+def test_post_user_with_invalid_email(client_with_db):
+    """Test that registering a user with invalid email does not work."""
+
+    user_data = {**MAX_USER_DATA, "email": "invalid"}
+    response = client_with_db.post("/users", json=user_data)
+
+    error = response.json()
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY, error
+    assert error["detail"][0]["msg"] == "value is not a valid email address"
+
+
 def test_get_non_existing_user(client_with_db):
     """Test requesting a non-existing user."""
 
@@ -87,7 +124,7 @@ def test_get_non_existing_user(client_with_db):
 def test_get_user_via_id(client_with_db):
     """Test that a registered user can be found via internal ID."""
 
-    user_data = FULL_USER_DATA
+    user_data = MAX_USER_DATA
     response = client_with_db.post("/users", json=user_data)
     expected_user = response.json()
     assert response.status_code == status.HTTP_201_CREATED
@@ -104,12 +141,91 @@ def test_get_user_via_id(client_with_db):
 def test_get_user_via_ls_id(client_with_db):
     """Test that a registered user can be found via LS ID."""
 
-    user_data = FULL_USER_DATA
+    user_data = MAX_USER_DATA
     response = client_with_db.post("/users", json=user_data)
     expected_user = response.json()
     assert response.status_code == status.HTTP_201_CREATED
 
     id_ = expected_user["ls_id"]
+    response = client_with_db.get(f"/users/{id_}")
+
+    user = response.json()
+    assert response.status_code == status.HTTP_200_OK, user
+
+    assert user == expected_user
+
+
+def test_patch_non_existing_user(client_with_db):
+    """Test modifying a non-existing user."""
+
+    update_data = {"title": "Prof."}
+    response = client_with_db.patch("/users/foo-bar-baz-qux", json=update_data)
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {"detail": "The user was not found."}
+
+
+def test_patch_user(client_with_db):
+    """Test that a registered user can be modified."""
+
+    user_data = MAX_USER_DATA
+    response = client_with_db.post("/users", json=user_data)
+    expected_user = response.json()
+    assert response.status_code == status.HTTP_201_CREATED
+    id_ = expected_user["id"]
+
+    update_data = {"status": "inactivated", "title": "Prof."}
+    assert expected_user["status"] != update_data["status"]
+    assert expected_user["title"] != update_data["title"]
+    expected_user.update(update_data)
+
+    response = client_with_db.patch(f"/users/{id_}", json=update_data)
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not response.text
+
+    response = client_with_db.get(f"/users/{id_}")
+
+    user = response.json()
+    assert response.status_code == status.HTTP_200_OK, user
+
+    assert user == expected_user
+
+
+def test_patch_user_partially(client_with_db):
+    """Test that a registered user can be modified partially."""
+
+    user_data = MAX_USER_DATA
+    response = client_with_db.post("/users", json=user_data)
+    expected_user = response.json()
+    assert response.status_code == status.HTTP_201_CREATED
+    id_ = expected_user["id"]
+
+    update_data = {"status": "inactivated"}
+    assert expected_user["status"] != update_data["status"]
+    expected_user.update(update_data)
+
+    response = client_with_db.patch(f"/users/{id_}", json=update_data)
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not response.text
+
+    response = client_with_db.get(f"/users/{id_}")
+
+    user = response.json()
+    assert response.status_code == status.HTTP_200_OK, user
+
+    assert user == expected_user
+
+    update_data = {"title": "Prof."}
+    assert expected_user["title"] != update_data["title"]
+    expected_user.update(update_data)
+
+    response = client_with_db.patch(f"/users/{id_}", json=update_data)
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not response.text
+
     response = client_with_db.get(f"/users/{id_}")
 
     user = response.json()
