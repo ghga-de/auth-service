@@ -135,7 +135,7 @@ async def patch_user(
         title="Internal ID",
     ),
     user_dao: UserDao = Depends(get_user_dao),
-) -> User:
+) -> Response:
     """Modify user data"""
     try:
         if not is_internal_id(id_):
@@ -178,7 +178,7 @@ async def delete_user(
         title="Internal ID",
     ),
     user_dao: UserDao = Depends(get_user_dao),
-) -> User:
+) -> Response:
     """Delete user"""
     try:
         if not is_internal_id(id_):
