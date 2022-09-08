@@ -232,3 +232,41 @@ def test_patch_user_partially(client_with_db):
     assert response.status_code == status.HTTP_200_OK, user
 
     assert user == expected_user
+
+
+def test_delete_non_existing_user(client_with_db):
+    """Test deleting a non-existing user."""
+
+    response = client_with_db.delete("/users/foo-bar-baz-qux")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {"detail": "The user was not found."}
+
+
+def test_delete_user(client_with_db):
+    """Test that a registered user can be deleted."""
+
+    user_data = MIN_USER_DATA
+    response = client_with_db.post("/users", json=user_data)
+    expected_user = response.json()
+    assert response.status_code == status.HTTP_201_CREATED
+    id_ = expected_user["id"]
+
+    response = client_with_db.get(f"/users/{id_}")
+
+    user = response.json()
+    assert response.status_code == status.HTTP_200_OK, user
+
+    response = client_with_db.delete(f"/users/{id_}")
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT, user
+    assert not response.text
+
+    response = client_with_db.get(f"/users/{id_}")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {"detail": "The user was not found."}
+
+    response = client_with_db.delete(f"/users/{id_}")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {"detail": "The user was not found."}

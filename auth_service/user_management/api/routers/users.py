@@ -155,3 +155,43 @@ async def patch_user(
         ) from error
 
     return Response(status_code=204)
+
+
+@router.delete(
+    "/users/{id}",
+    operation_id="delete_user",
+    tags=["users"],
+    summary="Delete user",
+    description="Endpoint used to delete a user."
+    " Can only be performed by a data steward.",
+    responses={
+        204: {"description": "User data was successfully deleted."},
+        404: {"description": "The user was not found."},
+        422: {"description": "Validation error in submitted user identification."},
+    },
+    status_code=201,
+)
+async def delete_user(
+    id_: str = Path(
+        ...,
+        alias="id",
+        title="Internal ID",
+    ),
+    user_dao: UserDao = Depends(get_user_dao),
+) -> User:
+    """Delete user"""
+    try:
+        if not is_internal_id(id_):
+            raise ResourceNotFoundError(id_=id_)
+        await user_dao.delete(id_=id_)
+    except ResourceNotFoundError as error:
+        raise HTTPException(
+            status_code=404, detail="The user was not found."
+        ) from error
+    except Exception as error:
+        log.error("Could not delete user: %s", error)
+        raise HTTPException(
+            status_code=500, detail="The user cannot be deleted."
+        ) from error
+
+    return Response(status_code=204)

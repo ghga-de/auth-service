@@ -62,7 +62,7 @@ components:
       title: User
       type: object
     UserData:
-      description: User data that is fixed
+      description: User data
       properties:
         email:
           description: Preferred e-mail address of the user
@@ -110,7 +110,7 @@ components:
       title: UserData
       type: object
     UserModifiableData:
-      description: User data that is modifyable
+      description: User data that is modifiable
       properties:
         status:
           allOf:
@@ -183,6 +183,32 @@ paths:
       tags:
       - users
   /users/{id}:
+    delete:
+      description: Endpoint used to delete a user. Can only be performed by a data
+        steward.
+      operationId: delete_user
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          title: Internal ID
+          type: string
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '204':
+          description: User data was successfully deleted.
+        '404':
+          description: The user was not found.
+        '422':
+          description: Validation error in submitted user identification.
+      summary: Delete user
+      tags:
+      - users
     get:
       description: Endpoint used to get the user data for a specified user. Can only
         be performed by a data steward or the same user.
