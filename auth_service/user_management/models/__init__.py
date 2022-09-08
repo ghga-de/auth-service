@@ -14,5 +14,5 @@
 # limitations under the License.
 
 """
-This sub-package contains the models used in this service.
+This sub-package contains the models used in the user management service.
 """
