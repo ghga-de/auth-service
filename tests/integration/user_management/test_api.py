@@ -29,7 +29,7 @@ def test_get_from_root(client):
     response = client.get("/")
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.text == '"Hello World from the User Management."'
+    assert response.text == '"Index of the User Management Service"'
 
 
 def test_get_from_some_other_path(client):
@@ -40,26 +40,32 @@ def test_get_from_some_other_path(client):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_demo_create_user(client_with_db):
-    """Test that the demo endpoint for creating a user works."""
+def test_post_user(client_with_db):
+    """Test that registering a user works."""
 
-    response = client_with_db.post("/create_demo_user")
+    user_data = dict(
+        ls_id="max@ls.org",
+        status="activated",
+        name="Max Headroom",
+        title="Dr.",
+        email="max@example.org",
+        research_topics="genes",
+        registration_reason="for testing",
+        registration_date="2022-09-01T12:00:00",
+    )
+    response = client_with_db.post("/users", json=user_data)
 
-    assert response.status_code == status.HTTP_200_OK
-    dto = response.json()
+    user = response.json()
+    assert response.status_code == status.HTTP_201_CREATED, user
 
-    assert set(dto) == {
-        "academic_title",
-        "email",
-        "id",
-        "ls_id",
-        "name",
-        "registration_date",
-        "registration_reason",
-        "research_topics",
-    }
-    assert dto["name"] == "Demo User"
-    id_ = dto["id"]
-    assert isinstance(id_, str)
-    assert len(id_) == 36
-    assert id_.count("-") == 4
+    id_ = user.pop("id", None)
+    assert id_ and len(id_) == 36 and id_.count("-") == 4
+
+    assert user == user_data
+
+    response = client_with_db.post("/users", json=user_data)
+
+    error = response.json()
+    assert response.status_code == status.HTTP_409_CONFLICT, error
+
+    assert error == {"detail": "User was already registered."}
