@@ -26,12 +26,12 @@ from auth_service.user_management.api.deps import (
     get_user_dao_factory,
     get_user_dao_factory_config,
 )
+from auth_service.user_management.core.utils import is_internal_id
 from auth_service.user_management.models.dto import (
-    ID,
-    AcademicTitleEnum,
+    AcademicTitle,
     User,
     UserData,
-    UserStatusEnum,
+    UserStatus,
 )
 
 
@@ -48,9 +48,9 @@ async def test_user_creation(mongodb_fixture):  # noqa: F811
 
     user_data = UserData(
         ls_id="max@ls.org",
-        status=UserStatusEnum.ACTIVATED,
+        status=UserStatus.ACTIVATED,
         name="Max Headroom",
-        title=AcademicTitleEnum.DR,
+        title=AcademicTitle.DR,
         email="max@example.org",
         research_topics="genes",
         registration_reasons="for testing",
@@ -66,7 +66,4 @@ async def test_user_creation(mongodb_fixture):  # noqa: F811
     assert user.research_topics == user_data.research_topics
     assert user.registration_reason == user_data.registration_reason
     assert user.registration_date == user_data.registration_date
-    assert isinstance(user.id, ID)
-    id_ = user.id.__root__
-    assert id_ and isinstance(id_, str)
-    assert len(id_) == 36 and id_.count("-") == 4  # UUID4
+    assert is_internal_id(user.id)

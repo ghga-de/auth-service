@@ -27,26 +27,7 @@ from pydantic import BaseModel, EmailStr, Field
 __all__ = ["User", "UserData"]
 
 
-class ID(BaseModel):
-    """ID component"""
-
-    __root__: str = Field(  # actually UUID4
-        ..., title="ID", description="Internally used ID"
-    )
-
-
-class LSID(BaseModel):
-    """LS ID component"""
-
-    __root__: EmailStr = Field(
-        ...,
-        title="LS ID",
-        description="Life Science ID",
-        example="user@lifescience-ri.eu",
-    )
-
-
-class UserStatusEnum(str, Enum):
+class UserStatus(str, Enum):
     """User status enum"""
 
     REGISTERED = "registered"
@@ -55,63 +36,42 @@ class UserStatusEnum(str, Enum):
     DELETED = "deleted"
 
 
-class UserStatus(BaseModel):
-    """User status component"""
-
-    __root__: UserStatusEnum = Field(
-        ..., title="Status", description="Registration status of the user"
-    )
-
-
-class FullName(BaseModel):
-    """Full name component"""
-
-    __root__: str = Field(
-        ...,
-        title="Name",
-        description="Full name of the user",
-        example="Rosalind Franklin",
-    )
-
-
-class AcademicTitleEnum(str, Enum):
+class AcademicTitle(str, Enum):
     """Academic title"""
 
     DR = "Dr."
     PROF = "Prof."
 
 
-class AcademicTitle(BaseModel):
-    """Academic title component"""
+class UserData(BaseModel):
+    """User data"""
 
-    __root__: AcademicTitleEnum = Field(
+    ls_id: EmailStr = Field(
         ...,
-        title="Academic title",
-        description="Academic title of the user (only Dr. or Prof.)",
+        title="LS ID",
+        description="Life Science ID",
+        example="user@lifescience-ri.eu",
     )
 
+    status: UserStatus = Field(
+        ..., title="Status", description="Registration status of the user"
+    )
 
-class EMail(BaseModel):
-    """E-Mail component"""
-
-    __root__: EmailStr = Field(
+    name: str = Field(
+        ...,
+        title="Name",
+        description="Full name of the user",
+        example="Rosalind Franklin",
+    )
+    title: AcademicTitle = Field(
+        title="Academic title", description="Academic title of the user"
+    )
+    email: EmailStr = Field(
         ...,
         title="E-Mail",
         description="Preferred e-mail address of the user",
         example="user@home.org",
     )
-
-
-class UserData(BaseModel):
-    """User data"""
-
-    ls_id: LSID
-
-    status: UserStatus
-
-    name: FullName
-    title: Optional[AcademicTitle]
-    email: EmailStr
 
     research_topics: Optional[str] = Field(default=None, title="Research topic(s)")
 
@@ -128,4 +88,4 @@ class UserData(BaseModel):
 class User(UserData):
     """User"""
 
-    id: ID
+    id: str = Field(..., title="ID", description="Internally used ID")  # actually UUID4

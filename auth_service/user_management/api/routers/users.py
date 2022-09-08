@@ -18,9 +18,11 @@
 
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Path
 from fastapi.exceptions import HTTPException
+from hexkit.protocols.dao import MultipleHitsFoundError, ResourceNotFoundError
 
+from ...core.utils import is_external_id, is_internal_id
 from ...models.dto import User, UserData
 from ...ports.dao import UserDao
 from ..deps import Depends, get_user_dao
@@ -52,7 +54,7 @@ async def post_user(
     user_data: UserData, user_dao: UserDao = Depends(get_user_dao)
 ) -> User:
     """Register a user"""
-    ls_id = user_data.ls_id.__root__
+    ls_id = user_data.ls_id
     user = await user_dao.find_one(mapping={"ls_id": ls_id})
     if user:
         raise HTTPException(status_code=409, detail="User was already registered.")
@@ -62,5 +64,50 @@ async def post_user(
         log.error("Could not insert user: %s", error)
         raise HTTPException(
             status_code=400, detail="User cannot be registered."
+        ) from error
+    return user
+
+
+@router.get(
+    "/users/{id}",
+    operation_id="get_user",
+    tags=["users"],
+    summary="Get user data",
+    description="Endpoint used to get the user data for a specified user."
+    " Can only be performed by a data steward or the same user.",
+    responses={
+        200: {"model": User, "description": "Requested user has been found."},
+        401: {"description": "Not authorized to get user data."},
+        404: {"description": "The user was not found."},
+        422: {"description": "Validation error in submitted user identification."},
+    },
+    status_code=200,
+)
+async def get_user(
+    id_: str = Path(  # actually Union[ID, LSID] instead of str
+        ...,
+        alias="id",
+        title="Internal ID or LS ID",
+    ),
+    user_dao: UserDao = Depends(get_user_dao),
+) -> User:
+    """Get user data"""
+    try:
+        if is_external_id(id_):
+            user = await user_dao.find_one(mapping={"ls_id": id_})
+        elif is_internal_id(id_):
+            user = await user_dao.get(id_=id_)
+        else:
+            user = None
+        if not user:
+            raise ResourceNotFoundError(id_=id_)
+    except (MultipleHitsFoundError, ResourceNotFoundError) as error:
+        raise HTTPException(
+            status_code=404, detail="The user was not found."
+        ) from error
+    except Exception as error:
+        log.error("Could not request user: %s", error)
+        raise HTTPException(
+            status_code=500, detail="The user cannot be requested."
         ) from error
     return user

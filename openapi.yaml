@@ -2,45 +2,36 @@
 components:
   schemas:
     AcademicTitle:
-      allOf:
-      - $ref: '#/components/schemas/AcademicTitleEnum'
-      description: Academic title of the user (only Dr. or Prof.)
-      title: AcademicTitle
-    AcademicTitleEnum:
       description: Academic title
       enum:
       - Dr.
       - Prof.
-      title: AcademicTitleEnum
-      type: string
-    FullName:
-      description: Full name of the user
-      example: Rosalind Franklin
-      title: FullName
-      type: string
-    ID:
-      description: Internally used ID
-      title: ID
-      type: string
-    LSID:
-      description: Life Science ID
-      example: user@lifescience-ri.eu
-      format: email
-      title: LSID
+      title: AcademicTitle
       type: string
     User:
       description: User
       properties:
         email:
+          description: Preferred e-mail address of the user
+          example: user@home.org
           format: email
-          title: Email
+          title: E-Mail
           type: string
         id:
-          $ref: '#/components/schemas/ID'
+          description: Internally used ID
+          title: ID
+          type: string
         ls_id:
-          $ref: '#/components/schemas/LSID'
+          description: Life Science ID
+          example: user@lifescience-ri.eu
+          format: email
+          title: LS ID
+          type: string
         name:
-          $ref: '#/components/schemas/FullName'
+          description: Full name of the user
+          example: Rosalind Franklin
+          title: Name
+          type: string
         registration_date:
           format: date-time
           title: Resitration date
@@ -52,13 +43,20 @@ components:
           title: Research topic(s)
           type: string
         status:
-          $ref: '#/components/schemas/UserStatus'
+          allOf:
+          - $ref: '#/components/schemas/UserStatus'
+          description: Registration status of the user
+          title: Status
         title:
-          $ref: '#/components/schemas/AcademicTitle'
+          allOf:
+          - $ref: '#/components/schemas/AcademicTitle'
+          description: Academic title of the user
+          title: Academic title
       required:
       - ls_id
       - status
       - name
+      - title
       - email
       - registration_date
       - id
@@ -68,13 +66,22 @@ components:
       description: User data
       properties:
         email:
+          description: Preferred e-mail address of the user
+          example: user@home.org
           format: email
-          title: Email
+          title: E-Mail
           type: string
         ls_id:
-          $ref: '#/components/schemas/LSID'
+          description: Life Science ID
+          example: user@lifescience-ri.eu
+          format: email
+          title: LS ID
+          type: string
         name:
-          $ref: '#/components/schemas/FullName'
+          description: Full name of the user
+          example: Rosalind Franklin
+          title: Name
+          type: string
         registration_date:
           format: date-time
           title: Resitration date
@@ -86,30 +93,32 @@ components:
           title: Research topic(s)
           type: string
         status:
-          $ref: '#/components/schemas/UserStatus'
+          allOf:
+          - $ref: '#/components/schemas/UserStatus'
+          description: Registration status of the user
+          title: Status
         title:
-          $ref: '#/components/schemas/AcademicTitle'
+          allOf:
+          - $ref: '#/components/schemas/AcademicTitle'
+          description: Academic title of the user
+          title: Academic title
       required:
       - ls_id
       - status
       - name
+      - title
       - email
       - registration_date
       title: UserData
       type: object
     UserStatus:
-      allOf:
-      - $ref: '#/components/schemas/UserStatusEnum'
-      description: Registration status of the user
-      title: UserStatus
-    UserStatusEnum:
       description: User status enum
       enum:
       - registered
       - activated
       - inactivated
       - deleted
-      title: UserStatusEnum
+      title: UserStatus
       type: string
 info:
   contact:
@@ -158,6 +167,34 @@ paths:
         '422':
           description: Validation error in submitted user data.
       summary: Register a user
+      tags:
+      - users
+  /users/{id}:
+    get:
+      description: Endpoint used to get the user data for a specified user. Can only
+        be performed by a data steward or the same user.
+      operationId: get_user
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          title: Internal ID or LS ID
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: Requested user has been found.
+        '401':
+          description: Not authorized to get user data.
+        '404':
+          description: The user was not found.
+        '422':
+          description: Validation error in submitted user identification.
+      summary: Get user data
       tags:
       - users
 tags:
