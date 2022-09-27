@@ -18,6 +18,8 @@
 import logging.config
 from typing import Optional
 
+from pydantic import root_validator
+
 from ghga_service_chassis_lib.api import ApiConfigBase, LogLevel
 from ghga_service_chassis_lib.config import config_from_yaml
 
@@ -63,12 +65,31 @@ class Config(ApiConfigBase):
     log_level: LogLevel = "debug"
     run_auth_adapter: bool = False
     auth_path_prefix: str = "/auth"
-    basic_auth_user: Optional[str] = None
-    basic_auth_pwd: Optional[str] = None
+    basic_auth_users: Optional[list[str]] = None
+    basic_auth_pwds: Optional[list[str]] = None
     basic_auth_realm: Optional[str] = "GHGA Data Portal"
     db_url: str = "mongodb://localhost:27017"
     db_name: str = "user-registry"
     user_collection: str = "users"
+
+    
+    @root_validator
+    def check_credentials_match(cls, values):
+        """Check if basic_auth_users and basic_auth_pwds match."""
+        
+        users, pws = values.get('basic_auth_user'), values.get('basic_auth_pwd')
+        if users is None:
+            if pws is not None:
+                raise ValueError(
+                    'If basic_auth_users is None, basic_auth_pwds should also be None.'
+                )
+        else:
+            if len(users) != len(pws):
+               raise ValueError(
+                    'If specified, basic_auth_users and basic_auth_pwds must be of' +
+                    ' the same length.'
+                )
+        return values
 
 
 CONFIG = Config()
