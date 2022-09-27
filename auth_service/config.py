@@ -18,7 +18,7 @@
 import logging.config
 from typing import Optional
 
-from pydantic import root_validator
+from pydantic import root_validator, SecretStr
 
 from ghga_service_chassis_lib.api import ApiConfigBase, LogLevel
 from ghga_service_chassis_lib.config import config_from_yaml
@@ -66,7 +66,7 @@ class Config(ApiConfigBase):
     run_auth_adapter: bool = False
     auth_path_prefix: str = "/auth"
     basic_auth_users: Optional[list[str]] = None
-    basic_auth_pwds: Optional[list[str]] = None
+    basic_auth_pwds: Optional[list[SecretStr]] = None
     basic_auth_realm: Optional[str] = "GHGA Data Portal"
     db_url: str = "mongodb://localhost:27017"
     db_name: str = "user-registry"
