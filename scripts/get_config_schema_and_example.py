@@ -19,6 +19,7 @@
 """
 
 import importlib
+import json
 import subprocess
 from pathlib import Path
 from typing import Any, Type
@@ -74,7 +75,8 @@ def print_schema():
 def print_example():
     """Prints an example config yaml."""
     config = get_dev_config()
-    print(yaml.dump(config.dict()).rstrip())
+    normalized_config_dict = json.loads(config.json())
+    print(yaml.dump(normalized_config_dict).rstrip())
 
 
 if __name__ == "__main__":
