@@ -1,6 +1,5 @@
 # Please only mention the non-default settings here:
 
-auth_path_prefix: /auth
 auto_reload: true
 db_url: mongodb://mongodb:27017/
 host: 0.0.0.0
