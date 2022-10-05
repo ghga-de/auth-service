@@ -16,8 +16,4 @@ jobs:
         run: |
           export ${{ steps.common.outputs.CONFIG_YAML_ENV_VAR_NAME }}="${{ steps.common.outputs.CONFIG_YAML }}"
 
-          # regenerate openapi.yaml
-          python3 ./scripts/openapi_from_app.py > openapi_regenerated.yaml
-
-          # compare with existing yaml:
-          diff openapi_regenerated.yaml openapi.yaml
+          ./scripts/update_openapi_docs.py --check
