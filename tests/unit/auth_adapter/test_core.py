@@ -27,7 +27,6 @@ from auth_service.config import Config
 
 from ...fixtures import (  # noqa: F401; pylint: disable=unused-import
     fixture_signing_keys,
-    fixture_signing_keys_full,
 )
 
 
@@ -185,16 +184,15 @@ def test_signs_internal_token(signing_keys):
     assert decode_and_verify_token(token, key=signing_keys.internal_jwk) == payload
 
 
-def test_token_exchange(signing_keys_full):
+def test_token_exchange(signing_keys):
     """Test that a valid external token is exchanged against an internal token."""
     ext_payload = {"name": "Foo Bar", "email": "foo@bar", "sub": "foo", "iss": "bar"}
-    external_jwks = signing_keys_full.external_jwks
-    external_jwk = list(external_jwks)[0]
-    access_token = sign_and_encode_token(ext_payload, key=external_jwk)
+    access_token = sign_and_encode_token(
+        ext_payload, key=signing_keys.full_external_jwk
+    )
     assert decode_and_verify_token(access_token) == ext_payload
     internal_token = exchange_token(access_token)
     assert isinstance(internal_token, str)
     assert internal_token.count(".") == 2
-    internal_jwk = signing_keys_full.internal_jwk
-    int_payload = decode_and_verify_token(internal_token, key=internal_jwk)
+    int_payload = decode_and_verify_token(internal_token, key=signing_keys.internal_jwk)
     assert int_payload == {"name": "Foo Bar", "email": "foo@bar"}

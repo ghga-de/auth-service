@@ -32,8 +32,11 @@ log = logging.getLogger(__name__)
 class SigningKeys:
     """A container for external and internal signing keys."""
 
-    external_jwks: jwk.JWKSet
-    internal_jwk: jwk.JWK
+    external_jwks: jwk.JWKSet  # the external public key set
+    internal_jwk: jwk.JWK  # the interal key pair
+
+    # when testing, we also provide the extrnal private key
+    full_external_jwk: Optional[jwk.JWK] = None
 
     def load(self, config: Config) -> None:
         """Load all the signing keys from the configuration."""
@@ -41,7 +44,9 @@ class SigningKeys:
         if not external_keys:
             log.warning("No external keys configured, generating random ones.")
             external_jwks = jwk.JWKSet()
-            external_jwks.add(self.generate())
+            external_jwk = self.generate()
+            external_jwks.add(external_jwk)
+            self.full_external_jwk = external_jwk
             external_keys = external_jwks.export(private_keys=False)
         self.external_jwks = jwk.JWKSet.from_json(external_keys)
         internal_keys = config.auth_int_keys

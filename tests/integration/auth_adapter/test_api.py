@@ -26,7 +26,6 @@ from auth_service.auth_adapter.core.auth import (
 
 from ...fixtures import (  # noqa: F401; pylint: disable=unused-import
     fixture_signing_keys,
-    fixture_signing_keys_full,
 )
 from .fixtures import (  # noqa: F401; pylint: disable=unused-import
     fixture_client,
@@ -134,13 +133,11 @@ def test_basic_auth_well_known(with_basic_auth, client):
     assert response.text == "GHGA Data Portal: Not authenticated"
 
 
-def test_token_exchange(signing_keys_full, client):
+def test_token_exchange(signing_keys, client):
     """Test that the external access token is exchanged against an internal token."""
 
     ext_payload = {"name": "Foo Bar", "email": "foo@bar", "sub": "foo", "iss": "bar"}
-    external_jwks = signing_keys_full.external_jwks
-    external_jwk = list(external_jwks)[0]
-    auth = sign_and_encode_token(ext_payload, key=external_jwk)
+    auth = sign_and_encode_token(ext_payload, key=signing_keys.full_external_jwk)
     auth = f"Bearer {auth}"
     response = client.get("/some/path", headers={"Authorization": auth})
 
@@ -154,20 +151,17 @@ def test_token_exchange(signing_keys_full, client):
     assert isinstance(internal_token, str)
     assert internal_token.count(".", 2)
 
-    internal_jwk = signing_keys_full.internal_jwk
-    int_payload = decode_and_verify_token(internal_token, key=internal_jwk)
+    int_payload = decode_and_verify_token(internal_token, key=signing_keys.internal_jwk)
     assert int_payload == {"name": "Foo Bar", "email": "foo@bar"}
 
     assert "X-Authorization" not in headers
 
 
-def test_token_exchange_with_x_token(signing_keys_full, client):
+def test_token_exchange_with_x_token(signing_keys, client):
     """Test that the external access token can be passed in separate header."""
 
     ext_payload = {"name": "Foo Bar", "email": "foo@bar", "sub": "foo", "iss": "bar"}
-    external_jwks = signing_keys_full.external_jwks
-    external_jwk = list(external_jwks)[0]
-    auth = sign_and_encode_token(ext_payload, key=external_jwk)
+    auth = sign_and_encode_token(ext_payload, key=signing_keys.full_external_jwk)
     auth = f"Bearer {auth}"
     response = client.get("/some/path", headers={"X-Authorization": auth})
 
@@ -181,8 +175,7 @@ def test_token_exchange_with_x_token(signing_keys_full, client):
     assert isinstance(internal_token, str)
     assert internal_token.count(".", 2)
 
-    internal_jwk = signing_keys_full.internal_jwk
-    int_payload = decode_and_verify_token(internal_token, key=internal_jwk)
+    int_payload = decode_and_verify_token(internal_token, key=signing_keys.internal_jwk)
     assert int_payload == {"name": "Foo Bar", "email": "foo@bar"}
 
     assert "X-Authorization" not in headers
