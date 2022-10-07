@@ -20,13 +20,44 @@ import json
 import logging
 from typing import Any, Optional, TypedDict
 
-from jwcrypto import jws
+from jwcrypto import jwk, jws
 
-from .jwks import external_jwks, internal_jwk
+from ...config import Config
 
-__all__ = ["exchange_token"]
+__all__ = ["exchange_token", "signing_keys"]
 
 log = logging.getLogger(__name__)
+
+
+class SigningKeys:
+    """A container for external and internal signing keys."""
+
+    external_jwks: jwk.JWKSet
+    internal_jwk: jwk.JWK
+
+    def load(self, config: Config) -> None:
+        """Load all the signing keys from the configuration."""
+        external_keys = config.auth_ext_keys
+        if not external_keys:
+            log.warning("No external keys configured, generating random ones.")
+            external_jwks = jwk.JWKSet()
+            external_jwks.add(self.generate())
+            external_keys = external_jwks.export(private_keys=False)
+        self.external_jwks = jwk.JWKSet.from_json(external_keys)
+        internal_keys = config.auth_int_keys
+        if not internal_keys:
+            log.warning("No internal keys configured, generating random ones.")
+            internal_jwk = self.generate()
+            internal_keys = internal_jwk.export(private_key=True)
+        self.internal_jwk = jwk.JWK.from_json(internal_keys)
+
+    @staticmethod
+    def generate() -> jwk.JWK:
+        """Generate a random EC based JWK."""
+        return jwk.JWK.generate(kty="EC", crv="P-256")
+
+
+signing_keys = SigningKeys()
 
 
 class InternalToken(TypedDict):
@@ -62,7 +93,7 @@ def decode_and_verify_token(
     if not access_token:
         return None
     if not key:
-        key = external_jwks
+        key = signing_keys.external_jwks
     jws_token = jws.JWS()
     try:
         jws_token.deserialize(access_token, key=key)
@@ -89,7 +120,7 @@ def sign_and_encode_token(payload: dict[str, Any], key=None) -> Optional[str]:
     if not payload:
         return None
     if not key:
-        key = internal_jwk
+        key = signing_keys.internal_jwk
     try:
         jws_token = jws.JWS(json.dumps(payload).encode("utf-8"))
         header = json.dumps({"kid": key.thumbprint()})

@@ -62,6 +62,8 @@ class Config(ApiConfigBase):
     service_name: str = "auth_service"
     log_level: LogLevel = "debug"
     run_auth_adapter: bool = False
+    auth_int_keys: Optional[str] = None
+    auth_ext_keys: Optional[str] = None
     basic_auth_user: Optional[str] = None
     basic_auth_pwd: Optional[str] = None
     basic_auth_realm: Optional[str] = "GHGA Data Portal"

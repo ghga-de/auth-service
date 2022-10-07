@@ -15,16 +15,37 @@
 
 """Fixtures that are used in both integration and unit tests"""
 
-from jwcrypto import jwk
+import logging
+from typing import Generator
+
 from pytest import fixture
 
-from auth_service.auth_adapter.core.jwks import external_jwks
+from auth_service.auth_adapter.core import auth
+from auth_service.config import CONFIG
 
 
-@fixture(name="external_key")
-def fixture_external_key():
-    """Generate a key pair and add it to the external key set."""
-    key = jwk.JWK.generate(kty="RSA", size=2048)
-    external_jwks.add(key)
-    yield key
-    external_jwks["keys"].remove(key)
+@fixture(name="signing_keys")
+def fixture_signing_keys(caplog) -> auth.SigningKeys:
+    """Get signing key instance with random keys for testing."""
+    caplog.set_level(logging.WARNING)
+    caplog.clear()
+    auth.signing_keys.load(CONFIG)
+    assert [
+        record.message for record in caplog.records if record.levelname == "WARNING"
+    ] == [
+        "No external keys configured, generating random ones.",
+        "No internal keys configured, generating random ones.",
+    ]
+    caplog.clear()
+    return auth.signing_keys
+
+
+@fixture(name="signing_keys_full")
+def fixture_signing_keys_full(signing_keys) -> Generator[auth.SigningKeys, None, None]:
+    """Get signing key instance with full external key for testing."""
+    external_jwks = signing_keys.external_jwks
+    full_external_jwk = signing_keys.generate()
+    signing_keys.external_jwks = external_jwks.__class__()
+    signing_keys.external_jwks.add(full_external_jwk)
+    yield signing_keys
+    signing_keys.external_jwks = external_jwks
