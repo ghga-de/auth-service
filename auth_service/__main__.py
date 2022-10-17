@@ -15,6 +15,8 @@
 
 """Entrypoint of the package"""
 
+import asyncio
+
 from ghga_service_chassis_lib.api import run_server
 
 from .config import CONFIG, Config
@@ -24,7 +26,8 @@ def run(config: Config = CONFIG):
     """Run the service"""
     service = "auth_adapter" if config.run_auth_adapter else "user_management"
     print(f"Starting {service} service", service)
-    run_server(app=f"auth_service.{service}.api.main:app", config=config)
+    print("Configuration:", CONFIG)
+    asyncio.run(run_server(app=f"auth_service.{service}.api.main:app", config=config))
 
 
 if __name__ == "__main__":
