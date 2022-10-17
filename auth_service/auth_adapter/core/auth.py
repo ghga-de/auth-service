@@ -18,11 +18,11 @@
 
 import json
 import logging
-from typing import Any, Optional, TypedDict
+from typing import Any, Optional
 
 from jwcrypto import jwk, jws
 
-from ...config import Config
+from ...config import CONFIG, Config
 
 __all__ = ["exchange_token", "signing_keys"]
 
@@ -35,41 +35,26 @@ class SigningKeys:
     external_jwks: jwk.JWKSet  # the external public key set
     internal_jwk: jwk.JWK  # the interal key pair
 
-    # when testing, we also provide the extrnal private key
-    full_external_jwk: Optional[jwk.JWK] = None
-
-    def load(self, config: Config) -> None:
+    def __init__(self, config: Config = CONFIG) -> None:
         """Load all the signing keys from the configuration."""
         external_keys = config.auth_ext_keys
         if not external_keys:
-            log.warning("No external keys configured, generating random ones.")
-            external_jwks = jwk.JWKSet()
-            external_jwk = self.generate()
-            external_jwks.add(external_jwk)
-            self.full_external_jwk = external_jwk
-            external_keys = external_jwks.export(private_keys=False)
-        self.external_jwks = jwk.JWKSet.from_json(external_keys)
+            raise RuntimeError("No external signing keys configured.")
+        try:
+            self.external_jwks = jwk.JWKSet.from_json(external_keys)
+        except Exception as exc:
+            raise RuntimeError("Cannot parse external signing keys.") from exc
         internal_keys = config.auth_int_keys
         if not internal_keys:
-            log.warning("No internal keys configured, generating random ones.")
-            internal_jwk = self.generate()
-            internal_keys = internal_jwk.export(private_key=True)
+            raise RuntimeError("No internal signing keys configured.")
+        try:
+            internal_keys = config.auth_int_keys
+        except Exception as exc:
+            raise RuntimeError("Cannot parse internal signing key pair.") from exc
         self.internal_jwk = jwk.JWK.from_json(internal_keys)
-
-    @staticmethod
-    def generate() -> jwk.JWK:
-        """Generate a random EC based JWK."""
-        return jwk.JWK.generate(kty="EC", crv="P-256")
 
 
 signing_keys = SigningKeys()
-
-
-class InternalToken(TypedDict):
-    """Payload of an internal token."""
-
-    name: str
-    email: str
 
 
 def exchange_token(external_token: Optional[str]) -> Optional[str]:

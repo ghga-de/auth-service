@@ -212,5 +212,9 @@
       "type": "string"
     }
   },
+  "required": [
+    "auth_int_keys",
+    "auth_ext_keys"
+  ],
   "additionalProperties": false
 }

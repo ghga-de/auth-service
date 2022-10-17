@@ -32,10 +32,10 @@ services:
       AUTH_SERVICE_AUTO_RELOAD: "true"
       AUTH_SERVICE_DB_URL: mongodb://mongodb:27017/
       AUTH_SERVICE_CONFIG_YAML: /workspace/.devcontainer/.dev_config.yaml
-    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
-    # (Adding the "ports" property to this file will not forward from a Codespace.)
 
-    # Please remove service dependencies that are not needed:
+    env_file:
+      - local.env
+
   mongodb:
     image: mongo:5.0.11
     restart: unless-stopped

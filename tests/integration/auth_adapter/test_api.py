@@ -22,11 +22,9 @@ from fastapi import status
 from auth_service.auth_adapter.core.auth import (
     decode_and_verify_token,
     sign_and_encode_token,
+    signing_keys,
 )
 
-from ...fixtures import (  # noqa: F401; pylint: disable=unused-import
-    fixture_signing_keys,
-)
 from .fixtures import (  # noqa: F401; pylint: disable=unused-import
     fixture_client,
     fixture_with_basic_auth,
@@ -133,11 +131,12 @@ def test_basic_auth_well_known(with_basic_auth, client):
     assert response.text == "GHGA Data Portal: Not authenticated"
 
 
-def test_token_exchange(signing_keys, client):
+def test_token_exchange(client):
     """Test that the external access token is exchanged against an internal token."""
 
     ext_payload = {"name": "Foo Bar", "email": "foo@bar", "sub": "foo", "iss": "bar"}
-    auth = sign_and_encode_token(ext_payload, key=signing_keys.full_external_jwk)
+    ext_sign_key = signing_keys.external_jwks.get_key("test")
+    auth = sign_and_encode_token(ext_payload, key=ext_sign_key)
     auth = f"Bearer {auth}"
     response = client.get("/some/path", headers={"Authorization": auth})
 
@@ -157,11 +156,12 @@ def test_token_exchange(signing_keys, client):
     assert "X-Authorization" not in headers
 
 
-def test_token_exchange_with_x_token(signing_keys, client):
+def test_token_exchange_with_x_token(client):
     """Test that the external access token can be passed in separate header."""
 
     ext_payload = {"name": "Foo Bar", "email": "foo@bar", "sub": "foo", "iss": "bar"}
-    auth = sign_and_encode_token(ext_payload, key=signing_keys.full_external_jwk)
+    ext_sign_key = signing_keys.external_jwks.get_key("test")
+    auth = sign_and_encode_token(ext_payload, key=ext_sign_key)
     auth = f"Bearer {auth}"
     response = client.get("/some/path", headers={"X-Authorization": auth})
 
