@@ -35,7 +35,7 @@ class SigningKeys:
     external_jwks: jwk.JWKSet  # the external public key set
     internal_jwk: jwk.JWK  # the interal key pair
 
-    # when testing, we also provide the extrnal private key
+    # when testing, we also provide the external private key
     full_external_jwk: Optional[jwk.JWK] = None
 
     def load(self, config: Config) -> None:
