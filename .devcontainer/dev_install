@@ -10,7 +10,7 @@ pip install \
     -e \
     ".[all]"
 
-if python scripts/create_dev_keys.py; then
+if python tests/fixtures/auth_keys.py > .devcontainer/auth_keys.env; then
     set -a
     . .devcontainer/auth_keys.env
     set +a

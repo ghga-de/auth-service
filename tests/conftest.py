@@ -15,11 +15,6 @@
 
 """Test configuration"""
 
-from pathlib import Path
+from .fixtures.auth_keys import set_auth_keys_env
 
-from dotenv import load_dotenv
-
-REPO_ROOT_DIR = Path(__file__).parent.parent.resolve()
-ENV_FILE = REPO_ROOT_DIR / ".devcontainer" / "auth_keys.env"
-
-load_dotenv(ENV_FILE)
+set_auth_keys_env()  # set signing keys in environment for testing

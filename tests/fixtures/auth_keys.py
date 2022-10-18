@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Copyright 2021 - 2022 Universität Tübingen, DKFZ and EMBL
 # for the German Human Genome-Phenome Archive (GHGA)
 #
@@ -16,14 +14,11 @@
 # limitations under the License.
 #
 
-"""Create signing keys for development"""
+"""Generate signing keys for testing"""
 
-from pathlib import Path
+from os import environ
 
 from jwcrypto import jwk
-
-REPO_ROOT_DIR = Path(__file__).parent.parent.resolve()
-ENV_FILE = REPO_ROOT_DIR / ".devcontainer" / "auth_keys.env"
 
 
 def generate_jwk() -> jwk.JWK:
@@ -31,7 +26,7 @@ def generate_jwk() -> jwk.JWK:
     return jwk.JWK.generate(kty="EC", crv="P-256")
 
 
-def generate_external_keys():
+def generate_auth_ext_keys():
     """Create external key set (with private keys)."""
     external_jwks = jwk.JWKSet()
     external_jwk = generate_jwk()
@@ -40,25 +35,31 @@ def generate_external_keys():
     return external_jwks.export(private_keys=True)
 
 
-def generate_internal_keys():
+def generate_auth_int_keys():
     """Create internal key pair."""
     internal_jwk = generate_jwk()
     return internal_jwk.export(private_key=True)
 
 
-def run():
-    """Create local env file with signing keys"""
-    if ENV_FILE.exists():
-        print("Local env file already exists.")
-        return
-    print("Creating random signing keys...")
-    external_keys = generate_external_keys()
-    internal_keys = generate_internal_keys()
-    with open(ENV_FILE, "w", encoding="utf-8") as env_file:
-        env_file.write(f"AUTH_SERVICE_AUTH_INT_KEYS={internal_keys!r}\n")
-        env_file.write(f"AUTH_SERVICE_AUTH_EXT_KEYS={external_keys!r}\n")
-    print("Local env file has been created.")
+def generate_keys():
+    """Generate dictionary with signing keys."""
+    return dict(
+        AUTH_SERVICE_AUTH_EXT_KEYS=generate_auth_ext_keys(),
+        AUTH_SERVICE_AUTH_INT_KEYS=generate_auth_int_keys(),
+    )
+
+
+def set_auth_keys_env():
+    """Set signing keys as environment variables."""
+    for key, value in generate_keys().items():
+        environ[key] = value
+
+
+def print_auth_keys_env():
+    """Print environment for signing keys."""
+    for key, value in generate_keys().items():
+        print(f"{key}={value!r}")
 
 
 if __name__ == "__main__":
-    run()
+    print_auth_keys_env()
