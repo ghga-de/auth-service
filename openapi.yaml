@@ -76,8 +76,8 @@ components:
       required:
       - registration_date
       - status_change
-      - status
       - ls_id
+      - status
       - name
       - email
       - id
