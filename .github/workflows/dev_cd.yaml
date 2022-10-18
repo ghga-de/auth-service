@@ -95,6 +95,7 @@ jobs:
                 "new_image_tag": "${{ needs.get_commit_version.outputs.version }}"
               }
             }'
+            
           curl -X POST \
             "https://api.github.com/repos/${DEPLOYMENT_CONFIG_REPO}/dispatches" \
             -H 'Accept: application/vnd.github.everest-preview+json' \
@@ -106,4 +107,4 @@ jobs:
                 "app_name": "${{ github.event.repository.name }}",
                 "context": "${{ needs.get_commit_version.outputs.branch }}",
                 "new_image_tag": "${{ needs.get_commit_version.outputs.version }}"
-              }
+              }'
