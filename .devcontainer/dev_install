@@ -10,5 +10,11 @@ pip install \
     -e \
     ".[all]"
 
+if python tests/fixtures/auth_keys.py > .devcontainer/auth_keys.env; then
+    set -a
+    . .devcontainer/auth_keys.env
+    set +a
+fi
+
 # install pre-commit hooks to git:
 pre-commit install
