@@ -43,7 +43,24 @@ class AcademicTitle(str, Enum):
     PROF = "Prof."
 
 
-class UserData(BaseModel):
+class StatusChange(BaseModel):
+    """Details of a status change"""
+
+    previous: Optional[UserStatus] = Field(default=None, title="Previous user status")
+    by: Optional[str] = Field(
+        default=None,
+        title="Status changed by",
+        description="ID of the user who changed the status",
+    )
+    context: Optional[str] = Field(default=None, title="Status change context")
+    change_date: Optional[datetime] = Field(default=None, title="Date of last change")
+
+    class Config:  # pylint: disable=missing-class-docstring
+        frozen = True
+        use_enum_values = True
+
+
+class UserCreatableData(BaseModel):
     """User data"""
 
     ls_id: EmailStr = Field(
@@ -76,7 +93,6 @@ class UserData(BaseModel):
     registration_reason: Optional[str] = Field(
         default=None, title="Reason for registration"
     )
-    registration_date: datetime = Field(default=..., title="Resitration date")
 
     class Config:  # pylint: disable=missing-class-docstring
         frozen = True
@@ -84,7 +100,7 @@ class UserData(BaseModel):
 
 
 class UserModifiableData(BaseModel):
-    """User data that is modifiable"""
+    """User data that can be modified"""
 
     status: Optional[UserStatus] = Field(
         None, title="Status", description="Registration status of the user"
@@ -98,9 +114,33 @@ class UserModifiableData(BaseModel):
         use_enum_values = True
 
 
+class UserAutomaticData(BaseModel):
+    """User data that is automatically created except the ID"""
+
+    registration_date: datetime = Field(default=..., title="Registration date")
+
+    status_change: StatusChange
+
+    class Config:  # pylint: disable=missing-class-docstring
+        frozen = True
+        use_enum_values = True
+
+
+class UserData(UserCreatableData, UserAutomaticData):
+    """User data model without the ID"""
+
+    class Config:  # pylint: disable=missing-class-docstring
+        frozen = True
+        use_enum_values = True
+
+
 class User(UserData):
-    """User"""
+    """Complete user model with ID"""
 
     id: str = Field(  # actually UUID
         default=..., title="ID", description="Internally used ID"
     )
+
+    class Config:  # pylint: disable=missing-class-docstring
+        frozen = True
+        use_enum_values = True
