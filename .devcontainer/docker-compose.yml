@@ -34,7 +34,7 @@ services:
       AUTH_SERVICE_CONFIG_YAML: /workspace/.devcontainer/.dev_config.yaml
 
     env_file:
-      - local.env
+      - auth_keys.env
 
   mongodb:
     image: mongo:5.0.11

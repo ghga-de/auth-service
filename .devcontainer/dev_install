@@ -10,10 +10,11 @@ pip install \
     -e \
     ".[all]"
 
-python scripts/create_dev_keys.py
-set -a
-. .devcontainer/local.env
-set +a
+if python scripts/create_dev_keys.py; then
+    set -a
+    . .devcontainer/auth_keys.env
+    set +a
+fi
 
 # install pre-commit hooks to git:
 pre-commit install

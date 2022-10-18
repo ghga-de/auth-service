@@ -23,7 +23,7 @@ from pathlib import Path
 from jwcrypto import jwk
 
 REPO_ROOT_DIR = Path(__file__).parent.parent.resolve()
-ENV_FILE = REPO_ROOT_DIR / ".devcontainer" / "local.env"
+ENV_FILE = REPO_ROOT_DIR / ".devcontainer" / "auth_keys.env"
 
 
 def generate_jwk() -> jwk.JWK:
