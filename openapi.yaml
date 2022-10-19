@@ -75,7 +75,6 @@ components:
           title: Academic title
       required:
       - registration_date
-      - status_change
       - ls_id
       - status
       - name
