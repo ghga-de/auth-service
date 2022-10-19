@@ -10,11 +10,16 @@ pip install \
     -e \
     ".[all]"
 
-if python tests/fixtures/auth_keys.py > .devcontainer/auth_keys.env; then
-    set -a
-    . .devcontainer/auth_keys.env
-    set +a
-fi
-
 # install pre-commit hooks to git:
 pre-commit install
+
+# generate auth signing keys for testing:
+if [ ! -s .devcontainer/auth_keys.env ]; then
+    python tests/fixtures/auth_keys.py > .devcontainer/auth_keys.env
+fi
+if ! grep "AUTH_SERVICE_AUTH_EXT_KEYS" -q /etc/environment; then
+    sudo sh -c "cat .devcontainer/auth_keys.env >> /etc/environment"
+fi
+set -a
+source .devcontainer/auth_keys.env
+set +a

@@ -33,9 +33,6 @@ services:
       AUTH_SERVICE_DB_URL: mongodb://mongodb:27017/
       AUTH_SERVICE_CONFIG_YAML: /workspace/.devcontainer/.dev_config.yaml
 
-    env_file:
-      - auth_keys.env
-
   mongodb:
     image: mongo:5.0.11
     restart: unless-stopped
