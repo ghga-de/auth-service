@@ -54,14 +54,14 @@ class BaseDto(BaseModel):
 class StatusChange(BaseDto):
     """Details of a status change"""
 
-    previous: Optional[UserStatus] = Field(default=None, title="Previous user status")
+    previous: UserStatus = Field(default=None, title="Previous user status")
     by: Optional[str] = Field(
         default=None,
         title="Status changed by",
         description="ID of the user who changed the status",
     )
-    context: Optional[str] = Field(default=None, title="Status change context")
-    change_date: Optional[datetime] = Field(default=None, title="Date of last change")
+    context: str = Field(default=None, title="Status change context")
+    change_date: datetime = Field(default=None, title="Date of last change")
 
 
 class UserCreatableData(BaseDto):
@@ -119,7 +119,7 @@ class UserAutomaticData(BaseModel):
 
     registration_date: datetime = Field(default=..., title="Registration date")
 
-    status_change: StatusChange
+    status_change: Optional[StatusChange] = None
 
 
 class UserData(UserCreatableData, UserAutomaticData):

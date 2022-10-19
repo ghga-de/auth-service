@@ -65,13 +65,7 @@ async def post_user(
     user = await user_dao.find_one(mapping={"ls_id": ls_id})
     if user:
         raise HTTPException(status_code=409, detail="User was already registered.")
-    full_user_data = UserData(
-        **user_data.dict(),
-        status_change=StatusChange(
-            previous=None, by=None, context="registration", change_date=datetime.now()
-        ),
-        registration_date=datetime.now()
-    )
+    full_user_data = UserData(**user_data.dict(), registration_date=datetime.now())
     try:
         user = await user_dao.insert(full_user_data)
     except Exception as error:

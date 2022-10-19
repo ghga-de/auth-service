@@ -71,12 +71,7 @@ def test_post_user(client_with_db):
     id_ = user.pop("id", None)
     assert is_internal_id(id_)
 
-    status_change = user.pop("status_change")
-    assert status_change["previous"] is None
-    assert status_change["by"] is None
-    assert status_change["context"] == "registration"
-    date_diff = datetime.now() - datetime.fromisoformat(status_change["change_date"])
-    assert 0 <= date_diff.total_seconds() <= 10
+    assert user.pop("status_change") is None
     date_diff = datetime.now() - datetime.fromisoformat(user.pop("registration_date"))
     assert 0 <= date_diff.total_seconds() <= 10
 
@@ -101,12 +96,7 @@ def test_post_user_with_minimal_data(client_with_db):
     id_ = user.pop("id", None)
     assert is_internal_id(id_)
 
-    status_change = user.pop("status_change")
-    assert status_change["previous"] is None
-    assert status_change["by"] is None
-    assert status_change["context"] == "registration"
-    date_diff = datetime.now() - datetime.fromisoformat(status_change["change_date"])
-    assert 0 <= date_diff.total_seconds() <= 10
+    assert user.pop("status_change") is None
     date_diff = datetime.now() - datetime.fromisoformat(user.pop("registration_date"))
     assert 0 <= date_diff.total_seconds() <= 10
 
@@ -194,12 +184,7 @@ def test_patch_user(client_with_db):
     id_ = expected_user["id"]
 
     assert expected_user["status"] == MAX_USER_DATA["status"]
-    status_change = expected_user.pop("status_change")
-    assert status_change["previous"] is None
-    assert status_change["by"] is None
-    assert status_change["context"] == "registration"
-    date_diff = datetime.now() - datetime.fromisoformat(status_change["change_date"])
-    assert 0 <= date_diff.total_seconds() <= 10
+    assert expected_user.pop("status_change") is None
 
     update_data = {"status": "inactivated", "title": "Prof."}
     assert expected_user["status"] != update_data["status"]
@@ -236,12 +221,7 @@ def test_patch_user_partially(client_with_db):
     id_ = expected_user["id"]
 
     assert expected_user["status"] == MAX_USER_DATA["status"]
-    status_change = expected_user.pop("status_change")
-    assert status_change["previous"] is None
-    assert status_change["by"] is None
-    assert status_change["context"] == "registration"
-    date_diff = datetime.now() - datetime.fromisoformat(status_change["change_date"])
-    assert 0 <= date_diff.total_seconds() <= 10
+    assert expected_user.pop("status_change") is None
 
     update_data = {"status": "inactivated"}
     assert expected_user["status"] != update_data["status"]
