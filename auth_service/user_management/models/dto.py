@@ -43,7 +43,15 @@ class AcademicTitle(str, Enum):
     PROF = "Prof."
 
 
-class StatusChange(BaseModel):
+class BaseDto(BaseModel):
+    """Base model preconfigured for use as Dto."""
+
+    class Config:  # pylint: disable=missing-class-docstring
+        frozen = True
+        use_enum_values = True
+
+
+class StatusChange(BaseDto):
     """Details of a status change"""
 
     previous: Optional[UserStatus] = Field(default=None, title="Previous user status")
@@ -55,12 +63,8 @@ class StatusChange(BaseModel):
     context: Optional[str] = Field(default=None, title="Status change context")
     change_date: Optional[datetime] = Field(default=None, title="Date of last change")
 
-    class Config:  # pylint: disable=missing-class-docstring
-        frozen = True
-        use_enum_values = True
 
-
-class UserCreatableData(BaseModel):
+class UserCreatableData(BaseDto):
     """User data"""
 
     ls_id: EmailStr = Field(
@@ -94,12 +98,8 @@ class UserCreatableData(BaseModel):
         default=None, title="Reason for registration"
     )
 
-    class Config:  # pylint: disable=missing-class-docstring
-        frozen = True
-        use_enum_values = True
 
-
-class UserModifiableData(BaseModel):
+class UserModifiableData(BaseDto):
     """User data that can be modified"""
 
     status: Optional[UserStatus] = Field(
@@ -121,17 +121,9 @@ class UserAutomaticData(BaseModel):
 
     status_change: StatusChange
 
-    class Config:  # pylint: disable=missing-class-docstring
-        frozen = True
-        use_enum_values = True
-
 
 class UserData(UserCreatableData, UserAutomaticData):
     """User data model without the ID"""
-
-    class Config:  # pylint: disable=missing-class-docstring
-        frozen = True
-        use_enum_values = True
 
 
 class User(UserData):
@@ -140,7 +132,3 @@ class User(UserData):
     id: str = Field(  # actually UUID
         default=..., title="ID", description="Internally used ID"
     )
-
-    class Config:  # pylint: disable=missing-class-docstring
-        frozen = True
-        use_enum_values = True
