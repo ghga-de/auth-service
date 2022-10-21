@@ -37,7 +37,6 @@ class SigningKeys:
 
     def __init__(self, config: Config = CONFIG) -> None:
         """Load all the signing keys from the configuration."""
-        self.valid = True
         external_keys = config.auth_ext_keys
         try:
             if not external_keys:
