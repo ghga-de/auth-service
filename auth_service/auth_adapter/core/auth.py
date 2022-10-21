@@ -20,119 +20,150 @@ import json
 import logging
 from typing import Any, Optional
 
-from jwcrypto import jwk, jws
+from jwcrypto import jwk, jwt
 
 from ...config import CONFIG, Config
 
-__all__ = ["exchange_token", "signing_keys"]
+__all__ = ["exchange_token", "jwt_config"]
 
 log = logging.getLogger(__name__)
 
 
-class SigningKeys:
-    """A container for external and internal signing keys."""
+class JWTConfig:
+    """A container for the JWT related configuration."""
 
     external_jwks: Optional[jwk.JWKSet] = None  # the external public key set
     internal_jwk: Optional[jwk.JWK] = None  # the internal key pair
+    external_algs: Optional[list[str]] = None  # allowed external signing algorithms
+    check_claims: dict[str, Any] = {  # claims that shall be verified
+        "iat": None,
+        "exp": None,
+        "jti": None,
+        "sub": None,
+        "name": None,
+        "email": None,
+        "token_class": "access_token",
+    }
+    # the claims that are copied from the external to the internal token
+    copied_claims = ("name", "email", "iat", "exp")
+    # the key under which the subject is copied from the external token
+    copy_sub_as = "ls_id"
 
     def __init__(self, config: Config = CONFIG) -> None:
-        """Load all the signing keys from the configuration."""
+        """Load the JWT related configuration parameters."""
+
         external_keys = config.auth_ext_keys
-        try:
-            if not external_keys:
-                raise ValueError("No external keys configured")
-            self.external_jwks = jwk.JWKSet.from_json(external_keys)
-        except Exception as exc:  # pylint:disable=broad-except
-            # do not throw an error so that the auth adapter can still run
-            # even though it will not be able to validate external tokens
-            log.error("Error in external signing keys: %s", exc)
+        if external_keys:
+            try:
+                self.external_jwks = jwk.JWKSet.from_json(external_keys)
+            except Exception as exc:  # pylint:disable=broad-except
+                # do not throw an error so that the auth adapter can still run
+                # even though it will not be able to validate external tokens
+                log.error("Cannot parse external signing keys: %s", exc)
+        else:
+            log.error("No external signing keys configured.")
         internal_keys = config.auth_int_keys
-        try:
-            if not internal_keys:
-                raise ValueError("No internal signing keys configured.")
-            self.internal_jwk = jwk.JWK.from_json(internal_keys)
-        except Exception as exc:  # pylint:disable=broad-except
-            # do not throw an error so that the auth adapter can still run
-            # even though it will not be able to sign internal tokens
-            log.error("Error in internal signing key pair: %s", exc)
+        if internal_keys:
+            try:
+                self.internal_jwk = jwk.JWK.from_json(internal_keys)
+            except Exception as exc:  # pylint:disable=broad-except
+                # do not throw an error so that the auth adapter can still run
+                # even though it will not be able to sign internal tokens
+                log.error("Cannot parse internal signing key pair: %s", exc)
+        else:
+            log.error("No internal signing keys configured.")
+        external_algs = config.auth_ext_algs
+        if external_algs:
+            self.external_algs = external_algs
+        else:
+            log.warning("Allowed external signing algorithms not configured.")
+        authority_url = config.oidc_authority_url
+        if authority_url:
+            self.check_claims["iss"] = authority_url
+        else:
+            log.warning("No OIDC authority URL configured.")
+        client_id = config.oidc_client_id
+        if client_id:
+            self.check_claims["client_id"] = client_id
+        else:
+            log.warning("No OIDC client ID configured.")
 
 
-signing_keys = SigningKeys()
+jwt_config = JWTConfig()
 
 
-def exchange_token(external_token: Optional[str]) -> Optional[str]:
+def exchange_token(
+    external_token: Optional[str], with_sub: bool = False
+) -> Optional[str]:
     """Exchange the external token against an internal token.
 
     If the provided external token is valid, a corresponding internal token
     will be returned. Otherwise None will be returned.
+
+    If with_sub is set, then the subject will be passed as well.
     """
-    payload = decode_and_verify_token(external_token)
-    if not payload or not isinstance(payload, dict):
+    external_claims = decode_and_validate_token(external_token)
+    if not external_claims:
         return None
-    name = payload.get("name")
-    email = payload.get("email")
-    if not (name and email):
-        log.debug("Access token does not contain required user info")
-        return None
-    payload = dict(name=name, email=email)
-    internal_token = sign_and_encode_token(payload)
+    internal_claims = {
+        claim: external_claims[claim] for claim in jwt_config.copied_claims
+    }
+    if with_sub:
+        internal_claims[jwt_config.copy_sub_as] = external_claims["sub"]
+    internal_token = sign_and_encode_token(internal_claims)
     return internal_token
 
 
-def decode_and_verify_token(
+def decode_and_validate_token(
     access_token: Optional[str], key=None
 ) -> Optional[dict[str, Any]]:
-    """Decode and verify the given JSON Web Token."""
+    """Decode and validate the given JSON Web Token."""
     if not access_token:
         return None
     if not key:
-        key = signing_keys.external_jwks
+        key = jwt_config.external_jwks
         if not key:
-            log.debug("No external signing key, cannot verify token")
+            log.debug("No external signing key, cannot validate token.")
             return None
-    jws_token = jws.JWS()
     try:
-        jws_token.deserialize(access_token, key=key)
-        payload = json.loads(jws_token.payload.decode("UTF-8"))
-        return payload
-    except jws.InvalidJWSObject:
-        log.debug("Invalid access token format")
-    except jws.InvalidJWSSignature:
-        log.debug("Invalid access token signature")
-    except jws.JWKeyNotFound:
-        log.debug("Signature key for access token not found")
-    except UnicodeDecodeError:
-        log.debug("Access token payload has invalid encoding")
-    except json.JSONDecodeError:
-        log.debug("Access token payload is not valid JSON")
+        token = jwt.JWT(
+            jwt=access_token,
+            key=key,
+            algs=jwt_config.external_algs,
+            check_claims=jwt_config.check_claims,
+            expected_type="JWS",
+        )
+        claims = json.loads(token.claims)
+        # in addition to JWT.validate() which checks whether claims exist,
+        # we also make sure that the copied claims are not null or empty strings
+        if not claims["sub"]:
+            raise ValueError("The subject claim is missing.")
+        for claim in jwt_config.copied_claims:
+            if not claims[claim]:
+                raise ValueError(f"Missing value for {claim} claim.")
+        return claims
+    except Exception as exc:  # pylint:disable=broad-except
+        log.debug("Cannot validate external token: %s", exc)
     return None
 
 
-def sign_and_encode_token(payload: dict[str, Any], key=None) -> Optional[str]:
+def sign_and_encode_token(claims: dict[str, Any], key=None) -> Optional[str]:
     """Encode and sign the given payload as JSON Web Token.
 
     Returns None in case the payload could not be properly signed.
     """
-    if not payload:
+    if not claims:
         return None
     if not key:
-        key = signing_keys.internal_jwk
+        key = jwt_config.internal_jwk
         if not key:
-            log.debug("No internal signing key, cannot sign token")
+            log.debug("No internal signing key, cannot sign token.")
             return None
     try:
-        jws_token = jws.JWS(json.dumps(payload).encode("utf-8"))
-        header = json.dumps({"kid": key.thumbprint()})
-        alg = "ES256" if key["kty"] == "EC" else "RS256"
-        protected = {"alg": alg}
-        jws_token.add_signature(key, alg=alg, protected=protected, header=header)
-        token = jws_token.serialize(compact=True)
-    except (
-        jws.InvalidJWSObject,
-        jws.InvalidJWSOperation,
-        UnicodeEncodeError,
-        ValueError,
-    ) as error:
-        log.error("Error while signing JTW: %s", error)  # pragma: no cover
-        token = None
+        header = {"alg": "ES256" if key["kty"] == "EC" else "RS256", "typ": "JWT"}
+        token = jwt.JWT(header=header, claims=claims)
+        token.make_signed_token(key)
+        return token.serialize(compact=True)
+    except Exception as exc:  # pylint:disable=broad-except:
+        log.error("Error while signing JTW: %s", exc)  # pragma: no cover
     return token

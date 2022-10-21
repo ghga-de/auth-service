@@ -17,162 +17,260 @@
 """Unit tests for the Core Auth Adapter features"""
 
 import logging
+from datetime import datetime
 
+import pytest
 from jwcrypto import jwk
 
 from auth_service.auth_adapter.core.auth import (
-    decode_and_verify_token,
+    decode_and_validate_token,
     exchange_token,
+    jwt_config,
     sign_and_encode_token,
-    signing_keys,
 )
+from auth_service.config import CONFIG
+
+from ...fixtures.utils import create_access_token, get_claims_from_token
 
 
-def test_checks_signature_of_access_token(caplog):
-    """Test that the signature of an access token is verified."""
+def test_decodes_and_validates_a_valid_access_token(caplog):
+    """Test that a valid access token is decoded and validated."""
     caplog.set_level(logging.DEBUG)
-    access_token = (
-        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9."
-        "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9."
-        "EkN-DOsnsuRjRO6BxXemmJDm3HbxrbRzXglbN2S4sOkopdU4IsDxTI8jO19W_A4K8ZPJi"
-        "jNLis4EZsHeY559a4DFOd50_OqgHGuERTqYZyuhtF39yxJPAjUESwxk2J5k_4zM3O-vtd"
-        "1Ghyo4IbqKKSy6J9mTniYJPenn5-HIirE"
-    )
-    assert decode_and_verify_token(access_token) is None
-    key = jwk.JWK.from_pem(
-        "-----BEGIN PUBLIC KEY-----\n"
-        "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugdUWAY9iR3"
-        "fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQsHUfQrSDv+MuSUMAe"
-        "8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5Do2kQ+X5xK9cipRgEKwIDAQAB\n"
-        "-----END PUBLIC KEY-----".encode("ascii")
-    )
-    payload = decode_and_verify_token(access_token, key=key)
-    assert payload == {"admin": True, "name": "John Doe", "sub": "1234567890"}
-    access_token = ".".join(access_token.split(".")[:-1] + ["aW52YWxpZCBzaWduYXR1cmU"])
-    assert decode_and_verify_token(access_token, key=key) is None
-    assert [rec.message for rec in caplog.records] == [
-        "Signature key for access token not found",
-        "Invalid access token signature",
-    ]
+    access_token = create_access_token()
+    claims = decode_and_validate_token(access_token)
+    assert isinstance(claims, dict)
+    assert set(claims) == {
+        "client_id",
+        "email",
+        "exp",
+        "foo",
+        "iat",
+        "iss",
+        "jti",
+        "name",
+        "sub",
+        "token_class",
+    }
+    assert claims["client_id"] == CONFIG.oidc_client_id
+    assert claims["iss"] == CONFIG.oidc_authority_url
+    assert claims["name"] == "John Doe"
+    assert claims["email"] == "john@home.org"
+    assert claims["jti"] == "1234567890"
+    assert claims["sub"] == "john@aai.org"
+    assert claims["foo"] == "bar"
+    assert claims["token_class"] == "access_token"
+    assert isinstance(claims["iat"], int)
+    assert isinstance(claims["exp"], int)
+    assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
+    assert not caplog.records
 
 
-def test_does_not_verify_access_token_with_invalid_format(caplog):
-    """Test that access tokens with invalid format are not verified."""
+def test_validates_access_token_with_rsa_signature(caplog):
+    """Test that an access tokens with RSA signature can be validated."""
+    key = jwk.JWK.generate(kty="RSA", size=1024)
+    access_token = create_access_token(key=key)
+    claims = decode_and_validate_token(access_token, key=key)
+    assert isinstance(claims, dict)
+    assert claims["name"] == "John Doe"
+    assert not caplog.records
+
+
+def test_validates_access_token_with_ec_signature(caplog):
+    """Test that an access tokens with EC signature can be validated."""
+    key = jwk.JWK.generate(kty="EC", crv="P-256")
+    access_token = create_access_token(key=key)
+    claims = decode_and_validate_token(access_token, key=key)
+    assert isinstance(claims, dict)
+    assert claims["name"] == "John Doe"
+    assert not caplog.records
+
+
+def test_does_not_validate_an_access_token_with_bad_signature(caplog):
+    """Test that an access token with a corrupt signature is rejected."""
     caplog.set_level(logging.DEBUG)
-    assert decode_and_verify_token(None) is None
-    assert decode_and_verify_token("Not a JWT") is None
-    assert decode_and_verify_token("ab.cde.fg") is None
-    assert decode_and_verify_token("aGVhZGVy.cGF5bG9hZA.c2lnbmF0dXJl") is None
-    assert len(caplog.record_tuples) == 3
-    assert all(rec.message == "Invalid access token format" for rec in caplog.records)
+    access_token = create_access_token()
+    access_token = ".".join(access_token.split(".")[:-1] + ["somebadsignature"])
+    assert decode_and_validate_token(access_token) is None
+    assert len(caplog.records) == 1
+    assert caplog.records[0].message == "Cannot validate external token: Missing Key"
 
 
-def test_does_not_verify_token_with_invalid_payload(caplog):
-    """Test that access tokens with invalid payload are not verified."""
+def test_does_not_validate_an_access_token_when_external_key_is_missing(caplog):
+    """Test that an access token is not validated if no external key is provided."""
+    caplog.set_level(logging.DEBUG)
+    access_token = create_access_token()
+    external_jwks, jwt_config.external_jwks = jwt_config.external_jwks, None
+    try:
+        assert decode_and_validate_token(access_token) is None
+    finally:
+        jwt_config.external_jwks = external_jwks
+    assert len(caplog.records) == 1
+    assert (
+        caplog.records[0].message == "No external signing key, cannot validate token."
+    )
+
+
+def test_does_not_validate_an_access_token_when_alg_is_not_allowed(caplog):
+    """Test that an access token must be signed with an allowed alogorithm."""
+    caplog.set_level(logging.DEBUG)
+    access_token = create_access_token()
+    external_algs = jwt_config.external_algs
+    assert isinstance(external_algs, list)
+    jwt_config.external_algs = external_algs[:]
+    try:
+        jwt_config.external_algs.remove("ES256")
+        assert decode_and_validate_token(access_token) is None
+    finally:
+        jwt_config.external_algs = external_algs
+    assert len(caplog.records) == 1
+    assert caplog.records[0].message == "Cannot validate external token: Missing Key"
+
+
+def test_does_not_validate_an_access_token_with_invalid_client_id(caplog):
+    """Test that an access token with an unknown client id is rejected."""
+    caplog.set_level(logging.DEBUG)
+    access_token = create_access_token(client_id="some-bad-client")
+    assert decode_and_validate_token(access_token) is None
+    assert len(caplog.records) == 1
+    assert (
+        caplog.records[0].message == "Cannot validate external token:"
+        " Invalid 'client_id' value. Expected 'ghga-data-portal' got 'some-bad-client'"
+    )
+
+
+def test_does_not_validate_an_access_token_with_invalid_issuer(caplog):
+    """Test that an access token with an unknown issuer is rejected."""
+    caplog.set_level(logging.DEBUG)
+    access_token = create_access_token(iss="https://proxy.aai.badscience-ri.eu")
+    assert decode_and_validate_token(access_token) is None
+    assert len(caplog.records) == 1
+    assert (
+        caplog.records[0].message == "Cannot validate external token:"
+        " Invalid 'iss' value. Expected 'https://proxy.aai.lifescience-ri.eu'"
+        " got 'https://proxy.aai.badscience-ri.eu'"
+    )
+
+
+def test_does_not_validate_an_access_token_with_missing_subject(caplog):
+    """Test that an access token with a missing subject is rejected."""
+    caplog.set_level(logging.DEBUG)
+    access_token = create_access_token(sub=None)
+    assert decode_and_validate_token(access_token) is None
+    assert len(caplog.records) == 1
+    assert (
+        caplog.records[0].message == "Cannot validate external token:"
+        " The subject claim is missing."
+    )
+
+
+def test_does_not_validate_an_access_token_with_missing_name(caplog):
+    """Test that an access token with a missing name is rejected."""
+    caplog.set_level(logging.DEBUG)
+    access_token = create_access_token(name=None)
+    assert decode_and_validate_token(access_token) is None
+    assert len(caplog.records) == 1
+    assert (
+        caplog.records[0].message == "Cannot validate external token:"
+        " Missing value for name claim."
+    )
+
+
+def test_does_not_validate_an_access_token_with_missing_email(caplog):
+    """Test that an access token with a missing email is rejected."""
+    caplog.set_level(logging.DEBUG)
+    access_token = create_access_token(email=None)
+    assert decode_and_validate_token(access_token) is None
+    assert len(caplog.records) == 1
+    assert (
+        caplog.records[0].message == "Cannot validate external token:"
+        " Missing value for email claim."
+    )
+
+
+def test_does_not_validate_an_expired_access_token(caplog):
+    """Test that access tokens that have expired are rejected."""
+    caplog.set_level(logging.DEBUG)
+    access_token = create_access_token(expired=True)
+    assert decode_and_validate_token(access_token) is None
+    assert len(caplog.records) == 1
+    assert caplog.records[0].message.startswith(
+        "Cannot validate external token: Expired at "
+    )
+
+
+def test_does_not_validate_token_with_invalid_payload(caplog):
+    """Test that access tokens with invalid payload are rejected."""
     caplog.set_level(logging.DEBUG)
     key = jwk.JWK(kty="oct", k="r0TSf_aAU9eS7I5JPPJ20pmkPmR__9LsfnZaKfXZYp8")
-    token_with_valid_payload = (
-        "eyJhbGciOiJIUzI1NiJ9."
-        "eyJzdWIiOiAiSm9obiBEb2UifQ."
-        "RQYHxFwGjMdVh-umuuA1Yd4Ssx6TAYkg1INYK6_lKVw"
-    )
-    assert decode_and_verify_token(token_with_valid_payload, key=key) == {
-        "sub": "John Doe"
-    }
-    token_with_text_as_payload = (
-        "eyJhbGciOiJIUzI1NiJ9."
-        "VGhpcyBpcyBub3QgSlNPTiE."
-        "bKt6NQoZGLOLqqqB-XT99ENnsmv-hxLId08FxR4LUOw"
-    )
-    assert decode_and_verify_token(token_with_text_as_payload, key=key) is None
-    token_with_bad_encoding = (
-        "eyJhbGciOiJIUzI1NiJ9."
-        "eyJzdWIiOiAiRnLpZOlyaWMgQ2hvcGluIn0."
-        "8OTfVB6CN2pXgPHZBPdbkqWGd2XhtbVDhlcYdYNh6d4"
-    )
-    assert decode_and_verify_token(token_with_bad_encoding, key=key) is None
-    assert [rec.message for rec in caplog.records] == [
-        "Access token payload is not valid JSON",
-        "Access token payload has invalid encoding",
-    ]
+    external_algs, jwt_config.external_algs = jwt_config.external_algs, ["HS256"]
+    try:
+        token_with_valid_payload = (
+            "eyJhbGciOiJIUzI1NiJ9."
+            "eyJzdWIiOiAiSm9obiBEb2UifQ."
+            "RQYHxFwGjMdVh-umuuA1Yd4Ssx6TAYkg1INYK6_lKVw"
+        )
+        assert decode_and_validate_token(token_with_valid_payload, key=key) is None
+        token_with_text_as_payload = (
+            "eyJhbGciOiJIUzI1NiJ9."
+            "VGhpcyBpcyBub3QgSlNPTiE."
+            "bKt6NQoZGLOLqqqB-XT99ENnsmv-hxLId08FxR4LUOw"
+        )
+        assert decode_and_validate_token(token_with_text_as_payload, key=key) is None
+        token_with_bad_encoding = (
+            "eyJhbGciOiJIUzI1NiJ9."
+            "eyJzdWIiOiAiRnLpZOlyaWMgQ2hvcGluIn0."
+            "8OTfVB6CN2pXgPHZBPdbkqWGd2XhtbVDhlcYdYNh6d4"
+        )
+        assert decode_and_validate_token(token_with_bad_encoding, key=key) is None
+    finally:
+        jwt_config.external_algs = external_algs
+    messages = [rec.message for rec in caplog.records]
+    assert len(messages) == 3
+    assert all(msg.startswith("Cannot validate external token:") for msg in messages)
+    assert "iat is missing" in messages[0]
+    assert "not a json dict" in messages[1]
+    assert "can't decode" in messages[2]
 
 
-def test_verifies_access_token_with_rsa_signature():
-    """Test that an access tokens with RSA signature can be verified."""
-    key = jwk.JWK.from_pem(
-        "-----BEGIN PUBLIC KEY-----\n"
-        "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo"
-        "4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u"
-        "+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyeh"
-        "kd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ"
-        "0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdg"
-        "cKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbc"
-        "mwIDAQAB\n"
-        "-----END PUBLIC KEY-----".encode("ascii")
-    )
-    access_token = (
-        "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9."
-        "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRy"
-        "dWUsImlhdCI6MTUxNjIzOTAyMn0."
-        "NHVaYe26MbtOYhSKkoKYdFVomg4i8ZJd8_-RU8VNbftc4TSMb4bXP3l3YlNWACwy"
-        "XPGffz5aXHc6lty1Y2t4SWRqGteragsVdZufDn5BlnJl9pdR_kdVFUsra2rWKEof"
-        "kZeIC4yWytE58sMIihvo9H1ScmmVwBcQP6XETqYd0aSHp1gOa9RdUPDvoXQ5oqyg"
-        "TqVtxaDr6wUFKrKItgBMzWIdNZ6y7O9E0DhEPTbE9rfBo6KTFsHAZnMg4k68CDp2"
-        "woYIaXbmYTWcvbzIuHO7_37GT79XdIwkm95QJ7hYC9RiwrV7mesbY4PAahERJawn"
-        "tho0my942XheVLmGwLMBkQ"
-    )
-    assert decode_and_verify_token(access_token, key=key) == {
-        "sub": "1234567890",
-        "name": "John Doe",
-        "admin": True,
-        "iat": 1516239022,
-    }
+def test_signs_and_encodes_an_internal_token(caplog):
+    """Test that internal tokens can be signed and encoded."""
+    claims = {"foo": "bar"}
+    internal_token = sign_and_encode_token(claims)
+    assert internal_token is not None
+    assert get_claims_from_token(internal_token) == claims
+    assert not caplog.records
 
 
-def test_verifies_access_token_with_ec_signature():
-    """Test that access tokens with EC signature can be verified."""
-    key = jwk.JWK.from_pem(
-        "-----BEGIN PUBLIC KEY-----\n"
-        "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAERqVXn+o+6zEOpWEsGw5CsB+wd8zO"
-        "jxu0uASGpiGP+wYfcc1unyMxcStbDzUjRuObY8DalaCJ9/J6UrkQkZBtZw==\n"
-        "-----END PUBLIC KEY-----".encode("ascii")
-    )
-    access_token = (
-        "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9."
-        "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRta"
-        "W4iOnRydWUsImlhdCI6MTY2MTYyMTc0OSwiZXhwIjoxNjYxNjI1MzQ5fQ."
-        "k29jHcEkyFvnf1P5rcEEOiMBIGmOwSBmb1tBiEyYcITP3122IZrQlO3ca"
-        "e9ZvPlDdgK_g95LB9jPNz5R2DU6XQ"
-    )
-    assert decode_and_verify_token(access_token, key=key) == {
-        "sub": "1234567890",
-        "name": "John Doe",
-        "admin": True,
-        "iat": 1661621749,
-        "exp": 1661625349,
-    }
+def test_does_not_sign_internal_token_when_internal_key_is_missing(caplog):
+    """Test that internal tokens cannot be signed without an internal key."""
+    caplog.set_level(logging.DEBUG)
+    claims = {"foo": "bar"}
+    internal_jwk, jwt_config.internal_jwk = jwt_config.internal_jwk, None
+    try:
+        assert sign_and_encode_token(claims) is None
+    finally:
+        jwt_config.internal_jwk = internal_jwk
+    assert len(caplog.records) == 1
+    assert caplog.records[0].message == "No internal signing key, cannot sign token."
 
 
-def test_signs_internal_token():
-    """Test that internal tokens can be signed."""
-    payload = {"foo": "bar"}
-    token = sign_and_encode_token(payload)
-    assert isinstance(token, str)
-    assert token.count(".") == 2
-    assert decode_and_verify_token(token, key=signing_keys.internal_jwk) == payload
-
-
-def test_token_exchange():
+@pytest.mark.parametrize("with_sub", [False, True])
+def test_exchanges_a_valid_accesss_token(with_sub: bool, caplog):
     """Test that a valid external token is exchanged against an internal token."""
-    ext_payload = {"name": "Foo Bar", "email": "foo@bar", "sub": "foo", "iss": "bar"}
-    ext_sign_keyset = signing_keys.external_jwks
-    assert ext_sign_keyset
-    ext_sign_key = ext_sign_keyset.get_key("test")
-    assert ext_sign_key
-    access_token = sign_and_encode_token(ext_payload, key=ext_sign_key)
-    assert decode_and_verify_token(access_token) == ext_payload
-    internal_token = exchange_token(access_token)
-    assert isinstance(internal_token, str)
-    assert internal_token.count(".") == 2
-    int_payload = decode_and_verify_token(internal_token, key=signing_keys.internal_jwk)
-    assert int_payload == {"name": "Foo Bar", "email": "foo@bar"}
+    access_token = create_access_token()
+    internal_token = exchange_token(access_token, with_sub=with_sub)
+    assert internal_token is not None
+    claims = get_claims_from_token(internal_token)
+    assert isinstance(claims, dict)
+    expected_claims = {"email", "exp", "iat", "name"}
+    if with_sub:
+        expected_claims.add("ls_id")
+    assert set(claims) == expected_claims
+    assert claims["name"] == "John Doe"
+    assert claims["email"] == "john@home.org"
+    if with_sub:
+        assert claims["ls_id"] == "john@aai.org"
+    assert isinstance(claims["iat"], int)
+    assert isinstance(claims["exp"], int)
+    assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
+    assert not caplog.records

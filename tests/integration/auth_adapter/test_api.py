@@ -16,15 +16,11 @@
 """Test the api module"""
 
 from base64 import b64encode
+from datetime import datetime
 
 from fastapi import status
 
-from auth_service.auth_adapter.core.auth import (
-    decode_and_verify_token,
-    sign_and_encode_token,
-    signing_keys,
-)
-
+from ...fixtures.utils import create_access_token, get_claims_from_token
 from .fixtures import (  # noqa: F401; pylint: disable=unused-import
     fixture_client,
     fixture_with_basic_auth,
@@ -134,13 +130,7 @@ def test_basic_auth_well_known(with_basic_auth, client):
 def test_token_exchange(client):
     """Test that the external access token is exchanged against an internal token."""
 
-    ext_payload = {"name": "Foo Bar", "email": "foo@bar", "sub": "foo", "iss": "bar"}
-    ext_sign_keyset = signing_keys.external_jwks
-    assert ext_sign_keyset
-    ext_sign_key = ext_sign_keyset.get_key("test")
-    assert ext_sign_key
-    auth = sign_and_encode_token(ext_payload, key=ext_sign_key)
-    auth = f"Bearer {auth}"
+    auth = f"Bearer {create_access_token()}"
     response = client.get("/some/path", headers={"Authorization": auth})
 
     assert response.status_code == status.HTTP_200_OK
@@ -149,12 +139,22 @@ def test_token_exchange(client):
     headers = response.headers
     assert "Authorization" in headers
     internal_token = headers["Authorization"]
-    assert internal_token is not None
-    assert isinstance(internal_token, str)
-    assert internal_token.count(".", 2)
 
-    int_payload = decode_and_verify_token(internal_token, key=signing_keys.internal_jwk)
-    assert int_payload == {"name": "Foo Bar", "email": "foo@bar"}
+    claims = get_claims_from_token(internal_token)
+    assert isinstance(claims, dict)
+    expected_claims = {"email", "exp", "iat", "name"}
+    # TODO:
+    # if with_sub:
+    #    expected_claims.add("ls_id")
+    assert set(claims) == expected_claims
+    assert claims["name"] == "John Doe"
+    assert claims["email"] == "john@home.org"
+    # TODO:s
+    # if with_sub:
+    #    assert claims["ls_id"] == "john@aai.org"
+    assert isinstance(claims["iat"], int)
+    assert isinstance(claims["exp"], int)
+    assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
 
     assert "X-Authorization" not in headers
 
@@ -162,13 +162,7 @@ def test_token_exchange(client):
 def test_token_exchange_with_x_token(client):
     """Test that the external access token can be passed in separate header."""
 
-    ext_payload = {"name": "Foo Bar", "email": "foo@bar", "sub": "foo", "iss": "bar"}
-    ext_sign_keyset = signing_keys.external_jwks
-    assert ext_sign_keyset
-    ext_sign_key = ext_sign_keyset.get_key("test")
-    assert ext_sign_key
-    auth = sign_and_encode_token(ext_payload, key=ext_sign_key)
-    auth = f"Bearer {auth}"
+    auth = f"Bearer {create_access_token()}"
     response = client.get("/some/path", headers={"X-Authorization": auth})
 
     assert response.status_code == status.HTTP_200_OK
@@ -177,12 +171,16 @@ def test_token_exchange_with_x_token(client):
     headers = response.headers
     assert "Authorization" in headers
     internal_token = headers["Authorization"]
-    assert internal_token is not None
-    assert isinstance(internal_token, str)
-    assert internal_token.count(".", 2)
 
-    int_payload = decode_and_verify_token(internal_token, key=signing_keys.internal_jwk)
-    assert int_payload == {"name": "Foo Bar", "email": "foo@bar"}
+    claims = get_claims_from_token(internal_token)
+    assert isinstance(claims, dict)
+    expected_claims = {"email", "exp", "iat", "name"}
+    assert set(claims) == expected_claims
+    assert claims["name"] == "John Doe"
+    assert claims["email"] == "john@home.org"
+    assert isinstance(claims["iat"], int)
+    assert isinstance(claims["exp"], int)
+    assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
 
     assert "X-Authorization" not in headers
 
