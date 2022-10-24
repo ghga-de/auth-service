@@ -20,9 +20,18 @@ from typing import Generator
 
 from fastapi.testclient import TestClient
 from pytest import fixture
+from testcontainers.mongodb import MongoDbContainer
 
 from auth_service.auth_adapter.api import main
-from auth_service.config import CONFIG
+from auth_service.config import Config
+from auth_service.deps import (
+    UserDaoFactory,
+    get_config,
+    get_mongodb_config,
+    get_mongodb_dao_factory,
+    get_user_dao_factory,
+    get_user_dao_factory_config,
+)
 
 
 @fixture(name="client")
@@ -31,14 +40,36 @@ def fixture_client() -> TestClient:
     return TestClient(main.app)
 
 
+@fixture(name="client_with_db")
+def fixture_client_with_db() -> Generator[
+    tuple[TestClient, UserDaoFactory], None, None
+]:
+    """Get test client for the auth adapter with a test database."""
+
+    with MongoDbContainer() as mongodb:
+        connection_url = mongodb.get_connection_url()
+        config = Config(db_url=connection_url, db_name="test-auth-adapter")
+
+        user_dao_factory = get_user_dao_factory(
+            config=get_user_dao_factory_config(config=config),
+            dao_factory=get_mongodb_dao_factory(
+                config=get_mongodb_config(config=config)
+            ),
+        )
+
+        main.app.dependency_overrides[get_config] = lambda: config
+        yield TestClient(main.app), user_dao_factory
+
+
 @fixture(name="with_basic_auth")
 def fixture_with_basic_auth() -> Generator[str, None, None]:
     """Run test with Basic authentication"""
     user, pwd = "testuser", "testpwd"
-    CONFIG.basic_auth_user = user
-    CONFIG.basic_auth_pwd = pwd
+    config = get_config()
+    config.basic_auth_user = user
+    config.basic_auth_pwd = pwd
     importlib.reload(main)
     yield f"{user}:{pwd}"
-    CONFIG.basic_auth_user = None
-    CONFIG.basic_auth_pwd = None
+    config.basic_auth_user = None
+    config.basic_auth_pwd = None
     importlib.reload(main)

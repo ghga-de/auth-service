@@ -18,11 +18,14 @@
 
 import json
 import logging
+from datetime import datetime
 from typing import Any, Optional
 
 from jwcrypto import jwk, jwt
 
 from ...config import CONFIG, Config
+from ...deps import Depends, UserDao
+from ...user_management.models.dto import StatusChange, User, UserStatus
 
 __all__ = ["exchange_token", "jwt_config"]
 
@@ -92,24 +95,76 @@ class JWTConfig:
 jwt_config = JWTConfig()
 
 
-def exchange_token(
-    external_token: Optional[str], with_sub: bool = False
+def _compare_user(user: User, external_claims: dict[str, Any]) -> Optional[str]:
+    """Compare user with external claims and return inactivation context."""
+    if user.status == UserStatus.ACTIVATED:
+        if user.name != external_claims.get("name"):
+            return "name change"
+        if user.email != external_claims.get("email"):
+            return "email change"
+    return None
+
+
+def _get_inactivated_user(user: User, context: str) -> User:
+    """Get an inactivated copy of the User oject."""
+    return user.copy(
+        update=dict(
+            status=UserStatus.INACTIVATED.value,
+            status_change=StatusChange(
+                previous=user.status,
+                by=None,
+                context=context,
+                change_date=datetime.now(),
+            ),
+        )
+    )
+
+
+async def exchange_token(
+    external_token: Optional[str], pass_sub: bool = False, user_dao: UserDao = Depends()
 ) -> Optional[str]:
     """Exchange the external token against an internal token.
 
     If the provided external token is valid, a corresponding internal token
     will be returned. Otherwise None will be returned.
 
-    If with_sub is set, then the subject will be passed as well.
+    The internal token will contain the name and email taken from the
+    external token, and also its issued date and exiry date.
+    If the user is already registered, the user id and status will be
+    included in the internal token as well.
+    If name or email do not match with the external token, the user
+    is automatically deactivated in the database and internal token.
+    If the user is not yet registered, and pass_sub is set, then the sub claim
+    will be included in the internal token as "ls_id", otherwise and empty string
+    will be returned instead of the internal token.
     """
     external_claims = decode_and_validate_token(external_token)
     if not external_claims:
-        return None
+        return None  # invalid token (error)
     internal_claims = {
         claim: external_claims[claim] for claim in jwt_config.copied_claims
     }
-    if with_sub:
-        internal_claims[jwt_config.copy_sub_as] = external_claims["sub"]
+    sub = external_claims["sub"]
+    try:
+        user = await user_dao.find_one(mapping={"ls_id": sub})
+    except Exception as exc:  # pylint:disable=broad-except
+        log.warning("Error retrieving user: %s", exc)
+        user = None
+    if user is None:
+        # user is not yet in the registry
+        if not pass_sub:
+            return ""  # empty token (no error)
+        internal_claims[jwt_config.copy_sub_as] = sub
+    else:
+        # user already exists in the registry
+        context = _compare_user(user, external_claims)
+        if context:
+            user = _get_inactivated_user(user, context)
+            try:
+                await user_dao.update(user)
+            except Exception as exc:  # pylint:disable=broad-except
+                log.warning("Error updating user: %s", exc)
+        internal_claims.update(id=user.id, status=user.status)
     internal_token = sign_and_encode_token(internal_claims)
     return internal_token
 
@@ -164,6 +219,6 @@ def sign_and_encode_token(claims: dict[str, Any], key=None) -> Optional[str]:
         token = jwt.JWT(header=header, claims=claims)
         token.make_signed_token(key)
         return token.serialize(compact=True)
-    except Exception as exc:  # pylint:disable=broad-except:
+    except Exception as exc:  # pylint:disable=broad-except
         log.error("Error while signing JTW: %s", exc)  # pragma: no cover
     return token

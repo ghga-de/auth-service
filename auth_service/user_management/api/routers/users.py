@@ -23,6 +23,7 @@ from fastapi import APIRouter, Path, Response
 from fastapi.exceptions import HTTPException
 from hexkit.protocols.dao import MultipleHitsFoundError, ResourceNotFoundError
 
+from ....deps import Depends, UserDao, get_user_dao
 from ...core.utils import is_external_id, is_internal_id
 from ...models.dto import (
     StatusChange,
@@ -31,8 +32,6 @@ from ...models.dto import (
     UserData,
     UserModifiableData,
 )
-from ...ports.dao import UserDao
-from ..deps import Depends, get_user_dao
 
 __all__ = ["router"]
 

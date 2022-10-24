@@ -14,23 +14,17 @@
 # limitations under the License.
 #
 
-"""Unit tests for the Core Auth Adapter features"""
+"""Unit tests for the core token validation feature"""
 
 import logging
 from datetime import datetime
 
-import pytest
 from jwcrypto import jwk
 
-from auth_service.auth_adapter.core.auth import (
-    decode_and_validate_token,
-    exchange_token,
-    jwt_config,
-    sign_and_encode_token,
-)
+from auth_service.auth_adapter.core.auth import decode_and_validate_token, jwt_config
 from auth_service.config import CONFIG
 
-from ...fixtures.utils import create_access_token, get_claims_from_token
+from ...fixtures.utils import create_access_token
 
 
 def test_decodes_and_validates_a_valid_access_token(caplog):
@@ -230,47 +224,3 @@ def test_does_not_validate_token_with_invalid_payload(caplog):
     assert "iat is missing" in messages[0]
     assert "not a json dict" in messages[1]
     assert "can't decode" in messages[2]
-
-
-def test_signs_and_encodes_an_internal_token(caplog):
-    """Test that internal tokens can be signed and encoded."""
-    claims = {"foo": "bar"}
-    internal_token = sign_and_encode_token(claims)
-    assert internal_token is not None
-    assert get_claims_from_token(internal_token) == claims
-    assert not caplog.records
-
-
-def test_does_not_sign_internal_token_when_internal_key_is_missing(caplog):
-    """Test that internal tokens cannot be signed without an internal key."""
-    caplog.set_level(logging.DEBUG)
-    claims = {"foo": "bar"}
-    internal_jwk, jwt_config.internal_jwk = jwt_config.internal_jwk, None
-    try:
-        assert sign_and_encode_token(claims) is None
-    finally:
-        jwt_config.internal_jwk = internal_jwk
-    assert len(caplog.records) == 1
-    assert caplog.records[0].message == "No internal signing key, cannot sign token."
-
-
-@pytest.mark.parametrize("with_sub", [False, True])
-def test_exchanges_a_valid_accesss_token(with_sub: bool, caplog):
-    """Test that a valid external token is exchanged against an internal token."""
-    access_token = create_access_token()
-    internal_token = exchange_token(access_token, with_sub=with_sub)
-    assert internal_token is not None
-    claims = get_claims_from_token(internal_token)
-    assert isinstance(claims, dict)
-    expected_claims = {"email", "exp", "iat", "name"}
-    if with_sub:
-        expected_claims.add("ls_id")
-    assert set(claims) == expected_claims
-    assert claims["name"] == "John Doe"
-    assert claims["email"] == "john@home.org"
-    if with_sub:
-        assert claims["ls_id"] == "john@aai.org"
-    assert isinstance(claims["iat"], int)
-    assert isinstance(claims["exp"], int)
-    assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
-    assert not caplog.records
