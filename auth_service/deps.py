@@ -22,14 +22,7 @@ from .config import CONFIG, Config
 from .user_management.ports.dao import UserDao
 from .user_management.translators.dao import UserDaoFactory, UserDaoFactoryConfig
 
-__all__ = [
-    "Depends",
-    "get_config",
-    "get_user_dao",
-    "Config",
-    "UserDao",
-    "UserDaoFactory",
-]
+__all__ = ["Depends", "get_config", "get_user_dao", "Config", "UserDao"]
 
 
 def get_config() -> Config:

@@ -21,12 +21,12 @@ from datetime import datetime
 from fastapi import status
 from pytest import mark
 
-from auth_service.user_management.models.dto import UserData, UserStatus
+from auth_service.deps import UserDao, get_user_dao
+from auth_service.user_management.models.dto import UserStatus
 
-from ...fixtures.utils import create_access_token, get_claims_from_token
+from ...fixtures.utils import DummyUserDao, create_access_token, get_claims_from_token
 from .fixtures import (  # noqa: F401; pylint: disable=unused-import
     fixture_client,
-    fixture_client_with_db,
     fixture_with_basic_auth,
 )
 
@@ -200,11 +200,12 @@ def test_does_not_authorize_invalid_users(client):
 
 
 def test_token_exchange_for_unknown_user(
-    client_with_db,
+    client,
 ):  # pylint:disable=too-many-statements
     """Test the token exchange for authenticated but unknown users."""
 
-    client, _ = client_with_db
+    user_dao = DummyUserDao(ls_id="not.john@aai.org")
+    client.app.dependency_overrides[get_user_dao] = lambda: user_dao
 
     auth = f"Bearer {create_access_token()}"
 
@@ -297,29 +298,16 @@ def test_token_exchange_for_unknown_user(
 
 @mark.asyncio
 async def test_token_exchange_for_known_user(
-    client_with_db,
+    client,
 ):  # pylint:disable=too-many-statements
     """Test the token exchange for authenticated and registered users."""
 
-    client, user_dao_factory = client_with_db
-
-    # Create a dummy user
-    user_dao = await user_dao_factory.get_user_dao()
-    user_data = UserData(
-        name="John Doe",
-        email="john@home.org",
-        ls_id="john@aai.org",
-        status=UserStatus.ACTIVATED,
-        status_change=None,
-        registration_date=datetime(2020, 1, 1),
-    )
-    user = await user_dao.insert(user_data)
-    assert len(user.id) == 36
-    assert user.name == "John Doe"
-    assert user.status == UserStatus.ACTIVATED
-    assert user.status_change is None
+    user_dao: UserDao = DummyUserDao()
+    client.app.dependency_overrides[get_user_dao] = lambda: user_dao
+    user = user_dao.user
 
     # Check that we get an internal token for the user
+
     auth = f"Bearer {create_access_token()}"
     response = client.get("/some/path", headers={"Authorization": auth})
 
@@ -345,6 +333,9 @@ async def test_token_exchange_for_known_user(
     assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
 
     # Check that the user is inactivated when the name has changed
+    assert user.status is UserStatus.ACTIVATED
+    assert user.status_change is None
+
     auth = f"Bearer {create_access_token(name='John Foo')}"
     response = client.get("/some/path", headers={"Authorization": auth})
 
@@ -362,17 +353,16 @@ async def test_token_exchange_for_known_user(
 
     assert set(claims) == expected_claims
     assert claims["id"] == user.id
-    assert claims["name"] == "John Foo"
+    assert claims["name"] == "John Foo"  # changed name in internal token
     assert claims["email"] == user.email
     assert claims["status"] == "inactivated"
     assert isinstance(claims["iat"], int)
     assert isinstance(claims["exp"], int)
     assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
 
-    # Check that the status has also changed in the database
-    user = await user_dao.get_by_id(user.id)
-
-    assert user.name == "John Doe"
+    # Check that the status was also changed in the database
+    user = user_dao.user
+    assert user.name == "John Doe"  # user name was not changed
     assert user.status == UserStatus.INACTIVATED
     status_change = user.status_change
     assert status_change is not None
@@ -382,10 +372,11 @@ async def test_token_exchange_for_known_user(
     assert 0 <= (datetime.now() - status_change.change_date).total_seconds() < 5
 
 
-def test_token_exchange_with_x_token(client_with_db):
+def test_token_exchange_with_x_token(client):
     """Test that the external access token can be passed in separate header."""
 
-    client, _ = client_with_db
+    user_dao = DummyUserDao(ls_id="not.john@aai.org")
+    client.app.dependency_overrides[get_user_dao] = lambda: user_dao
 
     auth = f"Bearer {create_access_token()}"
 

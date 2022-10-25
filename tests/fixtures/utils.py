@@ -18,11 +18,12 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Mapping, Optional
 
 from jwcrypto import jwk, jwt
 
 from auth_service.auth_adapter.core.auth import jwt_config
+from auth_service.user_management.models.dto import User, UserStatus
 
 BASE_DIR = Path(__file__).parent.resolve()
 
@@ -74,3 +75,35 @@ def get_claims_from_token(token: str, key: Optional[jwk.JWK] = None) -> dict[str
     claims = json.loads(jwt.JWT(jwt=token, key=key).claims)
     assert isinstance(claims, dict)
     return claims
+
+
+class DummyUserDao:
+    """UserDao that can retrieve one dummy user."""
+
+    def __init__(
+        self,
+        id_="john@ghga.org",
+        name="John Doe",
+        email="john@home.org",
+        ls_id="john@aai.org",
+    ):
+        """Initialize the dummy UserDao"""
+        self.user = User(
+            id=id_,
+            name=name,
+            email=email,
+            ls_id=ls_id,
+            status=UserStatus.ACTIVATED,
+            status_change=None,
+            registration_date=datetime(2020, 1, 1),
+        )
+
+    async def find_one(self, *, mapping: Mapping[str, Any]) -> Optional[User]:
+        """Find the dummy user via ls_id."""
+        user, ls_id = self.user, mapping.get("ls_id")
+        return user if user and ls_id and ls_id == user.ls_id else None
+
+    async def update(self, user: User) -> None:
+        """Update the dummy user."""
+        if user.id == self.user.id:
+            self.user = user
