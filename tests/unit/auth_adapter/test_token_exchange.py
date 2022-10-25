@@ -63,7 +63,7 @@ class DummyUserDao:
 
 
 @mark.asyncio
-async def test_rejects_an_expired_accesss_token():
+async def test_rejects_an_expired_access_token():
     """Test the token exchange for a user with an expired token."""
     access_token = create_access_token(expired=True)
     internal_token = await exchange_token(access_token)
@@ -101,7 +101,7 @@ async def test_does_not_exchange_for_unknown_user_if_not_requested():
 
 
 @mark.asyncio
-async def test_exchanges_accesss_token_for_a_known_user():
+async def test_exchanges_access_token_for_a_known_user():
     """Test the token exchange for a valid and already known user."""
     access_token = create_access_token()
     user_dao = DummyUserDao()
@@ -137,7 +137,7 @@ async def test_does_not_pass_sub_for_a_known_user():
 
 
 @mark.asyncio
-async def test_exchanges_accesss_token_when_name_was_changed():
+async def test_exchanges_access_token_when_name_was_changed():
     """Test the token exchange for a valid user with a different name."""
     access_token = create_access_token()
     user_dao = DummyUserDao(name="John Foo")
@@ -163,7 +163,7 @@ async def test_exchanges_accesss_token_when_name_was_changed():
 
 
 @mark.asyncio
-async def test_exchanges_accesss_token_when_email_was_changed():
+async def test_exchanges_access_token_when_email_was_changed():
     """Test the token exchange for a valid user with a different email."""
     access_token = create_access_token()
     user_dao = DummyUserDao(email="john@elsewhere.org")

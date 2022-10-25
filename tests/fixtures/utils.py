@@ -64,7 +64,7 @@ def create_access_token(
 
 
 def get_claims_from_token(token: str, key: Optional[jwk.JWK] = None) -> dict[str, Any]:
-    """Decode given the JWT tokenand get its claims."""
+    """Decode given the JWT token and get its claims."""
     if not key:
         key = jwt_config.internal_jwk
     assert isinstance(key, jwk.JWK)

@@ -67,7 +67,7 @@ async def ext_auth(  # pylint:disable=too-many-arguments
     """
     access_token = get_bearer_token(authorization, x_authorization)
     if access_token:
-        # check whethr the external id is of interest and only pass it on in that case
+        # check whether the external id is of interest and only pass it on in that case
         pass_sub = (path == "users" and request.method == "POST") or (
             path.startswith("users/") and "@" in path and request.method == "GET"
         )

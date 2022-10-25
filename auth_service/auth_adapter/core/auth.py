@@ -106,7 +106,7 @@ def _compare_user(user: User, external_claims: dict[str, Any]) -> Optional[str]:
 
 
 def _get_inactivated_user(user: User, context: str) -> User:
-    """Get an inactivated copy of the User oject."""
+    """Get an inactivated copy of the User object."""
     return user.copy(
         update=dict(
             status=UserStatus.INACTIVATED.value,
@@ -129,7 +129,7 @@ async def exchange_token(
     will be returned. Otherwise None will be returned.
 
     The internal token will contain the name and email taken from the
-    external token, and also its issued date and exiry date.
+    external token, and also its issued date and expiry date.
     If the user is already registered, the user id and status will be
     included in the internal token as well.
     If name or email do not match with the external token, the user
