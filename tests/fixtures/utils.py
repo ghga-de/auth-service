@@ -32,7 +32,8 @@ def create_access_token(
     key: Optional[jwk.JWK] = None, expired: bool = False, **kwargs
 ) -> str:
     """Create an external access token that can be used for testing.
-    If no key for signing is provided, will use the external_jwks from the global jwt_config.
+
+    If no signing key is provided, the external_jwks from the global jwt_config is used.
     """
     if not key:
         keyset = jwt_config.external_jwks
@@ -67,8 +68,9 @@ def create_access_token(
 
 
 def get_claims_from_token(token: str, key: Optional[jwk.JWK] = None) -> dict[str, Any]:
-    """Decode given the JWT token and get its claims.
-    If no key for signing is provided, will use the internal_jwk from the global jwt_config.
+    """Decode the given JWT token and get its claims.
+
+    If no signing key is provided, the internal_jwk from the global jwt_config is used.
     """
     if not key:
         key = jwt_config.internal_jwk
