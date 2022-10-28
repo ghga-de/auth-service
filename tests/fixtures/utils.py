@@ -31,7 +31,9 @@ BASE_DIR = Path(__file__).parent.resolve()
 def create_access_token(
     key: Optional[jwk.JWK] = None, expired: bool = False, **kwargs
 ) -> str:
-    """Create an external access token that can be used for testing."""
+    """Create an external access token that can be used for testing.
+    If no key for signing is provided, will use the external_jwks from the global jwt_config.
+    """
     if not key:
         keyset = jwt_config.external_jwks
         assert isinstance(keyset, jwk.JWKSet)
