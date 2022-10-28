@@ -19,7 +19,6 @@ from base64 import b64encode
 from datetime import datetime
 
 from fastapi import status
-from pytest import mark
 
 from auth_service.deps import UserDao, get_user_dao
 from auth_service.user_management.models.dto import UserStatus
@@ -296,8 +295,7 @@ def test_token_exchange_for_unknown_user(
     assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
 
 
-@mark.asyncio
-async def test_token_exchange_for_known_user(
+def test_token_exchange_for_known_user(
     client,
 ):  # pylint:disable=too-many-statements
     """Test the token exchange for authenticated and registered users."""
