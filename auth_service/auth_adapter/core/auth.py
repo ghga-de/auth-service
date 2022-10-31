@@ -57,24 +57,14 @@ class JWTConfig:
 
         external_keys = config.auth_ext_keys
         if external_keys:
-            try:
-                self.external_jwks = jwk.JWKSet.from_json(external_keys)
-            except Exception as exc:  # pylint:disable=broad-except
-                # do not throw an error so that the auth adapter can still run
-                # even though it will not be able to validate external tokens
-                log.error("Cannot parse external signing keys: %s", exc)
+            self.external_jwks = jwk.JWKSet.from_json(external_keys)
         else:
-            log.error("No external signing keys configured.")
+            raise RuntimeError("No external signing keys configured.")
         internal_keys = config.auth_int_keys
         if internal_keys:
-            try:
-                self.internal_jwk = jwk.JWK.from_json(internal_keys)
-            except Exception as exc:  # pylint:disable=broad-except
-                # do not throw an error so that the auth adapter can still run
-                # even though it will not be able to sign internal tokens
-                log.error("Cannot parse internal signing key pair: %s", exc)
+            self.internal_jwk = jwk.JWK.from_json(internal_keys)
         else:
-            log.error("No internal signing keys configured.")
+            raise RuntimeError("No internal signing keys configured.")
         external_algs = config.auth_ext_algs
         if external_algs:
             self.external_algs = external_algs
