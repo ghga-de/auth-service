@@ -68,9 +68,7 @@ async def ext_auth(  # pylint:disable=too-many-arguments
     access_token = get_bearer_token(authorization, x_authorization)
     if access_token:
         # check whether the external id is of interest and only pass it on in that case
-        pass_sub = (path == "users" and request.method == "POST") or (
-            path.startswith("users/") and "@" in path and request.method == "GET"
-        )
+        pass_sub = path_needs_ext_info(path, request.method)
         internal_token = await exchange_token(
             access_token, pass_sub=pass_sub, user_dao=user_dao
         )
@@ -83,3 +81,10 @@ async def ext_auth(  # pylint:disable=too-many-arguments
     # since we cannot delete a header, we set it to an empty string if invalid
     response.headers["Authorization"] = internal_token or ""
     return {}
+
+
+def path_needs_ext_info(path: str, method: str) -> bool:
+    """Check whether the given request path and method need external user info."""
+    return (method == "POST" and path == "users") or (
+        method == "GET" and path.startswith("users/") and "@" in path
+    )
