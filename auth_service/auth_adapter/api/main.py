@@ -30,7 +30,7 @@ from ghga_service_chassis_lib.api import configure_app
 from ...config import CONFIG, configure_logging
 from ...deps import Depends, UserDao, get_user_dao
 from .. import DESCRIPTION, TITLE, VERSION
-from ..core.auth import exchange_token
+from ..core.auth import TokenValidationError, exchange_token
 from .basic import basic_auth
 from .headers import get_bearer_token
 
@@ -69,17 +69,18 @@ async def ext_auth(  # pylint:disable=too-many-arguments
     if access_token:
         # check whether the external id is of interest and only pass it on in that case
         pass_sub = path_needs_ext_info(path, request.method)
-        internal_token = await exchange_token(
-            access_token, pass_sub=pass_sub, user_dao=user_dao
-        )
-        if internal_token is None:
+        try:
+            internal_token = await exchange_token(
+                access_token, pass_sub=pass_sub, user_dao=user_dao
+            )
+        except TokenValidationError as exc:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token"
-            )
+            ) from exc
     else:
-        internal_token = None
+        internal_token = ""  # nosec
     # since we cannot delete a header, we set it to an empty string if invalid
-    response.headers["Authorization"] = internal_token or ""
+    response.headers["Authorization"] = internal_token
     return {}
 
 

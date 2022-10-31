@@ -18,9 +18,9 @@
 
 from datetime import datetime
 
-from pytest import mark
+from pytest import mark, raises
 
-from auth_service.auth_adapter.core.auth import exchange_token
+from auth_service.auth_adapter.core.auth import TokenValidationError, exchange_token
 from auth_service.user_management.models.dto import UserStatus
 
 from ...fixtures.utils import DummyUserDao, create_access_token, get_claims_from_token
@@ -30,8 +30,8 @@ from ...fixtures.utils import DummyUserDao, create_access_token, get_claims_from
 async def test_rejects_an_expired_access_token():
     """Test the token exchange for a user with an expired token."""
     access_token = create_access_token(expired=True)
-    internal_token = await exchange_token(access_token)
-    assert internal_token is None
+    with raises(TokenValidationError, match="Not a valid token: Expired"):
+        await exchange_token(access_token)
 
 
 @mark.asyncio

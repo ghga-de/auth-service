@@ -16,20 +16,23 @@
 
 """Unit tests for the core token validation feature"""
 
-import logging
 from datetime import datetime
 
 from jwcrypto import jwk
+from pytest import raises
 
-from auth_service.auth_adapter.core.auth import decode_and_validate_token, jwt_config
+from auth_service.auth_adapter.core.auth import (
+    TokenValidationError,
+    decode_and_validate_token,
+    jwt_config,
+)
 from auth_service.config import CONFIG
 
 from ...fixtures.utils import create_access_token
 
 
-def test_decodes_and_validates_a_valid_access_token(caplog):
+def test_decodes_and_validates_a_valid_access_token():
     """Test that a valid access token is decoded and validated."""
-    caplog.set_level(logging.DEBUG)
     access_token = create_access_token()
     claims = decode_and_validate_token(access_token)
     assert isinstance(claims, dict)
@@ -56,145 +59,131 @@ def test_decodes_and_validates_a_valid_access_token(caplog):
     assert isinstance(claims["iat"], int)
     assert isinstance(claims["exp"], int)
     assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
-    assert not caplog.records
 
 
-def test_validates_access_token_with_rsa_signature(caplog):
+def test_validates_access_token_with_rsa_signature():
     """Test that an access tokens with RSA signature can be validated."""
     key = jwk.JWK.generate(kty="RSA", size=1024)
     access_token = create_access_token(key=key)
     claims = decode_and_validate_token(access_token, key=key)
     assert isinstance(claims, dict)
     assert claims["name"] == "John Doe"
-    assert not caplog.records
 
 
-def test_validates_access_token_with_ec_signature(caplog):
+def test_validates_access_token_with_ec_signature():
     """Test that an access tokens with EC signature can be validated."""
     key = jwk.JWK.generate(kty="EC", crv="P-256")
     access_token = create_access_token(key=key)
     claims = decode_and_validate_token(access_token, key=key)
     assert isinstance(claims, dict)
     assert claims["name"] == "John Doe"
-    assert not caplog.records
 
 
-def test_does_not_validate_an_access_token_with_bad_signature(caplog):
+def test_does_not_validate_an_empty_token():
+    """Test that an empty access token rejected."""
+    with raises(TokenValidationError, match="Empty token"):
+        decode_and_validate_token(None)  # type: ignore
+    with raises(TokenValidationError, match="Empty token"):
+        decode_and_validate_token("")
+
+
+def test_does_not_validate_an_access_token_with_wrong_format():
+    """Test that an access token with a completely wrong format is rejected."""
+    access_token = "random.garbage"
+    with raises(TokenValidationError, match="Token format unrecognized"):
+        decode_and_validate_token(access_token)
+
+
+def test_does_not_validate_an_access_token_with_bad_signature():
     """Test that an access token with a corrupt signature is rejected."""
-    caplog.set_level(logging.DEBUG)
     access_token = create_access_token()
     access_token = ".".join(access_token.split(".")[:-1] + ["somebadsignature"])
-    assert decode_and_validate_token(access_token) is None
-    assert len(caplog.records) == 1
-    assert caplog.records[0].message == "Cannot validate external token: Missing Key"
+    with raises(TokenValidationError, match="Not a valid token: Missing Key"):
+        decode_and_validate_token(access_token)
 
 
-def test_does_not_validate_an_access_token_when_external_key_is_missing(caplog):
+def test_does_not_validate_an_access_token_when_external_key_is_missing():
     """Test that an access token is not validated if no external key is provided."""
-    caplog.set_level(logging.DEBUG)
     access_token = create_access_token()
     external_jwks, jwt_config.external_jwks = jwt_config.external_jwks, None
     try:
-        assert decode_and_validate_token(access_token) is None
+        with raises(TokenValidationError) as exc_info:
+            decode_and_validate_token(access_token)
     finally:
         jwt_config.external_jwks = external_jwks
-    assert len(caplog.records) == 1
-    assert (
-        caplog.records[0].message == "No external signing key, cannot validate token."
-    )
+    assert str(exc_info.value) == "No external signing key(s), cannot validate token."
 
 
-def test_does_not_validate_an_access_token_when_alg_is_not_allowed(caplog):
-    """Test that an access token must be signed with an allowed alogorithm."""
-    caplog.set_level(logging.DEBUG)
+def test_does_not_validate_an_access_token_when_alg_is_not_allowed():
+    """Test that an access token must be signed with an allowed algorithm."""
     access_token = create_access_token()
     external_algs = jwt_config.external_algs
     assert isinstance(external_algs, list)
     jwt_config.external_algs = external_algs[:]
     try:
         jwt_config.external_algs.remove("ES256")
-        assert decode_and_validate_token(access_token) is None
+        with raises(TokenValidationError, match="Not a valid token: Missing Key"):
+            decode_and_validate_token(access_token)
     finally:
         jwt_config.external_algs = external_algs
-    assert len(caplog.records) == 1
-    assert caplog.records[0].message == "Cannot validate external token: Missing Key"
 
 
-def test_does_not_validate_an_access_token_with_invalid_client_id(caplog):
+def test_does_not_validate_an_access_token_with_invalid_client_id():
     """Test that an access token with an unknown client id is rejected."""
-    caplog.set_level(logging.DEBUG)
     access_token = create_access_token(client_id="some-bad-client")
-    assert decode_and_validate_token(access_token) is None
-    assert len(caplog.records) == 1
-    assert (
-        caplog.records[0].message == "Cannot validate external token:"
-        " Invalid 'client_id' value. Expected 'ghga-data-portal' got 'some-bad-client'"
+    with raises(TokenValidationError) as exc_info:
+        decode_and_validate_token(access_token)
+    assert str(exc_info.value) == (
+        "Not a valid token: Invalid 'client_id' value."
+        " Expected 'ghga-data-portal' got 'some-bad-client'"
     )
 
 
-def test_does_not_validate_an_access_token_with_invalid_issuer(caplog):
+def test_does_not_validate_an_access_token_with_invalid_issuer():
     """Test that an access token with an unknown issuer is rejected."""
-    caplog.set_level(logging.DEBUG)
     access_token = create_access_token(iss="https://proxy.aai.badscience-ri.eu")
-    assert decode_and_validate_token(access_token) is None
-    assert len(caplog.records) == 1
-    assert (
-        caplog.records[0].message == "Cannot validate external token:"
-        " Invalid 'iss' value. Expected 'https://proxy.aai.lifescience-ri.eu'"
+    with raises(TokenValidationError) as exc_info:
+        decode_and_validate_token(access_token)
+    assert str(exc_info.value) == (
+        "Not a valid token: Invalid 'iss' value."
+        " Expected 'https://proxy.aai.lifescience-ri.eu'"
         " got 'https://proxy.aai.badscience-ri.eu'"
     )
 
 
-def test_does_not_validate_an_access_token_with_missing_subject(caplog):
+def test_does_not_validate_an_access_token_with_missing_subject():
     """Test that an access token with a missing subject is rejected."""
-    caplog.set_level(logging.DEBUG)
     access_token = create_access_token(sub=None)
-    assert decode_and_validate_token(access_token) is None
-    assert len(caplog.records) == 1
-    assert (
-        caplog.records[0].message == "Cannot validate external token:"
-        " The subject claim is missing."
-    )
+    with raises(TokenValidationError) as exc_info:
+        decode_and_validate_token(access_token)
+    assert str(exc_info.value) == "The subject claim is missing."
 
 
-def test_does_not_validate_an_access_token_with_missing_name(caplog):
+def test_does_not_validate_an_access_token_with_missing_name():
     """Test that an access token with a missing name is rejected."""
-    caplog.set_level(logging.DEBUG)
     access_token = create_access_token(name=None)
-    assert decode_and_validate_token(access_token) is None
-    assert len(caplog.records) == 1
-    assert (
-        caplog.records[0].message == "Cannot validate external token:"
-        " Missing value for name claim."
-    )
+    with raises(TokenValidationError) as exc_info:
+        decode_and_validate_token(access_token)
+    assert str(exc_info.value) == "Missing value for name claim."
 
 
-def test_does_not_validate_an_access_token_with_missing_email(caplog):
+def test_does_not_validate_an_access_token_with_missing_email():
     """Test that an access token with a missing email is rejected."""
-    caplog.set_level(logging.DEBUG)
     access_token = create_access_token(email=None)
-    assert decode_and_validate_token(access_token) is None
-    assert len(caplog.records) == 1
-    assert (
-        caplog.records[0].message == "Cannot validate external token:"
-        " Missing value for email claim."
-    )
+    with raises(TokenValidationError) as exc_info:
+        decode_and_validate_token(access_token)
+    assert str(exc_info.value) == "Missing value for email claim."
 
 
-def test_does_not_validate_an_expired_access_token(caplog):
+def test_does_not_validate_an_expired_access_token():
     """Test that access tokens that have expired are rejected."""
-    caplog.set_level(logging.DEBUG)
     access_token = create_access_token(expired=True)
-    assert decode_and_validate_token(access_token) is None
-    assert len(caplog.records) == 1
-    assert caplog.records[0].message.startswith(
-        "Cannot validate external token: Expired at "
-    )
+    with raises(TokenValidationError, match="Not a valid token: Expired"):
+        decode_and_validate_token(access_token)
 
 
-def test_does_not_validate_token_with_invalid_payload(caplog):
+def test_does_not_validate_token_with_invalid_payload():
     """Test that access tokens with invalid payload are rejected."""
-    caplog.set_level(logging.DEBUG)
     key = jwk.JWK(kty="oct", k="r0TSf_aAU9eS7I5JPPJ20pmkPmR__9LsfnZaKfXZYp8")
     external_algs, jwt_config.external_algs = jwt_config.external_algs, ["HS256"]
     try:
@@ -203,24 +192,25 @@ def test_does_not_validate_token_with_invalid_payload(caplog):
             "eyJzdWIiOiAiSm9obiBEb2UifQ."
             "RQYHxFwGjMdVh-umuuA1Yd4Ssx6TAYkg1INYK6_lKVw"
         )
-        assert decode_and_validate_token(token_with_valid_payload, key=key) is None
+        with raises(
+            TokenValidationError, match="Not a valid token: Claim iat is missing"
+        ):
+            decode_and_validate_token(token_with_valid_payload, key=key)
         token_with_text_as_payload = (
             "eyJhbGciOiJIUzI1NiJ9."
             "VGhpcyBpcyBub3QgSlNPTiE."
             "bKt6NQoZGLOLqqqB-XT99ENnsmv-hxLId08FxR4LUOw"
         )
-        assert decode_and_validate_token(token_with_text_as_payload, key=key) is None
+        with raises(
+            TokenValidationError, match="Not a valid token: .* not a json dict"
+        ):
+            decode_and_validate_token(token_with_text_as_payload, key=key)
         token_with_bad_encoding = (
             "eyJhbGciOiJIUzI1NiJ9."
             "eyJzdWIiOiAiRnLpZOlyaWMgQ2hvcGluIn0."
             "8OTfVB6CN2pXgPHZBPdbkqWGd2XhtbVDhlcYdYNh6d4"
         )
-        assert decode_and_validate_token(token_with_bad_encoding, key=key) is None
+        with raises(TokenValidationError, match="'utf-8' codec can't decode"):
+            decode_and_validate_token(token_with_bad_encoding, key=key)
     finally:
         jwt_config.external_algs = external_algs
-    messages = [rec.message for rec in caplog.records]
-    assert len(messages) == 3
-    assert all(msg.startswith("Cannot validate external token:") for msg in messages)
-    assert "iat is missing" in messages[0]
-    assert "not a json dict" in messages[1]
-    assert "can't decode" in messages[2]

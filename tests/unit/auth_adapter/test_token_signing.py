@@ -16,30 +16,40 @@
 
 """Unit tests for the core token signing feature"""
 
-import logging
+from pytest import raises
 
-from auth_service.auth_adapter.core.auth import jwt_config, sign_and_encode_token
+from auth_service.auth_adapter.core.auth import (
+    TokenSigningError,
+    jwt_config,
+    sign_and_encode_token,
+)
 
 from ...fixtures.utils import get_claims_from_token
 
 
-def test_signs_and_encodes_an_internal_token(caplog):
+def test_signs_and_encodes_an_internal_token():
     """Test that internal tokens can be signed and encoded."""
     claims = {"foo": "bar"}
     internal_token = sign_and_encode_token(claims)
     assert internal_token is not None
     assert get_claims_from_token(internal_token) == claims
-    assert not caplog.records
 
 
-def test_does_not_sign_internal_token_when_internal_key_is_missing(caplog):
+def test_does_not_sign_an_empty_payload():
+    """Test that an empty payload is rejected."""
+    with raises(TokenSigningError, match="No payload"):
+        sign_and_encode_token(None)  # type: ignore
+    with raises(TokenSigningError, match="No payload"):
+        sign_and_encode_token({})
+
+
+def test_does_not_sign_internal_token_when_internal_key_is_missing():
     """Test that internal tokens cannot be signed without an internal key."""
-    caplog.set_level(logging.DEBUG)
     claims = {"foo": "bar"}
     internal_jwk, jwt_config.internal_jwk = jwt_config.internal_jwk, None
     try:
-        assert sign_and_encode_token(claims) is None
+        with raises(TokenSigningError) as exc_info:
+            sign_and_encode_token(claims)
     finally:
         jwt_config.internal_jwk = internal_jwk
-    assert len(caplog.records) == 1
-    assert caplog.records[0].message == "No internal signing key, cannot sign token."
+    assert str(exc_info.value) == "No internal signing key, cannot sign token."
