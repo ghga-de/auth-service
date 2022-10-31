@@ -49,6 +49,10 @@ class TokenValidationError(AuthAdapterError):
     """Error when validating JWTs."""
 
 
+class UserDataMismatchError(AuthAdapterError):
+    """Raised when user claims do not match the registered user data."""
+
+
 class JWTConfig:
     """A container for the JWT related configuration."""
 
@@ -102,14 +106,16 @@ class JWTConfig:
 jwt_config = JWTConfig()
 
 
-def _compare_user(user: User, external_claims: dict[str, Any]) -> Optional[str]:
-    """Compare user with external claims and return inactivation context."""
+def _compare_user_data(user: User, external_claims: dict[str, Any]) -> None:
+    """Compare user data and raise an error if there is a mismatch.
+
+    The value of the raised UserDataMismatchError can be used as inactivation context.
+    """
     if user.status == UserStatus.ACTIVATED:
         if user.name != external_claims.get("name"):
-            return "name change"
+            raise UserDataMismatchError("name")
         if user.email != external_claims.get("email"):
-            return "email change"
-    return None
+            raise UserDataMismatchError("email")
 
 
 def _get_inactivated_user(user: User, context: str) -> User:
@@ -159,14 +165,16 @@ async def exchange_token(
         log.warning("Error retrieving user: %s", exc)
         user = None
     if user is None:
-        # user is not yet in the registry
+        # user is not yet registered
         if not pass_sub:
             return ""
         internal_claims[jwt_config.copy_sub_as] = sub
     else:
         # user already exists in the registry
-        context = _compare_user(user, external_claims)
-        if context:
+        try:
+            _compare_user_data(user, external_claims)
+        except UserDataMismatchError as mismatch:
+            context = f"{mismatch} changed"
             user = _get_inactivated_user(user, context)
             try:
                 await user_dao.update(user)

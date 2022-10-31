@@ -122,7 +122,7 @@ async def test_exchanges_access_token_when_name_was_changed():
     assert status_change is not None
     assert status_change.previous is UserStatus.ACTIVATED
     assert status_change.by is None
-    assert status_change.context == "name change"
+    assert status_change.context == "name changed"
     assert 0 <= (datetime.now() - status_change.change_date).total_seconds() < 5
 
 
@@ -148,5 +148,5 @@ async def test_exchanges_access_token_when_email_was_changed():
     assert status_change is not None
     assert status_change.previous is UserStatus.ACTIVATED
     assert status_change.by is None
-    assert status_change.context == "email change"
+    assert status_change.context == "email changed"
     assert 0 <= (datetime.now() - status_change.change_date).total_seconds() < 5

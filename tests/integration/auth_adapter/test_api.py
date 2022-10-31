@@ -366,7 +366,7 @@ def test_token_exchange_for_known_user(
     assert status_change is not None
     assert status_change.previous is UserStatus.ACTIVATED
     assert status_change.by is None
-    assert status_change.context == "name change"
+    assert status_change.context == "name changed"
     assert 0 <= (datetime.now() - status_change.change_date).total_seconds() < 5
 
 
