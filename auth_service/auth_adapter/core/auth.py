@@ -33,6 +33,10 @@ __all__ = ["exchange_token", "jwt_config"]
 log = logging.getLogger(__name__)
 
 
+class NoHitsFoundError(Exception):
+    """Temporary until available in hexkit 0.6"""
+
+
 class AuthAdapterError(Exception):
     """Auth adapter related error."""
 
@@ -161,10 +165,9 @@ async def exchange_token(
     sub = external_claims["sub"]
     try:
         user = await user_dao.find_one(mapping={"ls_id": sub})
-    except Exception as exc:  # pylint:disable=broad-except
-        log.warning("Error retrieving user: %s", exc)
-        user = None
-    if user is None:
+        if user is None:  # can be removed when updating to hexkit 0.6.0
+            raise NoHitsFoundError
+    except NoHitsFoundError:
         # user is not yet registered
         if not pass_sub:
             return ""
@@ -176,10 +179,7 @@ async def exchange_token(
         except UserDataMismatchError as mismatch:
             context = f"{mismatch} changed"
             user = _get_inactivated_user(user, context)
-            try:
-                await user_dao.update(user)
-            except Exception as exc:  # pylint:disable=broad-except
-                log.warning("Error updating user: %s", exc)
+            await user_dao.update(user)
         internal_claims.update(id=user.id, status=user.status)
     internal_token = sign_and_encode_token(internal_claims)
     return internal_token
