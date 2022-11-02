@@ -81,15 +81,13 @@ class JWTConfig:
         """Load the JWT related configuration parameters."""
 
         external_keys = config.auth_ext_keys
-        if external_keys:
-            self.external_jwks = jwk.JWKSet.from_json(external_keys)
-        else:
+        if not external_keys:
             raise ConfigurationMissingKey("No external signing keys configured.")
+        self.external_jwks = jwk.JWKSet.from_json(external_keys)
         internal_keys = config.auth_int_keys
-        if internal_keys:
-            self.internal_jwk = jwk.JWK.from_json(internal_keys)
-        else:
+        if not internal_keys:
             raise ConfigurationMissingKey("No internal signing keys configured.")
+        self.internal_jwk = jwk.JWK.from_json(internal_keys)
         external_algs = config.auth_ext_algs
         if external_algs:
             self.external_algs = external_algs
