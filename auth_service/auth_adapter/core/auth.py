@@ -21,6 +21,7 @@ import logging
 from datetime import datetime
 from typing import Any, Optional
 
+from hexkit.protocols.dao import NoHitsFoundError
 from jwcrypto import jwk, jwt
 from jwcrypto.common import JWException
 
@@ -31,10 +32,6 @@ from ...user_management.models.dto import StatusChange, User, UserStatus
 __all__ = ["exchange_token", "jwt_config"]
 
 log = logging.getLogger(__name__)
-
-
-class NoHitsFoundError(Exception):
-    """Temporary until available in hexkit 0.6"""
 
 
 class AuthAdapterError(Exception):
@@ -163,8 +160,6 @@ async def exchange_token(
     sub = external_claims["sub"]
     try:
         user = await user_dao.find_one(mapping={"ls_id": sub})
-        if user is None:  # can be removed when updating to hexkit 0.6.0
-            raise NoHitsFoundError
     except NoHitsFoundError:
         # user is not yet registered
         if not pass_sub:

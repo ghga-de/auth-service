@@ -20,6 +20,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Mapping, Optional
 
+from hexkit.protocols.dao import NoHitsFoundError
 from jwcrypto import jwk, jwt
 
 from auth_service.auth_adapter.core.auth import jwt_config
@@ -107,7 +108,9 @@ class DummyUserDao:
     async def find_one(self, *, mapping: Mapping[str, Any]) -> Optional[User]:
         """Find the dummy user via ls_id."""
         user, ls_id = self.user, mapping.get("ls_id")
-        return user if user and ls_id and ls_id == user.ls_id else None
+        if user and ls_id and ls_id == user.ls_id:
+            return user
+        raise NoHitsFoundError(mapping=mapping)
 
     async def update(self, user: User) -> None:
         """Update the dummy user."""
