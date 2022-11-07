@@ -37,4 +37,7 @@ LICENSE_INFO = {
     # "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
 }
 
-TAGS_METADATA = [{"name": "users", "description": "User data"}]
+TAGS_METADATA = [
+    {"name": "users", "description": "User data"},
+    {"name": "claims", "description": "User claims"},
+]
