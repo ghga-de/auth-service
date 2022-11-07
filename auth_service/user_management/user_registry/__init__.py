@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""User Registry
+
+The GHGA users registry holds all of the user related data.
 """
-This sub-package contains the main business functionality of this service.
-It should not contain any service API-related code.
-"""
+
+__version__ = "0.1.0"

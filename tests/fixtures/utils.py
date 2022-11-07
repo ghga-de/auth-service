@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Utils for fixture handling"""
+"""Utils for testing"""
 
 import json
 from datetime import datetime
@@ -24,7 +24,7 @@ from hexkit.protocols.dao import NoHitsFoundError
 from jwcrypto import jwk, jwt
 
 from auth_service.auth_adapter.core.auth import jwt_config
-from auth_service.user_management.models.dto import User, UserStatus
+from auth_service.user_management.user_registry.models.dto import User, UserStatus
 
 BASE_DIR = Path(__file__).parent.resolve()
 

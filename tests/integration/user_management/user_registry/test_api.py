@@ -19,9 +19,9 @@ from datetime import datetime
 
 from fastapi import status
 
-from auth_service.user_management.core.utils import is_internal_id
+from auth_service.user_management.user_registry.utils import is_internal_id
 
-from .fixtures import (  # noqa: F401; pylint: disable=unused-import
+from ..fixtures import (  # noqa: F401; pylint: disable=unused-import
     fixture_client,
     fixture_client_with_db,
 )

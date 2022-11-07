@@ -22,9 +22,16 @@ Additional endpoints might be structured in dedicated modules
 from fastapi import FastAPI
 from ghga_service_chassis_lib.api import configure_app
 
-from ...config import CONFIG, configure_logging
-from .. import CONTACT, DESCRIPTION, LICENSE_INFO, TAGS_METADATA, TITLE, VERSION
-from .routers.users import router as users_router
+from auth_service.config import CONFIG, configure_logging
+from auth_service.user_management import (
+    CONTACT,
+    DESCRIPTION,
+    LICENSE_INFO,
+    TAGS_METADATA,
+    TITLE,
+    VERSION,
+)
+from auth_service.user_management.user_registry.router import router as users_router
 
 configure_logging()
 
