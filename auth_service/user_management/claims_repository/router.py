@@ -119,7 +119,7 @@ async def get_claims(
     """Get all claims for a given user"""
     if user_id and claim_dao:
         return []
-    return Response(status_code=500)
+    raise HTTPException(status_code=500)
 
 
 @router.patch(
@@ -151,7 +151,7 @@ async def patch_user(
 ) -> Response:
     """Revoke an existing user claim"""
     if claim_data and user_id and claim_id and claim_dao:
-        return None
+        pass
     return Response(status_code=500)
 
 
@@ -183,5 +183,5 @@ async def delete_claim(
 ) -> Response:
     """Delete an existing user claim"""
     if user_id and claim_id and claim_dao:
-        return None
+        pass
     return Response(status_code=500)

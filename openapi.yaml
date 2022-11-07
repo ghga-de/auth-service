@@ -671,3 +671,5 @@ paths:
 tags:
 - description: User data
   name: users
+- description: User claims
+  name: claims
