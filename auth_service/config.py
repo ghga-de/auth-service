@@ -83,7 +83,8 @@ class Config(ApiConfigBase):
 
     db_url: str = "mongodb://localhost:27017"
     db_name: str = "user-registry"
-    user_collection: str = "users"
+    users_collection: str = "users"
+    claims_collection: str = "claims"
 
 
 CONFIG = Config()

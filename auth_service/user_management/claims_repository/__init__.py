@@ -13,4 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Integration tests for the user registry service"""
+"""Claims Repository
+
+The GHGA claims repository holds all of the user claim related data.
+"""
+
+__version__ = "0.1.0"

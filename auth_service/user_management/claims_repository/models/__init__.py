@@ -13,4 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Integration tests for the user registry service"""
+"""
+This sub-package contains the models used in the claims repository service.
+"""

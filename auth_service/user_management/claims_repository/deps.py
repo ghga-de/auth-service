@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""FastAPI dependencies for the user registry"""
+"""FastAPI dependencies for the claims repository"""
 
 from auth_service.deps import (
     Config,
@@ -23,29 +23,29 @@ from auth_service.deps import (
     get_mongodb_dao_factory,
 )
 
-from .ports.dao import UserDao
-from .translators.dao import UserDaoFactory, UserDaoFactoryConfig
+from .ports.dao import ClaimDao
+from .translators.dao import ClaimDaoFactory, ClaimDaoFactoryConfig
 
-__all__ = ["get_user_dao", "UserDao"]
+__all__ = ["get_claim_dao", "ClaimDao"]
 
 
-def get_user_dao_factory_config(
+def get_claim_dao_factory_config(
     config: Config = Depends(get_config),
-) -> UserDaoFactoryConfig:
-    """Get user DAO factory config."""
-    return UserDaoFactoryConfig(collection_name=config.users_collection)
+) -> ClaimDaoFactoryConfig:
+    """Get claim DAO factory config."""
+    return ClaimDaoFactoryConfig(collection_name=config.claims_collection)
 
 
-def get_user_dao_factory(
-    config: UserDaoFactoryConfig = Depends(get_user_dao_factory_config),
+def get_claim_dao_factory(
+    config: ClaimDaoFactoryConfig = Depends(get_claim_dao_factory_config),
     dao_factory: MongoDbDaoFactory = Depends(get_mongodb_dao_factory),
-) -> UserDaoFactory:
-    """Get user DAO factory."""
-    return UserDaoFactory(config=config, dao_factory=dao_factory)
+) -> ClaimDaoFactory:
+    """Get claim DAO factory."""
+    return ClaimDaoFactory(config=config, dao_factory=dao_factory)
 
 
-async def get_user_dao(
-    dao_factory: UserDaoFactory = Depends(get_user_dao_factory),
-) -> UserDao:
-    """Get user data access object."""
-    return await dao_factory.get_user_dao()
+async def get_claim_dao(
+    dao_factory: ClaimDaoFactory = Depends(get_claim_dao_factory),
+) -> ClaimDao:
+    """Get claim data access object."""
+    return await dao_factory.get_claim_dao()

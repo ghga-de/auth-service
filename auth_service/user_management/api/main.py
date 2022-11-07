@@ -31,6 +31,9 @@ from auth_service.user_management import (
     TITLE,
     VERSION,
 )
+from auth_service.user_management.claims_repository.router import (
+    router as claims_router,
+)
 from auth_service.user_management.user_registry.router import router as users_router
 
 configure_logging()
@@ -46,6 +49,7 @@ app = FastAPI(
 configure_app(app, config=CONFIG)
 
 app.include_router(users_router)
+app.include_router(claims_router)
 
 
 @app.get("/", operation_id="index", tags=[], summary="Index")

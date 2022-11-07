@@ -13,4 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Integration tests for the user management"""
+"""Integration tests for the user management service"""
