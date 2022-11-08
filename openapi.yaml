@@ -23,8 +23,10 @@ components:
         asserted_by:
           allOf:
           - $ref: '#/components/schemas/AuthorityLevel'
+          example: so
           title: Authority level
         assertion_date:
+          example: '2022-11-30T12:00:00Z'
           format: date-time
           title: Assertion date
           type: string
@@ -54,12 +56,14 @@ components:
           title: If revoked, date of revocation
           type: string
         source:
+          example: https://home.org
           format: uri
           maxLength: 2083
           minLength: 1
           title: Asserting organization
           type: string
         sub_source:
+          example: https://dac.home.org
           format: uri
           maxLength: 2083
           minLength: 1
@@ -70,14 +74,17 @@ components:
           title: ID
           type: string
         valid_from:
+          example: '2023-01-01T00:00:00Z'
           format: date-time
           title: Start date of validity
           type: string
         valid_until:
+          example: '2023-12-31T23:59:59Z'
           format: date-time
           title: End date of validity
           type: string
         visa_type:
+          example: AffiliationAndRole
           title: Visa type
           type: string
         visa_value:
@@ -91,6 +98,7 @@ components:
           - items:
               $ref: '#/components/schemas/Identity'
             type: array
+          example: faculty@home.org
           title: Scope of the claim depending of the visa type
       required:
       - visa_type
@@ -111,8 +119,10 @@ components:
         asserted_by:
           allOf:
           - $ref: '#/components/schemas/AuthorityLevel'
+          example: so
           title: Authority level
         assertion_date:
+          example: '2022-11-30T12:00:00Z'
           format: date-time
           title: Assertion date
           type: string
@@ -124,26 +134,31 @@ components:
           title: Set of conditions
           type: array
         source:
+          example: https://home.org
           format: uri
           maxLength: 2083
           minLength: 1
           title: Asserting organization
           type: string
         sub_source:
+          example: https://dac.home.org
           format: uri
           maxLength: 2083
           minLength: 1
           title: Asserting sub-organization
           type: string
         valid_from:
+          example: '2023-01-01T00:00:00Z'
           format: date-time
           title: Start date of validity
           type: string
         valid_until:
+          example: '2023-12-31T23:59:59Z'
           format: date-time
           title: End date of validity
           type: string
         visa_type:
+          example: AffiliationAndRole
           title: Visa type
           type: string
         visa_value:
@@ -157,6 +172,7 @@ components:
           - items:
               $ref: '#/components/schemas/Identity'
             type: array
+          example: faculty@home.org
           title: Scope of the claim depending of the visa type
       required:
       - visa_type

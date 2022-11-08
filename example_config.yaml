@@ -13,7 +13,7 @@ cors_allow_credentials: null
 cors_allowed_headers: null
 cors_allowed_methods: null
 cors_allowed_origins: null
-db_name: user-registry
+db_name: user-management
 db_url: mongodb://mongodb:27017/
 docs_url: /docs
 host: 0.0.0.0
