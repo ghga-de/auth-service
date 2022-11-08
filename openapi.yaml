@@ -93,13 +93,13 @@ components:
             type: array
           title: Scope of the claim depending of the visa type
       required:
-      - user_id
       - visa_type
       - visa_value
       - assertion_date
       - valid_from
       - valid_until
       - source
+      - user_id
       - creation_date
       - creation_by
       - id
@@ -135,10 +135,6 @@ components:
           minLength: 1
           title: Asserting sub-organization
           type: string
-        user_id:
-          description: Internally used ID of the user
-          title: ID
-          type: string
         valid_from:
           format: date-time
           title: Start date of validity
@@ -163,7 +159,6 @@ components:
             type: array
           title: Scope of the claim depending of the visa type
       required:
-      - user_id
       - visa_type
       - visa_value
       - assertion_date
