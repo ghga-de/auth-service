@@ -399,10 +399,10 @@ info:
   contact:
     email: helpdesk@ghga.de
     name: GHGA
-  description: REST API for managing the GHGA user registry
+  description: REST API for managing the GHGA users and user claims
   license:
     name: Apache 2.0
-  title: User Registry API
+  title: User Management API
   version: 0.1.0
 openapi: 3.0.2
 paths:

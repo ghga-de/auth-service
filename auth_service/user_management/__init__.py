@@ -21,8 +21,8 @@ This service contains all the functionality for the user data management.
 __version__ = "0.1.0"
 
 VERSION = __version__
-TITLE = "User Registry API"
-DESCRIPTION = "REST API for managing the GHGA user registry"
+TITLE = "User Management API"
+DESCRIPTION = "REST API for managing the GHGA users and user claims"
 
 # TO DO: the URLs cannot be converted to YAML (openapi_from_app)
 
