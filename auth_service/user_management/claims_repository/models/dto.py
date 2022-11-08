@@ -111,22 +111,32 @@ class Identity(BaseDto):
 class ClaimCreation(BaseDto):
     """A claim made about a user with a user ID"""
 
-    visa_type: str = Field(default=..., title="Visa type")
+    visa_type: str = Field(default=..., title="Visa type", example="AffiliationAndRole")
     visa_value: Union[EmailStr, HttpUrl, list[Identity]] = Field(
-        default=..., title="Scope of the claim depending of the visa type"
+        default=...,
+        title="Scope of the claim depending of the visa type",
+        example="faculty@home.org",
     )
 
-    assertion_date: datetime = Field(..., title="Assertion date")
-    valid_from: datetime = Field(..., title="Start date of validity")
-    valid_until: datetime = Field(..., title="End date of validity")
+    assertion_date: datetime = Field(
+        ..., title="Assertion date", example="2022-11-30T12:00:00Z"
+    )
+    valid_from: datetime = Field(
+        ..., title="Start date of validity", example="2023-01-01T00:00:00Z"
+    )
+    valid_until: datetime = Field(
+        ..., title="End date of validity", example="2023-12-31T23:59:59Z"
+    )
 
     source: HttpUrl = Field(
-        ..., title="Asserting organization"
+        ..., title="Asserting organization", example="https://home.org"
     )  # organization making the assertion
     sub_source: Optional[HttpUrl] = Field(
-        None, title="Asserting sub-organization"
+        None, title="Asserting sub-organization", example="https://dac.home.org"
     )  # e.g. DAC or Data Hub
-    asserted_by: Optional[AuthorityLevel] = Field(None, title="Authority level")
+    asserted_by: Optional[AuthorityLevel] = Field(
+        None, title="Authority level", example="so"
+    )
 
     conditions: Optional[list[list[Condition]]] = Field(
         None, title="Set of conditions"
