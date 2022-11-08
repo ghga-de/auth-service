@@ -15,21 +15,21 @@
 #
 
 """
-Core utilities for the User Registry.
+Core utilities for the Claims Repository.
 """
 
-__all__ = ["is_internal_id", "is_external_id"]
+from hexkit.protocols.dao import ResourceNotFoundError
+
+from auth_service.user_management.user_registry.deps import UserDao
 
 
-def is_internal_id(id_: str) -> bool:
-    """Check if the passed ID is an internal user id."""
-    if not id_ or not isinstance(id_, str):
+async def user_exists(user_id, user_dao: UserDao) -> bool:
+    """Check whether the user with the given id exists."""
+    if not user_id:
         return False
-    return len(id_) == 36 and id_.count("-") == 4 and "@" not in id_
-
-
-def is_external_id(id_: str) -> bool:
-    """Check if the passed ID is an external user id."""
-    if not id_ or not isinstance(id_, str):
+    try:
+        await user_dao.get_by_id(user_id)
+    except ResourceNotFoundError:
         return False
-    return len(id_) > 8 and id_.count("@") == 1
+    else:
+        return True

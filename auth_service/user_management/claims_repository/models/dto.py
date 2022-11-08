@@ -111,10 +111,6 @@ class Identity(BaseDto):
 class ClaimCreation(BaseDto):
     """A claim made about a user with a user ID"""
 
-    user_id: str = Field(  # actually UUID
-        default=..., title="ID", description="Internally used ID of the user"
-    )
-
     visa_type: str = Field(default=..., title="Visa type")
     visa_value: Union[EmailStr, HttpUrl, list[Identity]] = Field(
         default=..., title="Scope of the claim depending of the visa type"
@@ -151,7 +147,11 @@ class ClaimUpdate(BaseDto):
 
 
 class ClaimFullCreation(ClaimCreation):
-    """A claim about a user with all data except the claim ID"""
+    """A claim about a user with a user ID and all data except the claim ID"""
+
+    user_id: str = Field(  # actually UUID
+        default=..., title="ID", description="Internally used ID of the user"
+    )
 
     creation_date: datetime = Field(..., title="Date of creation of this claim")
     creation_by: str = Field(..., title="Who created this claim (user ID)")

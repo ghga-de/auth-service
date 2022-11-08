@@ -14,22 +14,19 @@
 # limitations under the License.
 #
 
-"""
-Core utilities for the User Registry.
-"""
+"""Unit tests for the utils module."""
 
-__all__ = ["is_internal_id", "is_external_id"]
+from pytest import mark
 
+from auth_service.user_management.claims_repository.utils import user_exists
 
-def is_internal_id(id_: str) -> bool:
-    """Check if the passed ID is an internal user id."""
-    if not id_ or not isinstance(id_, str):
-        return False
-    return len(id_) == 36 and id_.count("-") == 4 and "@" not in id_
+from ...fixtures.utils import DummyUserDao
 
 
-def is_external_id(id_: str) -> bool:
-    """Check if the passed ID is an external user id."""
-    if not id_ or not isinstance(id_, str):
-        return False
-    return len(id_) > 8 and id_.count("@") == 1
+@mark.asyncio
+async def test_user_exists():
+    """Test that existence of users can be checked."""
+    user_dao = DummyUserDao(id_="some-internal-id")
+    assert await user_exists(None, user_dao) is False
+    assert await user_exists("some-internal-id", user_dao) is True
+    assert await user_exists("other-internal-id", user_dao) is False

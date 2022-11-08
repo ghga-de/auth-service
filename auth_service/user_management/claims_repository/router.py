@@ -21,16 +21,13 @@ from datetime import datetime
 
 from fastapi import APIRouter, Path, Response
 from fastapi.exceptions import HTTPException
-from hexkit.protocols.dao import (
-    MultipleHitsFoundError,
-    NoHitsFoundError,
-    ResourceNotFoundError,
-)
+from hexkit.protocols.dao import ResourceNotFoundError
 
 from auth_service.user_management.user_registry.deps import UserDao, get_user_dao
 
 from .deps import ClaimDao, Depends, get_claim_dao
 from .models.dto import Claim, ClaimCreation, ClaimFullCreation, ClaimUpdate
+from .utils import user_exists
 
 __all__ = ["router"]
 
@@ -65,25 +62,20 @@ async def post_claim(
     claim_dao: ClaimDao = Depends(get_claim_dao),
 ) -> Claim:
     """Store a user claim"""
-    try:
-        if user_id:
-            await user_dao.get_by_id(user_id)
-        else:
-            raise ResourceNotFoundError(id_=user_id)
-    except (NoHitsFoundError, MultipleHitsFoundError, ResourceNotFoundError) as error:
-        raise HTTPException(
-            status_code=404, detail="The user was not found."
-        ) from error
+    if not await user_exists(user_id, user_dao):
+        raise HTTPException(status_code=404, detail="The user was not found.")
 
     current_date = datetime.now()
     current_user_id = "someone"  # needs to be changed
     full_claim = ClaimFullCreation(
         **claim_creation.dict(),
+        user_id=user_id,
         creation_date=current_date,
         creation_by=current_user_id,
         revocation_date=None,
         revocation_by=None
     )
+
     try:
         claim = await claim_dao.insert(full_claim)
     except Exception as error:
@@ -114,12 +106,14 @@ async def get_claims(
         alias="user_id",
         title="Internal ID of the user",
     ),
+    user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
 ) -> list[Claim]:
     """Get all claims for a given user"""
-    if user_id and claim_dao:
-        return []
-    raise HTTPException(status_code=500)
+    if not await user_exists(user_id, user_dao):
+        raise HTTPException(status_code=404, detail="The user was not found.")
+
+    return [claim async for claim in claim_dao.find_all(mapping={"user_id": user_id})]
 
 
 @router.patch(
@@ -136,7 +130,7 @@ async def get_claims(
     status_code=201,
 )
 async def patch_user(
-    claim_data: ClaimUpdate,
+    claim_update: ClaimUpdate,
     user_id: str = Path(
         ...,
         alias="user_id",
@@ -147,12 +141,44 @@ async def patch_user(
         alias="claim_id",
         title="Internal claim ID",
     ),
+    user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
 ) -> Response:
     """Revoke an existing user claim"""
-    if claim_data and user_id and claim_id and claim_dao:
-        pass
-    return Response(status_code=500)
+    if await user_exists(user_id, user_dao):
+        try:
+            claim = await claim_dao.get_by_id(claim_id)
+            if claim.user_id != user_id:
+                raise ResourceNotFoundError
+        except ResourceNotFoundError:
+            claim = None
+    else:
+        claim = None
+
+    if not claim:
+        raise HTTPException(status_code=404, detail="The user claim was not found.")
+
+    revocation_date = claim_update.revocation_date
+    if not revocation_date:
+        raise HTTPException(status_code=422, detail="No revocation date given.")
+    if not revocation_date or (
+        claim.revocation_date and revocation_date > claim.revocation_date
+    ):
+        raise HTTPException(status_code=422, detail="Already revoked earlier.")
+
+    current_user_id = "someone"  # needs to be changed
+
+    claim = claim.copy(
+        update={"revocation_date": revocation_date, "revocation_by": current_user_id}
+    )
+    try:
+        await claim_dao.update(claim)
+    except ResourceNotFoundError as error:
+        raise HTTPException(
+            status_code=404, detail="The user claim was not found."
+        ) from error
+
+    return Response(status_code=204)
 
 
 @router.delete(
@@ -179,9 +205,22 @@ async def delete_claim(
         alias="claim_id",
         title="Internal claim ID",
     ),
+    user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
 ) -> Response:
     """Delete an existing user claim"""
-    if user_id and claim_id and claim_dao:
-        pass
-    return Response(status_code=500)
+    if await user_exists(user_id, user_dao):
+        try:
+            claim = await claim_dao.get_by_id(claim_id)
+            if claim.user_id != user_id:
+                raise ResourceNotFoundError
+            await claim_dao.delete(id_=claim_id)
+        except ResourceNotFoundError:
+            claim = None
+    else:
+        claim = None
+
+    if not claim:
+        raise HTTPException(status_code=404, detail="The user claim was not found.")
+
+    return Response(status_code=204)
