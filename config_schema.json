@@ -227,7 +227,7 @@
     },
     "db_name": {
       "title": "Db Name",
-      "default": "user-registry",
+      "default": "user-management",
       "env_names": [
         "auth_service_db_name"
       ],

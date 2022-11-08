@@ -82,7 +82,7 @@ class Config(ApiConfigBase):
     oidc_client_id: Optional[str] = "ghga-data-portal"
 
     db_url: str = "mongodb://localhost:27017"
-    db_name: str = "user-registry"
+    db_name: str = "user-management"
     users_collection: str = "users"
     claims_collection: str = "claims"
 
