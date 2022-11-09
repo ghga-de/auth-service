@@ -153,7 +153,7 @@ class ClaimCreation(BaseDto):
 class ClaimUpdate(BaseDto):
     """A set of attributes that shall be updated in a claim."""
 
-    revocation_date: datetime = Field(None, title="Date of revocation")
+    revocation_date: datetime = Field(..., title="Date of revocation")
 
 
 class ClaimFullCreation(ClaimCreation):
