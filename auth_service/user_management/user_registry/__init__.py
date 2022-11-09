@@ -17,5 +17,3 @@
 
 The GHGA users registry holds all of the user related data.
 """
-
-__version__ = "0.1.0"

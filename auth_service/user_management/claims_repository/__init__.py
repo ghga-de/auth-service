@@ -17,5 +17,3 @@
 
 The GHGA claims repository holds all of the user claim related data.
 """
-
-__version__ = "0.1.0"
