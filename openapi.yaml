@@ -206,6 +206,8 @@ components:
           format: date-time
           title: Date of revocation
           type: string
+      required:
+      - revocation_date
       title: ClaimUpdate
       type: object
     Condition:
