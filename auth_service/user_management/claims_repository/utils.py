@@ -23,10 +23,8 @@ from hexkit.protocols.dao import ResourceNotFoundError
 from auth_service.user_management.user_registry.deps import UserDao
 
 
-async def user_exists(user_id, user_dao: UserDao) -> bool:
+async def user_exists(user_id: str, user_dao: UserDao) -> bool:
     """Check whether the user with the given id exists."""
-    if not user_id:
-        return False
     try:
         await user_dao.get_by_id(user_id)
     except ResourceNotFoundError:
