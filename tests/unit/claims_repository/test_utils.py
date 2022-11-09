@@ -27,6 +27,6 @@ from ...fixtures.utils import DummyUserDao
 async def test_user_exists():
     """Test that existence of users can be checked."""
     user_dao = DummyUserDao(id_="some-internal-id")
-    assert await user_exists(None, user_dao) is False
+    assert await user_exists(None, user_dao) is False  # type: ignore
     assert await user_exists("some-internal-id", user_dao) is True
     assert await user_exists("other-internal-id", user_dao) is False

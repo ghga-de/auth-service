@@ -161,12 +161,8 @@ async def patch_user(
     if claim.user_id != user_id:
         raise claim_not_found_error
 
-    revocation_date = claim_update.revocation_date
-    if not revocation_date:
-        raise HTTPException(status_code=422, detail="No revocation date given.")
-    if not revocation_date or (
-        claim.revocation_date and revocation_date > claim.revocation_date
-    ):
+    revocation_date = claim_update.revocation_date  # is not null per validation
+    if claim.revocation_date and revocation_date > claim.revocation_date:
         raise HTTPException(status_code=422, detail="Already revoked earlier.")
 
     current_user_id = "someone"  # needs to be changed

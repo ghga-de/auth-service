@@ -169,7 +169,6 @@ def test_patch_claim(client_with_db):
         f"/users/{user_id}/claims/{claim_id}", json=patch_data
     )
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    assert response.json()["detail"] == "No revocation date given."
 
     # test with later revocation date
     patch_data = {"revocation_date": "2022-10-15T13:00:00"}
@@ -199,13 +198,13 @@ def test_patch_claim(client_with_db):
 
     # test with non-existing user
     response = client_with_db.patch(
-        f"/users/john@aggh.org/claims/{claim_id}", json=CLAIM_DATA
+        f"/users/john@aggh.org/claims/{claim_id}", json=patch_data
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json()["detail"] == "The user claim was not found."
+    assert response.json()["detail"] == "The user was not found."
     # test with non-existing claim
     response = client_with_db.patch(
-        f"/users/{user_id}/claims/invalid-claim-id", json=CLAIM_DATA
+        f"/users/{user_id}/claims/invalid-claim-id", json=patch_data
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "The user claim was not found."
