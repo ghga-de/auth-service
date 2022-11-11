@@ -18,12 +18,18 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Mapping, Optional
+from typing import Any, AsyncIterator, Mapping, Optional
 
 from hexkit.protocols.dao import NoHitsFoundError, ResourceNotFoundError
 from jwcrypto import jwk, jwt
 
 from auth_service.auth_adapter.core.auth import jwt_config
+from auth_service.config import CONFIG
+from auth_service.user_management.claims_repository.models.dto import (
+    AuthorityLevel,
+    Claim,
+    VisaType,
+)
 from auth_service.user_management.user_registry.models.dto import User, UserStatus
 
 BASE_DIR = Path(__file__).parent.resolve()
@@ -122,3 +128,50 @@ class DummyUserDao:
         """Update the dummy user."""
         if user.id == self.user.id:
             self.user = user
+
+
+class DummyDataStewardClaimDao:
+    """ClaimDao that can retrieve a data steward claim for the dummy user."""
+
+    def __init__(self):
+        """Initialize the dummy ClaimDao"""
+        self.claim = Claim(
+            id="dummy-data-steward-claim-id",
+            user_id="john@ghga.org",
+            visa_type=VisaType.GHGA_ROLE,
+            visa_value="data_steward@some.org",
+            source=CONFIG.organization_url,
+            assertion_date=datetime(2022, 11, 1),
+            asserted_by=AuthorityLevel.SYSTEM,
+            valid_from=datetime(2022, 11, 15),
+            valid_until=datetime(2022, 11, 20),
+            creation_date=datetime(2022, 11, 1),
+            creation_by="jane@ghga.org",
+        )
+
+    @staticmethod
+    def now_valid():
+        """Get a valid date for the dummy data steward."""
+        return datetime(2022, 11, 17)
+
+    @staticmethod
+    def now_invalid():
+        """Get an invalid date for the dummy data steward."""
+        return datetime(2022, 11, 27)
+
+    async def get_by_id(self, id_: str) -> Claim:
+        """Get the dummy user claim via its ID."""
+        if id_ == self.claim.id:
+            return self.claim
+        raise ResourceNotFoundError(id_=id_)
+
+    async def find_all(self, *, mapping: Mapping[str, Any]) -> AsyncIterator[Claim]:
+        """Find all dummy user claims."""
+        claim = self.claim
+        claim_id, user_id, visa_type = claim.id, claim.user_id, claim.visa_type
+        if (
+            mapping.get("id", claim_id) == claim_id
+            and mapping.get("user_id", user_id) == user_id
+            and mapping.get("visa_type", visa_type) == visa_type
+        ):
+            yield claim
