@@ -23,7 +23,7 @@ from auth_service.user_management.claims_repository.core.utils import (
     user_exists,
 )
 
-from ...fixtures.utils import DummyDataStewardClaimDao, DummyUserDao
+from ...fixtures.utils import DummyClaimDao, DummyUserDao
 
 
 @mark.asyncio
@@ -38,21 +38,13 @@ async def test_user_exists():
 @mark.asyncio
 async def test_is_data_steward():
     """Test check that a user is a data steward."""
-    claim_dao = DummyDataStewardClaimDao()
-    user_dao = DummyUserDao()
-    assert await is_data_steward(
-        "john@ghga.org", user_dao, claim_dao, now=claim_dao.now_valid
-    )
+    claim_dao = DummyClaimDao()
+    user_dao = DummyUserDao(id_="james@ghga.de")
+    assert await is_data_steward("james@ghga.de", user_dao, claim_dao)
+    assert not await is_data_steward("john@ghga.de", user_dao, claim_dao)
     assert not await is_data_steward(
-        "john@ghga.org", user_dao, claim_dao, now=claim_dao.now_invalid
+        "james@ghga.de", user_dao, claim_dao, now=lambda: claim_dao.invalid_date
     )
-    assert not await is_data_steward(
-        "jane@ghga.org", user_dao, claim_dao, now=claim_dao.now_valid
-    )
-    user_dao = DummyUserDao("jane@ghga.org")
-    assert not await is_data_steward(
-        "john@ghga.org", user_dao, claim_dao, now=claim_dao.now_valid
-    )
-    assert not await is_data_steward(
-        "jane@ghga.org", user_dao, claim_dao, now=claim_dao.now_valid
-    )
+    user_dao = DummyUserDao("jane@ghga.de")
+    assert not await is_data_steward("james@ghga.de", user_dao, claim_dao)
+    assert not await is_data_steward("john@ghga.de", user_dao, claim_dao)

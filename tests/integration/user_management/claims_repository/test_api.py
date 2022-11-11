@@ -60,7 +60,7 @@ def test_post_claim(client_with_db):
     user_dao = DummyUserDao()
     client_with_db.app.dependency_overrides[get_user_dao] = lambda: user_dao
 
-    response = client_with_db.post("/users/john@ghga.org/claims", json=CLAIM_DATA)
+    response = client_with_db.post("/users/john@ghga.de/claims", json=CLAIM_DATA)
 
     claim = response.json()
     assert response.status_code == status.HTTP_201_CREATED, claim
@@ -69,7 +69,7 @@ def test_post_claim(client_with_db):
     assert claim_id is not None
     assert len(claim_id) == 36
     assert claim_id.count("-") == 4
-    assert claim.pop("user_id") == "john@ghga.org"
+    assert claim.pop("user_id") == "john@ghga.de"
     assert claim.pop("sub_source") is None
     assert claim.pop("asserted_by") is None
     assert claim.pop("conditions") is None
@@ -81,7 +81,7 @@ def test_post_claim(client_with_db):
     assert claim == CLAIM_DATA
 
     # test with non-existing user
-    response = client_with_db.post("/users/john@aggh.org/claims", json=CLAIM_DATA)
+    response = client_with_db.post("/users/john@haag.de/claims", json=CLAIM_DATA)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "The user was not found."
 
@@ -92,7 +92,7 @@ def test_get_claims(client_with_db):
     user_dao = DummyUserDao()
     client_with_db.app.dependency_overrides[get_user_dao] = lambda: user_dao
 
-    user_id = "john@ghga.org"
+    user_id = "john@ghga.de"
 
     # post two different claims
     claim1 = CLAIM_DATA
@@ -122,7 +122,7 @@ def test_get_claims(client_with_db):
     assert requested_claims[0]["visa_value"] != requested_claims[1]["visa_value"]
 
     # test with non-existing user
-    response = client_with_db.get("/users/john@aggh.org/claims")
+    response = client_with_db.get("/users/john@haag.de/claims")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "The user was not found."
 
@@ -133,7 +133,7 @@ def test_patch_claim(client_with_db):
     user_dao = DummyUserDao()
     client_with_db.app.dependency_overrides[get_user_dao] = lambda: user_dao
 
-    user_id = "john@ghga.org"
+    user_id = "john@ghga.de"
 
     # post test claim
     response = client_with_db.post(f"/users/{user_id}/claims", json=CLAIM_DATA)
@@ -198,7 +198,7 @@ def test_patch_claim(client_with_db):
 
     # test with non-existing user
     response = client_with_db.patch(
-        f"/users/john@aggh.org/claims/{claim_id}", json=patch_data
+        f"/users/john@haag.de/claims/{claim_id}", json=patch_data
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "The user was not found."
@@ -216,7 +216,7 @@ def test_delete_claim(client_with_db):
     user_dao = DummyUserDao()
     client_with_db.app.dependency_overrides[get_user_dao] = lambda: user_dao
 
-    user_id = "john@ghga.org"
+    user_id = "john@ghga.de"
 
     # post two different claims
     claim1 = CLAIM_DATA.copy()
@@ -231,7 +231,7 @@ def test_delete_claim(client_with_db):
 
     # test deletion of first claim with non-existing user
     claim_id = claim1["id"]
-    response = client_with_db.delete(f"/users/john@aggh.org/claims/{claim_id}")
+    response = client_with_db.delete(f"/users/john@haag.de/claims/{claim_id}")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
     # test that claims have been posted

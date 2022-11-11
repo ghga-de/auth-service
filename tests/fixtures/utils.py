@@ -16,7 +16,7 @@
 """Utils for testing"""
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, AsyncIterator, Mapping, Optional
 
@@ -68,7 +68,7 @@ def create_access_token(
     token = jwt.JWT(header=header, claims=claims)
     token.make_signed_token(key)
     access_token = token.serialize()
-    assert isinstance(access_token, str)
+    assert token and isinstance(access_token, str)
     assert len(access_token) > 50
     assert access_token.count(".") == 2
     return access_token
@@ -82,7 +82,7 @@ def get_claims_from_token(token: str, key: Optional[jwk.JWK] = None) -> dict[str
     if not key:
         key = jwt_config.internal_jwk
     assert isinstance(key, jwk.JWK)
-    assert isinstance(token, str)
+    assert token and isinstance(token, str)
     assert len(token) > 50
     assert token.count(".") == 2
     claims = json.loads(jwt.JWT(jwt=token, key=key).claims)
@@ -95,7 +95,7 @@ class DummyUserDao:
 
     def __init__(
         self,
-        id_="john@ghga.org",
+        id_="john@ghga.de",
         name="John Doe",
         email="john@home.org",
         ls_id="john@aai.org",
@@ -130,34 +130,26 @@ class DummyUserDao:
             self.user = user
 
 
-class DummyDataStewardClaimDao:
-    """ClaimDao that can retrieve a data steward claim for the dummy user."""
+class DummyClaimDao:
+    """ClaimDao that can retrieve a dummy data steward claim."""
 
-    def __init__(self):
+    def __init__(self, valid_date=datetime.now()):
         """Initialize the dummy ClaimDao"""
+        self.valid_date = valid_date
+        self.invalid_date = valid_date + timedelta(14)
         self.claim = Claim(
-            id="dummy-data-steward-claim-id",
-            user_id="john@ghga.org",
+            id="dummy-claim-id",
+            user_id="james@ghga.de",
             visa_type=VisaType.GHGA_ROLE,
             visa_value="data_steward@some.org",
             source=CONFIG.organization_url,
-            assertion_date=datetime(2022, 11, 1),
+            assertion_date=valid_date - timedelta(14),
             asserted_by=AuthorityLevel.SYSTEM,
-            valid_from=datetime(2022, 11, 15),
-            valid_until=datetime(2022, 11, 20),
-            creation_date=datetime(2022, 11, 1),
-            creation_by="jane@ghga.org",
+            valid_from=valid_date - timedelta(7),
+            valid_until=valid_date + timedelta(7),
+            creation_date=valid_date - timedelta(10),
+            creation_by="maria@ghga.de",
         )
-
-    @staticmethod
-    def now_valid():
-        """Get a valid date for the dummy data steward."""
-        return datetime(2022, 11, 17)
-
-    @staticmethod
-    def now_invalid():
-        """Get an invalid date for the dummy data steward."""
-        return datetime(2022, 11, 27)
 
     async def get_by_id(self, id_: str) -> Claim:
         """Get the dummy user claim via its ID."""
