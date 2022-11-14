@@ -64,7 +64,6 @@ jobs:
         id: docker_build
         with:
           push: true
-          platforms: linux/amd64,linux/arm64/v8
           tags: "ghga/${{ github.event.repository.name }}:${{ needs.get_commit_version.outputs.version }},ghga/${{ github.event.repository.name }}:${{ needs.get_commit_version.outputs.branch }}"
 
       - name: Image digest
