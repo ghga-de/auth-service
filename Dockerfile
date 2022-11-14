@@ -13,20 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.10.8-slim-bullseye
+FROM python:3.10.5-alpine3.16
 
 COPY . /service
 WORKDIR /service
 
-# install dependencies
-RUN apt update && apt dist-upgrade -y
+RUN apk update && apk upgrade
+RUN apk add --no-cache gcc
+RUN apk add --update alpine-sdk
+# Security patch toss busybox
+RUN apk upgrade busybox --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
+
 RUN pip install .
 
 # create new user and execute as that user
-RUN useradd --create-home appuser
-WORKDIR /home/appuser
+RUN addgroup -S appuser && adduser -S appuser -G appuser
 USER appuser
+WORKDIR /home/appuser
 
 ENV PYTHONUNBUFFERED=1
 
+# Please adapt to package name:
 ENTRYPOINT ["auth-service"]
