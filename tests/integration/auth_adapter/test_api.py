@@ -308,6 +308,8 @@ def test_token_exchange_for_known_user(
 
     user_dao: UserDao = DummyUserDao()
     client.app.dependency_overrides[get_user_dao] = lambda: user_dao
+    claim_dao: ClaimDao = DummyClaimDao()
+    client.app.dependency_overrides[get_claim_dao] = lambda: claim_dao
     user = user_dao.user
 
     # Check that we get an internal token for the user
