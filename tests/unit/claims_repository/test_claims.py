@@ -64,7 +64,7 @@ def test_is_data_steward_claim():
         visa_type=VisaType.GHGA_ROLE,
         visa_value="data_steward@some.org",
         source=CONFIG.organization_url,
-        assertion_date=datetime(2022, 11, 1),
+        assertion_date=DateTimeUTC.create(2022, 11, 1),
         asserted_by=AuthorityLevel.SYSTEM,
         valid_from=DateTimeUTC.create(2022, 11, 15),
         valid_until=DateTimeUTC.create(2022, 11, 20),
