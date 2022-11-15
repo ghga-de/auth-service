@@ -16,7 +16,7 @@
 """Utils for testing"""
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, AsyncIterator, Mapping, Optional
 
@@ -31,11 +31,9 @@ from auth_service.user_management.claims_repository.models.dto import (
     VisaType,
 )
 from auth_service.user_management.user_registry.models.dto import User, UserStatus
-from auth_service.user_management.utils import now_as_utc
+from auth_service.user_management.utils import DateTimeUTC, now_as_utc
 
 BASE_DIR = Path(__file__).parent.resolve()
-
-UTC = timezone.utc
 
 
 def create_access_token(
@@ -111,7 +109,7 @@ class DummyUserDao:
             ls_id=ls_id,
             status=UserStatus.ACTIVATED,
             status_change=None,
-            registration_date=datetime(2020, 1, 1, tzinfo=UTC),
+            registration_date=DateTimeUTC.create(2020, 1, 1),
         )
 
     async def get_by_id(self, id_: str) -> User:

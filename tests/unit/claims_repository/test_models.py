@@ -16,8 +16,6 @@
 
 """Test Claims models and show some usage examples."""
 
-from datetime import datetime, timezone
-
 from pytest import mark, raises
 
 from auth_service.user_management.claims_repository.models.dto import (
@@ -30,8 +28,7 @@ from auth_service.user_management.claims_repository.models.dto import (
     MatchType,
     VisaType,
 )
-
-UTC = timezone.utc
+from auth_service.user_management.utils import DateTimeUTC
 
 
 @mark.parametrize(
@@ -44,9 +41,9 @@ def test_good_visa_values(value):
         user_id="foo-bar",
         visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
         visa_value=value,
-        assertion_date=datetime(2022, 9, 1, 12, 0, tzinfo=UTC),
-        valid_from=datetime(2022, 10, 1, 0, 0, tzinfo=UTC),
-        valid_until=datetime(2022, 10, 31, 23, 59, tzinfo=UTC),
+        assertion_date=DateTimeUTC.create(2022, 9, 1, 12, 0),
+        valid_from=DateTimeUTC.create(2022, 10, 1, 0, 0),
+        valid_until=DateTimeUTC.create(2022, 10, 31, 23, 59),
         source="https://foo-bar.org",
     )
 
@@ -70,9 +67,9 @@ def test_bad_visa_values(value):
             user_id="foo-bar",
             visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
             visa_value=value,
-            assertion_date=datetime(2022, 9, 1, 12, 0, tzinfo=UTC),
-            valid_from=datetime(2022, 10, 1, 0, 0, tzinfo=UTC),
-            valid_until=datetime(2022, 10, 31, 23, 59, tzinfo=UTC),
+            assertion_date=DateTimeUTC.create(2022, 9, 1, 12, 0),
+            valid_from=DateTimeUTC.create(2022, 10, 1, 0, 0),
+            valid_until=DateTimeUTC.create(2022, 10, 31, 23, 59),
             source="https://foo-bar.org",
         )
 
@@ -83,9 +80,9 @@ def test_conditions():
         user_id="foo-bar",
         visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
         visa_value="baz@foo-bar.org",
-        assertion_date=datetime(2022, 9, 1, 12, 0, tzinfo=UTC),
-        valid_from=datetime(2022, 10, 1, 0, 0, tzinfo=UTC),
-        valid_until=datetime(2022, 10, 31, 23, 59, tzinfo=UTC),
+        assertion_date=DateTimeUTC.create(2022, 9, 1, 12, 0),
+        valid_from=DateTimeUTC.create(2022, 10, 1, 0, 0),
+        valid_until=DateTimeUTC.create(2022, 10, 31, 23, 59),
         source="https://foo-bar.org",
         sub_source="https://baz.foo-bar.org",
         asserted_by=AuthorityLevel.DAC,
@@ -142,24 +139,24 @@ def test_conditions():
     "valid_from, valid_until",
     [
         (
-            datetime(2022, 10, 1, 0, 0, tzinfo=UTC),
-            datetime(2022, 10, 31, 23, 59, tzinfo=UTC),
+            DateTimeUTC.create(2022, 10, 1, 0, 0),
+            DateTimeUTC.create(2022, 10, 31, 23, 59),
         ),
         (
-            datetime(2001, 12, 31, 23, 59, tzinfo=UTC),
-            datetime(2021, 1, 1, 0, 0, tzinfo=UTC),
+            DateTimeUTC.create(2001, 12, 31, 23, 59),
+            DateTimeUTC.create(2021, 1, 1, 0, 0),
         ),
         (
-            datetime(2020, 6, 15, 12, 59, tzinfo=UTC),
-            datetime(2020, 6, 15, 13, 1, tzinfo=UTC),
+            DateTimeUTC.create(2020, 6, 15, 12, 59),
+            DateTimeUTC.create(2020, 6, 15, 13, 1),
         ),
         (
-            datetime(2022, 2, 28, 13, 1, tzinfo=UTC),
-            datetime(2022, 3, 1, 12, 59, tzinfo=UTC),
+            DateTimeUTC.create(2022, 2, 28, 13, 1),
+            DateTimeUTC.create(2022, 3, 1, 12, 59),
         ),
         (
-            datetime(2021, 12, 31, 23, 59, tzinfo=UTC),
-            datetime(2022, 1, 1, 0, 0, tzinfo=UTC),
+            DateTimeUTC.create(2021, 12, 31, 23, 59),
+            DateTimeUTC.create(2022, 1, 1, 0, 0),
         ),
     ],
 )
@@ -169,7 +166,7 @@ def test_validator_period(valid_from, valid_until):
         user_id="foo",
         visa_type=VisaType.RESEARCHER_STATUS,
         visa_value="foo@bar.org",
-        assertion_date=datetime(2022, 9, 1, 12, 0, tzinfo=UTC),
+        assertion_date=DateTimeUTC.create(2022, 9, 1, 12, 0),
         valid_from=valid_from,
         valid_until=valid_until,
         source="https://foo.org",
@@ -180,8 +177,8 @@ def test_validator_period(valid_from, valid_until):
             user_id="foo",
             visa_type=VisaType.RESEARCHER_STATUS,
             visa_value="foo@bar.org",
-            assertion_date=datetime(2022, 9, 1, 12, 0, tzinfo=UTC),
-            valid_from=datetime(2022, 10, 1, tzinfo=UTC),
+            assertion_date=DateTimeUTC.create(2022, 9, 1, 12, 0),
+            valid_from=DateTimeUTC.create(2022, 10, 1),
             valid_until=valid_from,
             source="https://foo.org",
         )
@@ -191,7 +188,7 @@ def test_validator_period(valid_from, valid_until):
             user_id="foo",
             visa_type=VisaType.RESEARCHER_STATUS,
             visa_value="foo@bar.org",
-            assertion_date=datetime(2022, 9, 1, 12, 0, tzinfo=UTC),
+            assertion_date=DateTimeUTC.create(2022, 9, 1, 12, 0),
             valid_from=valid_from,
             valid_until=valid_from,
             source="https://foo.org",

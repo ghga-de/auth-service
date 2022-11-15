@@ -34,6 +34,13 @@ class DateTimeUTC(datetime):
     """
 
     @classmethod
+    def create(cls, *args, **kwargs):
+        """Create a datetime with UTC timezone."""
+        if kwargs.get("tzinfo") is None:
+            kwargs["tzinfo"] = UTC
+        return cls(*args, **kwargs)
+
+    @classmethod
     def __get_validators__(cls):
         """Get all validators."""
         yield cls.validate

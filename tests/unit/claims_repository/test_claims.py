@@ -16,7 +16,7 @@
 
 """Unit tests for the core claims module."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from auth_service.config import CONFIG
 from auth_service.user_management.claims_repository.core.claims import (
@@ -28,8 +28,7 @@ from auth_service.user_management.claims_repository.models.dto import (
     Claim,
     VisaType,
 )
-
-UTC = timezone.utc
+from auth_service.user_management.utils import DateTimeUTC
 
 
 def test_is_valid_claim():
@@ -40,21 +39,21 @@ def test_is_valid_claim():
         visa_type=VisaType.RESEARCHER_STATUS,
         visa_value="https://home.org",
         source="https://home.org",
-        assertion_date=datetime(2022, 11, 1, tzinfo=UTC),
-        valid_from=datetime(2022, 11, 15, tzinfo=UTC),
-        valid_until=datetime(2022, 11, 20, tzinfo=UTC),
-        creation_date=datetime(2022, 11, 1, tzinfo=UTC),
+        assertion_date=DateTimeUTC.create(2022, 11, 1),
+        valid_from=DateTimeUTC.create(2022, 11, 15),
+        valid_until=DateTimeUTC.create(2022, 11, 20),
+        creation_date=DateTimeUTC.create(2022, 11, 1),
         creation_by="user-id",
     )
-    assert is_valid_claim(claim, now=lambda: datetime(2022, 11, 17, tzinfo=UTC))
-    assert not is_valid_claim(claim, now=lambda: datetime(2020, 1, 1, tzinfo=UTC))
-    assert not is_valid_claim(claim, now=lambda: datetime(2022, 11, 7, tzinfo=UTC))
-    assert not is_valid_claim(claim, now=lambda: datetime(2022, 11, 27, tzinfo=UTC))
-    assert not is_valid_claim(claim, now=lambda: datetime(2029, 12, 31, tzinfo=UTC))
-    claim = claim.copy(update=dict(revocation_date=datetime(2022, 11, 30, tzinfo=UTC)))
-    assert not is_valid_claim(claim, now=lambda: datetime(2020, 1, 1, tzinfo=UTC))
-    assert not is_valid_claim(claim, now=lambda: datetime(2022, 11, 17, tzinfo=UTC))
-    assert not is_valid_claim(claim, now=lambda: datetime(2029, 12, 31, tzinfo=UTC))
+    assert is_valid_claim(claim, now=lambda: DateTimeUTC.create(2022, 11, 17))
+    assert not is_valid_claim(claim, now=lambda: DateTimeUTC.create(2020, 1, 1))
+    assert not is_valid_claim(claim, now=lambda: DateTimeUTC.create(2022, 11, 7))
+    assert not is_valid_claim(claim, now=lambda: DateTimeUTC.create(2022, 11, 27))
+    assert not is_valid_claim(claim, now=lambda: DateTimeUTC.create(2029, 12, 31))
+    claim = claim.copy(update=dict(revocation_date=datetime(2022, 11, 30)))
+    assert not is_valid_claim(claim, now=lambda: DateTimeUTC.create(2020, 1, 1))
+    assert not is_valid_claim(claim, now=lambda: DateTimeUTC.create(2022, 11, 17))
+    assert not is_valid_claim(claim, now=lambda: DateTimeUTC.create(2029, 12, 31))
 
 
 def test_is_data_steward_claim():
@@ -65,11 +64,11 @@ def test_is_data_steward_claim():
         visa_type=VisaType.GHGA_ROLE,
         visa_value="data_steward@some.org",
         source=CONFIG.organization_url,
-        assertion_date=datetime(2022, 11, 1, tzinfo=UTC),
+        assertion_date=datetime(2022, 11, 1),
         asserted_by=AuthorityLevel.SYSTEM,
-        valid_from=datetime(2022, 11, 15, tzinfo=UTC),
-        valid_until=datetime(2022, 11, 20, tzinfo=UTC),
-        creation_date=datetime(2022, 11, 1, tzinfo=UTC),
+        valid_from=DateTimeUTC.create(2022, 11, 15),
+        valid_until=DateTimeUTC.create(2022, 11, 20),
+        creation_date=DateTimeUTC.create(2022, 11, 1),
         creation_by="user-id",
     )
     assert is_data_steward_claim(good_claim)
