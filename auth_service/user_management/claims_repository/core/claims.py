@@ -18,10 +18,10 @@
 Definitions and helper functions for validating user claims.
 """
 
-from datetime import datetime
 from typing import Callable
 
 from ....config import CONFIG
+from ...utils import DateTimeUTC, now_as_utc
 from ..models.dto import AuthorityLevel, Claim, VisaType
 
 __all__ = ["is_valid_claim", "is_data_steward_claim"]
@@ -31,7 +31,7 @@ INTERNAL_SOURCE = CONFIG.organization_url
 DATA_STEWARD_ROLE = "data_steward"
 
 
-def is_valid_claim(claim: Claim, now: Callable[[], datetime] = datetime.now) -> bool:
+def is_valid_claim(claim: Claim, now: Callable[[], DateTimeUTC] = now_as_utc) -> bool:
     """Check whether the given claim is currently valid."""
     return not claim.revocation_date and claim.valid_from <= now() <= claim.valid_until
 
