@@ -16,12 +16,11 @@
 
 """Unit tests for the core token exchange feature"""
 
-from datetime import datetime
-
 from pytest import mark, raises
 
 from auth_service.auth_adapter.core.auth import TokenValidationError, exchange_token
 from auth_service.user_management.user_registry.models.dto import UserStatus
+from auth_service.user_management.utils import now_as_utc
 
 from ...fixtures.utils import (
     DummyClaimDao,
@@ -57,7 +56,7 @@ async def test_exchanges_token_for_unknown_user_if_requested():
     assert claims["ls_id"] == "john@aai.org"
     assert isinstance(claims["iat"], int)
     assert isinstance(claims["exp"], int)
-    assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
+    assert claims["iat"] <= int(now_as_utc().timestamp()) < claims["exp"]
 
 
 @mark.asyncio
@@ -88,7 +87,7 @@ async def test_exchanges_access_token_for_a_known_user():
     assert claims["status"] == "activated"
     assert isinstance(claims["iat"], int)
     assert isinstance(claims["exp"], int)
-    assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
+    assert claims["iat"] <= int(now_as_utc().timestamp()) < claims["exp"]
     assert user_dao.user.status is UserStatus.ACTIVATED
     assert user_dao.user.status_change is None
 
@@ -124,13 +123,13 @@ async def test_exchanges_access_token_when_name_was_changed():
     assert claims["status"] == "inactivated"
     assert isinstance(claims["iat"], int)
     assert isinstance(claims["exp"], int)
-    assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
+    assert claims["iat"] <= int(now_as_utc().timestamp()) < claims["exp"]
     status_change = user_dao.user.status_change
     assert status_change is not None
     assert status_change.previous is UserStatus.ACTIVATED
     assert status_change.by is None
     assert status_change.context == "name changed"
-    assert 0 <= (datetime.now() - status_change.change_date).total_seconds() < 5
+    assert 0 <= (now_as_utc() - status_change.change_date).total_seconds() < 5
 
 
 @mark.asyncio
@@ -150,13 +149,13 @@ async def test_exchanges_access_token_when_email_was_changed():
     assert claims["status"] == "inactivated"
     assert isinstance(claims["iat"], int)
     assert isinstance(claims["exp"], int)
-    assert claims["iat"] <= int(datetime.now().timestamp()) < claims["exp"]
+    assert claims["iat"] <= int(now_as_utc().timestamp()) < claims["exp"]
     status_change = user_dao.user.status_change
     assert status_change is not None
     assert status_change.previous is UserStatus.ACTIVATED
     assert status_change.by is None
     assert status_change.context == "email changed"
-    assert 0 <= (datetime.now() - status_change.change_date).total_seconds() < 5
+    assert 0 <= (now_as_utc() - status_change.change_date).total_seconds() < 5
 
 
 @mark.asyncio

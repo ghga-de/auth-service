@@ -18,7 +18,7 @@
 
 import json
 import logging
-from datetime import datetime
+from datetime import timezone
 from typing import Any, Optional
 
 from hexkit.protocols.dao import NoHitsFoundError
@@ -34,10 +34,13 @@ from auth_service.user_management.user_registry.models.dto import (
     User,
     UserStatus,
 )
+from auth_service.user_management.utils import now_as_utc
 
 __all__ = ["exchange_token", "jwt_config"]
 
 log = logging.getLogger(__name__)
+
+UTC = timezone.utc
 
 
 class AuthAdapterError(Exception):
@@ -132,7 +135,7 @@ def _get_inactivated_user(user: User, context: str) -> User:
                 previous=user.status,
                 by=None,
                 context=context,
-                change_date=datetime.now(),
+                change_date=now_as_utc(),
             ),
         )
     )

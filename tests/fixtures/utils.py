@@ -16,7 +16,7 @@
 """Utils for testing"""
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, AsyncIterator, Mapping, Optional
 
@@ -31,8 +31,11 @@ from auth_service.user_management.claims_repository.models.dto import (
     VisaType,
 )
 from auth_service.user_management.user_registry.models.dto import User, UserStatus
+from auth_service.user_management.utils import now_as_utc
 
 BASE_DIR = Path(__file__).parent.resolve()
+
+UTC = timezone.utc
 
 
 def create_access_token(
@@ -58,7 +61,7 @@ def create_access_token(
         sub="john@aai.org",
         foo="bar",
     )
-    iat = int(datetime.now().timestamp())
+    iat = int(now_as_utc().timestamp())
     exp = iat + 60
     if expired:
         iat -= 120
@@ -108,7 +111,7 @@ class DummyUserDao:
             ls_id=ls_id,
             status=UserStatus.ACTIVATED,
             status_change=None,
-            registration_date=datetime(2020, 1, 1),
+            registration_date=datetime(2020, 1, 1, tzinfo=UTC),
         )
 
     async def get_by_id(self, id_: str) -> User:
@@ -133,7 +136,7 @@ class DummyUserDao:
 class DummyClaimDao:
     """ClaimDao that can retrieve a dummy data steward claim."""
 
-    def __init__(self, valid_date=datetime.now()):
+    def __init__(self, valid_date=now_as_utc()):
         """Initialize the dummy ClaimDao"""
         self.valid_date = valid_date
         self.invalid_date = valid_date + timedelta(14)

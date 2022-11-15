@@ -30,9 +30,9 @@ from ..fixtures import (  # noqa: F401; pylint: disable=unused-import
 CLAIM_DATA = dict(
     visa_type="GHGA_ROLE",
     visa_value="data-steward@ghga.de",
-    assertion_date="2022-09-01T12:00:00",
-    valid_from="2022-10-01T12:00:00",
-    valid_until="2022-10-31T12:00:00",
+    assertion_date="2022-09-01T12:00:00+00:00",
+    valid_from="2022-10-01T12:00:00+00:00",
+    valid_until="2022-10-31T12:00:00+00:00",
     source="https://ghga.de",
 )
 
@@ -146,7 +146,7 @@ def test_patch_claim(client_with_db):
     assert posted_claim.pop("revocation_by") is None
 
     # revoke test claim
-    revocation_date = "2022-10-15T12:00:00"
+    revocation_date = "2022-10-15T12:00:00+00:00"
     patch_data = {"revocation_date": revocation_date}
     response = client_with_db.patch(
         f"/users/{user_id}/claims/{claim_id}", json=patch_data
@@ -171,7 +171,7 @@ def test_patch_claim(client_with_db):
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     # test with later revocation date
-    patch_data = {"revocation_date": "2022-10-15T13:00:00"}
+    patch_data = {"revocation_date": "2022-10-15T13:00:00+00:00"}
     response = client_with_db.patch(
         f"/users/{user_id}/claims/{claim_id}", json=patch_data
     )
@@ -179,7 +179,7 @@ def test_patch_claim(client_with_db):
     assert response.json()["detail"] == "Already revoked earlier."
 
     # test with earlier revocation date
-    revocation_date = "2022-10-15T11:00:00"
+    revocation_date = "2022-10-15T11:00:00+00:00"
     patch_data = {"revocation_date": revocation_date}
     response = client_with_db.patch(
         f"/users/{user_id}/claims/{claim_id}", json=patch_data

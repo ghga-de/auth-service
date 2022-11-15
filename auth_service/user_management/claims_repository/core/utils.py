@@ -18,13 +18,13 @@
 Core utilities for the Claims Repository.
 """
 
-from datetime import datetime
 from typing import Callable
 
 from hexkit.protocols.dao import ResourceNotFoundError
 
 from auth_service.user_management.user_registry.deps import UserDao
 
+from ...utils import DateTimeUTC, now_as_utc
 from ..deps import ClaimDao
 from ..models.dto import VisaType
 from .claims import is_data_steward_claim, is_valid_claim
@@ -46,7 +46,7 @@ async def is_data_steward(
     user_id: str,
     user_dao: UserDao,
     claim_dao: ClaimDao,
-    now: Callable[[], datetime] = datetime.now,
+    now: Callable[[], DateTimeUTC] = now_as_utc,
 ):
     """Check whether the user with the given ID is a data steward."""
     if not await user_exists(user_id, user_dao=user_dao):

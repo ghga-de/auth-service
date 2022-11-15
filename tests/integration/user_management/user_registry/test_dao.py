@@ -16,7 +16,7 @@
 
 """Test user specific DAOs."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from hexkit.providers.mongodb.testutils import (  # noqa: F401; pylint: disable=unused-import
     mongodb_fixture,
@@ -36,6 +36,8 @@ from auth_service.user_management.user_registry.models.dto import (
     UserStatus,
 )
 from auth_service.user_management.user_registry.utils import is_internal_id
+
+UTC = timezone.utc
 
 
 @mark.asyncio
@@ -59,7 +61,7 @@ async def test_user_creation(
         email="max@example.org",
         research_topics="genes",
         registration_reasons="for testing",
-        registration_date=datetime(2022, 9, 1, 12, 0),
+        registration_date=datetime(2022, 9, 1, 12, 0, tzinfo=UTC),
         status_change=StatusChange(previous=None, by=None, context="test"),
     )
     user = await user_dao.insert(user_data)
