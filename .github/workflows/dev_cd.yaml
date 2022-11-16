@@ -66,6 +66,16 @@ jobs:
           push: true
           tags: "ghga/${{ github.event.repository.name }}:${{ needs.get_commit_version.outputs.version }},ghga/${{ github.event.repository.name }}:${{ needs.get_commit_version.outputs.branch }}"
 
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/ghga/${{ github.event.repository.name }}:${{ needs.get_commit_version.outputs.version }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
 
