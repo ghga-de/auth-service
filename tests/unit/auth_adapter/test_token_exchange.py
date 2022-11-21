@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-"""Unit tests for the core token exchange feature"""
+"""Unit tests for the auth adapter core token exchange feature"""
 
 from ghga_service_chassis_lib.utils import now_as_utc
 from pytest import mark, raises

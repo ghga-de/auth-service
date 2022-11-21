@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-"""Unit tests for the core token signing feature"""
+"""Unit tests for the auth adapter core token signing feature"""
 
 from pytest import raises
 

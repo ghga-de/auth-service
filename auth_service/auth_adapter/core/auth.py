@@ -207,10 +207,12 @@ def _assert_claims_not_empty(claims: dict[str, Any]) -> None:
             raise TokenValidationError(f"Missing value for {claim} claim.")
 
 
-def decode_and_validate_token(access_token: str, key=None) -> dict[str, Any]:
+def decode_and_validate_token(
+    access_token: str, key: Optional[jwk.JWKSet] = None
+) -> dict[str, Any]:
     """Decode and validate the given JSON Web Token.
 
-    Rerturns the decoded claims in the token as a dictionary if valid.
+    Returns the decoded claims in the token as a dictionary if valid.
 
     Raises a TokenValidationError in case the token could not be validated.
     """
@@ -240,7 +242,7 @@ def decode_and_validate_token(access_token: str, key=None) -> dict[str, Any]:
     return claims
 
 
-def sign_and_encode_token(claims: dict[str, Any], key=None) -> str:
+def sign_and_encode_token(claims: dict[str, Any], key: Optional[jwk.JWK] = None) -> str:
     """Encode and sign the given payload as JSON Web Token.
 
     Returns the signed and encoded payload.

@@ -20,6 +20,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any, AsyncIterator, Mapping, Optional
 
+from fastapi import Request
 from ghga_service_chassis_lib.utils import DateTimeUTC, now_as_utc
 from hexkit.protocols.dao import NoHitsFoundError, ResourceNotFoundError
 from jwcrypto import jwk, jwt
@@ -39,7 +40,7 @@ datetime_utc = DateTimeUTC.construct
 
 
 def create_access_token(
-    key: Optional[jwk.JWK] = None, expired: bool = False, **kwargs
+    key: Optional[jwk.JWK] = None, expired: bool = False, **kwargs: Optional[str]
 ) -> str:
     """Create an external access token that can be used for testing.
 
@@ -77,6 +78,40 @@ def create_access_token(
     return access_token
 
 
+def create_internal_token(
+    key: Optional[jwk.JWK] = None,
+    expired: bool = False,
+    **kwargs: Optional[str],
+) -> str:
+    """Create an internal token that can be used for testing.
+
+    If no signing key is provided, the internal_jwk from the global jwt_config is used.
+    """
+    if not key:
+        key = jwt_config.internal_jwk
+    assert isinstance(key, jwk.JWK)
+    kty = key["kty"]
+    assert kty in ("EC", "RSA")
+    header = {"alg": "ES256" if kty == "EC" else "RS256", "typ": "JWT"}
+    claims: dict[str, Any] = dict(
+        name="John Doe", email="john@home.org", status="activated"
+    )
+    iat = int(now_as_utc().timestamp())
+    exp = iat + 60
+    if expired:
+        iat -= 120
+        exp -= 120
+    claims.update(iat=iat, exp=exp)
+    claims.update(kwargs)
+    token = jwt.JWT(header=header, claims=claims)
+    token.make_signed_token(key)
+    internal_token = token.serialize()
+    assert token and isinstance(internal_token, str)
+    assert len(internal_token) > 50
+    assert internal_token.count(".") == 2
+    return internal_token
+
+
 def get_claims_from_token(token: str, key: Optional[jwk.JWK] = None) -> dict[str, Any]:
     """Decode the given JWT token and get its claims.
 
@@ -91,6 +126,12 @@ def get_claims_from_token(token: str, key: Optional[jwk.JWK] = None) -> dict[str
     claims = json.loads(jwt.JWT(jwt=token, key=key).claims)
     assert isinstance(claims, dict)
     return claims
+
+
+def request_with_authorization(token: str = "") -> Request:
+    """Get a dummy request with the given bearer token in the authorization header."""
+    authorization = f"Bearer {token}".encode("ascii")
+    return Request(dict(type="http", headers=[(b"authorization", authorization)]))
 
 
 class DummyUserDao:
