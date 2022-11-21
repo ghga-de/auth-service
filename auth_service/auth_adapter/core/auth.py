@@ -143,7 +143,7 @@ async def exchange_token(
     pass_sub: bool = False,
     user_dao: UserDao = Depends(),
     claim_dao: ClaimDao = Depends(),
-) -> str:
+) -> Optional[str]:
     """Exchange the external token against an internal token.
 
     If the provided external token is valid, a corresponding internal token
@@ -156,8 +156,8 @@ async def exchange_token(
     If name or email do not match with the external token, the user
     is automatically deactivated in the database and internal token.
     If the user is not yet registered, and pass_sub is set, then the sub claim
-    will be included in the internal token as "ls_id", otherwise an empty string
-    will be returned instead of the internal token.
+    will be included in the internal token as "ls_id", otherwise the value None
+    will be returned instead of a token.
     If the user has a special internal role, this is passed as the "role"
     claim of the internal token.
 
@@ -174,7 +174,7 @@ async def exchange_token(
     except NoHitsFoundError:
         # user is not yet registered
         if not pass_sub:
-            return ""
+            return None
         internal_claims[jwt_config.copy_sub_as] = sub
     else:
         # user already exists in the registry
@@ -189,8 +189,7 @@ async def exchange_token(
             user.id, user_dao=user_dao, claim_dao=claim_dao
         ):
             internal_claims.update(role="data_steward")
-    internal_token = sign_and_encode_token(internal_claims)
-    return internal_token
+    return sign_and_encode_token(internal_claims)
 
 
 def _assert_claims_not_empty(claims: dict[str, Any]) -> None:

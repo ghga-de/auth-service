@@ -64,8 +64,7 @@ async def test_does_not_exchange_for_unknown_user_if_not_requested():
     """Test token exchange for a valid but unknown user without pass_sub flag."""
     access_token = create_access_token()
     user_dao = DummyUserDao(ls_id="not.john@aai.org")
-    internal_token = await exchange_token(access_token, user_dao=user_dao)
-    assert internal_token == ""
+    assert await exchange_token(access_token, user_dao=user_dao) is None
 
 
 @mark.asyncio
