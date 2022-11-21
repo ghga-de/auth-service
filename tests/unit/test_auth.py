@@ -32,6 +32,7 @@ from auth_service.user_management.auth import (
     decode_and_validate_token,
     jwt_config,
 )
+from auth_service.user_management.user_registry.models.dto import UserStatus
 
 from ..fixtures.utils import create_internal_token, request_with_authorization
 
@@ -195,6 +196,47 @@ async def test_fetches_internal_token_from_an_authorization_header(fetcher: type
     assert isinstance(token.exp, datetime)
     assert token.exp.tzinfo is UTC
     assert token.iat <= now_as_utc() < token.exp
+    assert token.status == UserStatus.ACTIVATED
+
+
+@mark.parametrize("fetcher", [FetchAuthToken, RequireAuthToken])
+@mark.asyncio
+async def test_fetches_internal_token_with_additional_attributes(fetcher: type):
+    """Test that an internal token with additional attributes can be fetched."""
+
+    request = request_with_authorization(
+        create_internal_token(
+            id="some-internal-id",
+            ls_id="some-id@aai.org",
+            role="admin@some.hub",
+        )
+    )
+
+    fetch_auth_token = fetcher()
+    token = await fetch_auth_token(request=request)
+    assert token
+    assert isinstance(token, AuthToken)
+
+    assert token.name == "John Doe"
+    assert token.id == "some-internal-id"
+    assert token.ls_id == "some-id@aai.org"
+    assert token.status == UserStatus.ACTIVATED
+    assert token.role == "admin@some.hub"
+
+
+@mark.parametrize("fetcher", [FetchAuthToken, RequireAuthToken])
+@mark.asyncio
+async def test_fetches_internal_token_with_unknown_attributes(fetcher: type):
+    """Test that unknown attributes in an internal token are silently ignored."""
+
+    request = request_with_authorization(create_internal_token(foo="bar"))
+
+    fetch_auth_token = fetcher()
+    token = await fetch_auth_token(request=request)
+    assert token
+    assert isinstance(token, AuthToken)
+
+    assert token.name == "John Doe"
 
 
 @mark.parametrize("fetcher", [FetchAuthToken, RequireAuthToken])
@@ -264,6 +306,7 @@ async def test_accepts_an_inactivated_user_when_optional():
     assert isinstance(token, AuthToken)
 
     assert token.name == "John Doe"
+    assert token.status == UserStatus.INACTIVATED
 
 
 @mark.asyncio
@@ -291,6 +334,7 @@ async def test_can_fetch_an_inactivated_but_required_user():
     assert isinstance(token, AuthToken)
 
     assert token.name == "John Doe"
+    assert token.status == UserStatus.INACTIVATED
 
 
 @mark.parametrize("required_role", [None, "admin", "admin@some_hub", "boss"])
@@ -319,6 +363,7 @@ async def test_can_require_a_certain_role(
         assert isinstance(token, AuthToken)
 
         assert token.name == "John Doe"
+        assert token.role == user_role
 
     else:
 
