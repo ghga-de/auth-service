@@ -24,7 +24,7 @@ import json
 from typing import Any, Optional
 
 from fastapi import HTTPException, Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 from ghga_service_chassis_lib.utils import DateTimeUTC
 from jwcrypto import jwk, jwt
 from jwcrypto.common import JWException
@@ -98,27 +98,27 @@ forbidden_error = HTTPException(
 )
 
 
-class FetchAuthToken(HTTPBearer):
+class FetchAuthToken:
     """Fetches an optional internal authorization token."""
 
     def __init__(self):
         """Initialize authorization token fetcher."""
-        super().__init__(auto_error=False)
+        self.http_bearer = HTTPBearer(auto_error=False)
 
     async def __call__(self, request: Request) -> Optional[AuthToken]:
         """Fetch the token or return None if not available."""
-        credentials: HTTPAuthorizationCredentials = await super().__call__(request)
-        token = credentials.credentials if credentials else None
-        if not token:
+        credentials = await self.http_bearer(request)
+        bearer_token = credentials.credentials if credentials else None
+        if not bearer_token:
             return None
         try:
-            return AuthToken(**decode_and_validate_token(token))
+            return AuthToken(**decode_and_validate_token(bearer_token))
         except (TokenValidationError, ValueError) as error:
             # raise an error for an invalid token even if it is optional
             raise forbidden_error from error
 
 
-class RequireAuthToken(HTTPBearer):
+class RequireAuthToken:
     """Fetches a required internal authorization token."""
 
     def __init__(self, activated: bool = True, role: Optional[str] = None):
@@ -126,18 +126,18 @@ class RequireAuthToken(HTTPBearer):
 
         By default, the user must be activated. A role can also be required.
         """
-        super().__init__(auto_error=True)
+        self.http_bearer = HTTPBearer(auto_error=True)
         self.activated = activated
         self.role = role
 
     async def __call__(self, request: Request) -> AuthToken:
         """Fetch the token or raise an error if not available."""
-        credentials: HTTPAuthorizationCredentials = await super().__call__(request)
-        token = credentials.credentials if credentials else None
-        if not token:
+        credentials = await self.http_bearer(request)
+        bearer_token = credentials.credentials if credentials else None
+        if not bearer_token:
             raise forbidden_error
         try:
-            token = AuthToken(**decode_and_validate_token(token))
+            token = AuthToken(**decode_and_validate_token(bearer_token))
             if self.activated and token.status is not UserStatus.ACTIVATED:
                 raise ValueError("User is not activated")
             role = self.role
