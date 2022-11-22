@@ -25,6 +25,7 @@ from typing import Any, Optional
 
 from fastapi import HTTPException, Request
 from fastapi.security import HTTPBearer
+from fastapi.security.base import SecurityBase
 from ghga_service_chassis_lib.utils import DateTimeUTC
 from jwcrypto import jwk, jwt
 from jwcrypto.common import JWException
@@ -98,12 +99,18 @@ forbidden_error = HTTPException(
 )
 
 
-class FetchAuthToken:
+# All the security utilities that integrate with OpenAPI (and the automatic API docs)
+# inherit from SecurityBase, that's how FastAPI knows how to integrate them in OpenAPI.
+
+
+class FetchAuthToken(SecurityBase):
     """Fetches an optional internal authorization token."""
 
     def __init__(self):
         """Initialize authorization token fetcher."""
         self.http_bearer = HTTPBearer(auto_error=False)
+        self.model = self.http_bearer.model
+        self.scheme_name = self.http_bearer.scheme_name
 
     async def __call__(self, request: Request) -> Optional[AuthToken]:
         """Fetch the token or return None if not available."""
@@ -118,7 +125,7 @@ class FetchAuthToken:
             raise forbidden_error from error
 
 
-class RequireAuthToken:
+class RequireAuthToken(SecurityBase):
     """Fetches a required internal authorization token."""
 
     def __init__(self, activated: bool = True, role: Optional[str] = None):
@@ -127,6 +134,8 @@ class RequireAuthToken:
         By default, the user must be activated. A role can also be required.
         """
         self.http_bearer = HTTPBearer(auto_error=True)
+        self.model = self.http_bearer.model
+        self.scheme_name = self.http_bearer.scheme_name
         self.activated = activated
         self.role = role
 
