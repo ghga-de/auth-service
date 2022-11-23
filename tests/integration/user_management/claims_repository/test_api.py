@@ -169,15 +169,20 @@ def test_get_claims(client_with_db):
     assert response.json()["detail"] == "The user was not found."
 
 
-def test_get_claim_for_same_user(client):
+def test_get_claims_for_same_user(client_with_db):
     """Test that getting user claims for the same user is not forbidden."""
 
-    response = client.get("/users/steve-internal/claims", headers=STEWARD_HEADERS)
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json()["detail"] == "The user was not found."
+    user_dao = DummyUserDao(id_="steve-internal")
+    client_with_db.app.dependency_overrides[get_user_dao] = lambda: user_dao
+
+    response = client_with_db.get(
+        "/users/steve-internal/claims", headers=STEWARD_HEADERS
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
 
 
-def test_get_claim_without_permission(client):
+def test_get_claims_without_permission(client):
     """Test that getting user claims without permission does not work."""
 
     response = client.get("/users/john@ghga.de/claims")
