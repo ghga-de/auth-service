@@ -21,6 +21,7 @@ These should be eventually made available to all services via a library.
 """
 
 import json
+import sys
 from typing import Any, Optional
 
 from fastapi import HTTPException, Request
@@ -32,6 +33,7 @@ from jwcrypto.common import JWException
 from pydantic import BaseModel
 from starlette.status import HTTP_403_FORBIDDEN
 
+from auth_service.config import CONFIG, Config
 from auth_service.user_management.user_registry.models.dto import UserStatus
 
 __all__ = [
@@ -40,9 +42,6 @@ __all__ = [
     "RequireAuthToken",
     "decode_and_validate_token",
 ]
-
-
-from auth_service.config import CONFIG, Config
 
 
 class AuthError(Exception):
@@ -73,9 +72,12 @@ class JWTConfig:
         """Load the JWT related configuration parameters."""
 
         internal_keys = config.auth_int_keys
-        if not internal_keys:
-            raise ConfigurationMissingKey("No internal signing keys configured.")
-        self.internal_jwk = jwk.JWK.from_json(internal_keys)
+        if internal_keys:
+            self.internal_jwk = jwk.JWK.from_json(internal_keys)
+        else:
+            if "update_openapi_docs" not in sys.argv[0]:
+                # raise config errors early if we are not just updating openapi docs
+                raise ConfigurationMissingKey("No internal signing keys configured.")
 
 
 jwt_config = JWTConfig()

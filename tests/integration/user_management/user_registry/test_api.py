@@ -489,9 +489,9 @@ def test_delete_user_as_data_steward(client_with_db):
     id_ = expected_user["id"]
 
     response = client_with_db.get(f"/users/{id_}", headers=STEWARD_HEADERS)
-
     user = response.json()
-    assert response.status_code == status.HTTP_200_OK, user
+    assert response.status_code == status.HTTP_200_OK
+    assert user["id"] == id_
 
     response = client_with_db.delete(f"/users/{id_}", headers=STEWARD_HEADERS)
 
@@ -499,7 +499,6 @@ def test_delete_user_as_data_steward(client_with_db):
     assert not response.text
 
     response = client_with_db.get(f"/users/{id_}", headers=STEWARD_HEADERS)
-
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "The user was not found."}
 

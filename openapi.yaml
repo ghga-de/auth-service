@@ -413,6 +413,10 @@ components:
       - https://www.ghga.de/GA4GH/VisaTypes/Role/v1.0
       title: VisaType
       type: string
+  securitySchemes:
+    HTTPBearer:
+      scheme: bearer
+      type: http
 info:
   contact:
     email: helpdesk@ghga.de
@@ -455,10 +459,14 @@ paths:
           description: User was successfully registered.
         '400':
           description: User cannot be registered.
+        '403':
+          description: Not authorized to register user.
         '409':
           description: User was already registered.
         '422':
           description: Validation error in submitted user data.
+      security:
+      - HTTPBearer: []
       summary: Register a user
       tags:
       - users
@@ -482,10 +490,14 @@ paths:
           description: Successful Response
         '204':
           description: User data was successfully deleted.
+        '403':
+          description: Not authorized to delete this user.
         '404':
           description: The user was not found.
         '422':
           description: Validation error in submitted user identification.
+      security:
+      - HTTPBearer: []
       summary: Delete user
       tags:
       - users
@@ -509,10 +521,14 @@ paths:
           description: Requested user has been found.
         '401':
           description: Not authorized to get user data.
+        '403':
+          description: Not authorized to request user.
         '404':
           description: The user was not found.
         '422':
           description: Validation error in submitted user identification.
+      security:
+      - HTTPBearer: []
       summary: Get user data
       tags:
       - users
@@ -541,10 +557,14 @@ paths:
           description: Successful Response
         '204':
           description: User data was successfully saved.
+        '403':
+          description: Not authorized to make this modification.
         '404':
           description: The user was not found.
         '422':
           description: Validation error in submitted user data.
+      security:
+      - HTTPBearer: []
       summary: Modify user data
       tags:
       - users
