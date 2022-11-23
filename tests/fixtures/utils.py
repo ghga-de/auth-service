@@ -63,10 +63,11 @@ def create_access_token(
         foo="bar",
     )
     iat = int(now_as_utc().timestamp())
-    exp = iat + 60
     if expired:
-        iat -= 120
-        exp -= 120
+        exp = iat - 60 * 10  # expired 10 minutes ago
+        iat = exp - 60 * 10  # created 20 minutes ago
+    else:
+        exp = iat + 60 * 10  # valid for 10 minutes
     claims.update(iat=iat, exp=exp)
     claims.update(kwargs)
     token = jwt.JWT(header=header, claims=claims)
@@ -97,10 +98,11 @@ def create_internal_token(
         name="John Doe", email="john@home.org", status="activated"
     )
     iat = int(now_as_utc().timestamp())
-    exp = iat + 60
     if expired:
-        iat -= 120
-        exp -= 120
+        exp = iat - 60 * 10  # expired 10 minutes ago
+        iat = exp - 60 * 10  # created 20 minutes ago
+    else:
+        exp = iat + 60 * 30  # valid for 30 minutes
     claims.update(iat=iat, exp=exp)
     claims.update(kwargs)
     token = jwt.JWT(header=header, claims=claims)
