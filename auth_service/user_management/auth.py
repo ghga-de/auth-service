@@ -152,7 +152,6 @@ class RequireAuthToken(SecurityBase):
     async def __call__(self, request: Request) -> AuthToken:
         """Fetch the token or raise an error if not available."""
         credentials = await self.http_bearer(request)
-        print("CREDS =", credentials)
         bearer_token = credentials.credentials if credentials else None
         if not bearer_token:
             raise forbidden_error
@@ -168,7 +167,6 @@ class RequireAuthToken(SecurityBase):
                 if user_role != role:
                     raise ValueError("User does not have required role")
         except (TokenValidationError, ValueError) as error:
-            print("ERROR = ", error)
             raise forbidden_error from error
         return token
 

@@ -21,7 +21,7 @@ from fastapi import status
 
 from auth_service.user_management.user_registry.deps import get_user_dao
 
-from ....fixtures.utils import DummyUserDao
+from ....fixtures.utils import DummyUserDao, get_headers_for
 from ..fixtures import (  # noqa: F401; pylint: disable=unused-import
     fixture_client,
     fixture_client_with_db,
@@ -34,6 +34,18 @@ CLAIM_DATA = dict(
     valid_from="2022-10-01T12:00:00+00:00",
     valid_until="2022-10-31T12:00:00+00:00",
     source="https://ghga.de",
+)
+
+STEWARD_HEADERS = get_headers_for(
+    id="steve-internal",
+    name="Steve Steward",
+    email="steve@archive.org",
+    role="data_steward",
+)
+NO_STEWARD_HEADERS = get_headers_for(
+    id="steve-internal",
+    name="Steve Steward",
+    email="steve@archive.org",
 )
 
 
@@ -55,12 +67,14 @@ def test_get_from_some_other_path(client):
 
 
 def test_post_claim(client_with_db):
-    """Test that posting a user claim works."""
+    """Test that creating a user claim works."""
 
     user_dao = DummyUserDao()
     client_with_db.app.dependency_overrides[get_user_dao] = lambda: user_dao
 
-    response = client_with_db.post("/users/john@ghga.de/claims", json=CLAIM_DATA)
+    response = client_with_db.post(
+        "/users/john@ghga.de/claims", json=CLAIM_DATA, headers=STEWARD_HEADERS
+    )
 
     claim = response.json()
     assert response.status_code == status.HTTP_201_CREATED, claim
@@ -81,9 +95,35 @@ def test_post_claim(client_with_db):
     assert claim == CLAIM_DATA
 
     # test with non-existing user
-    response = client_with_db.post("/users/john@haag.de/claims", json=CLAIM_DATA)
+    response = client_with_db.post(
+        "/users/john@haag.de/claims", json=CLAIM_DATA, headers=STEWARD_HEADERS
+    )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "The user was not found."
+
+
+def test_post_claim_for_same_user(client):
+    """Test that creating a user claim for the same user does not work."""
+
+    response = client.post(
+        "/users/steve-internal/claims", json=CLAIM_DATA, headers=STEWARD_HEADERS
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Cannot modify own claims."
+
+
+def test_post_claim_without_permission(client):
+    """Test that creating a user claim without permission does not work."""
+
+    response = client.post("/users/john@ghga.de/claims", json=CLAIM_DATA)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authenticated"
+
+    response = client.post(
+        "/users/john@ghga.de/claims", json=CLAIM_DATA, headers=NO_STEWARD_HEADERS
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authenticated"
 
 
 def test_get_claims(client_with_db):
@@ -103,12 +143,14 @@ def test_get_claims(client_with_db):
     }
     posted_claims = []
     for claim in (claim1, claim2):
-        response = client_with_db.post(f"/users/{user_id}/claims", json=claim)
+        response = client_with_db.post(
+            f"/users/{user_id}/claims", json=claim, headers=STEWARD_HEADERS
+        )
         assert response.status_code == status.HTTP_201_CREATED
         posted_claims.append(response.json())
     posted_claims.sort(key=itemgetter("visa_type"))
 
-    response = client_with_db.get(f"/users/{user_id}/claims")
+    response = client_with_db.get(f"/users/{user_id}/claims", headers=STEWARD_HEADERS)
     assert response.status_code == status.HTTP_200_OK
     requested_claims = response.json()
     posted_claims.sort(key=itemgetter("visa_type"))
@@ -122,9 +164,29 @@ def test_get_claims(client_with_db):
     assert requested_claims[0]["visa_value"] != requested_claims[1]["visa_value"]
 
     # test with non-existing user
-    response = client_with_db.get("/users/john@haag.de/claims")
+    response = client_with_db.get("/users/john@haag.de/claims", headers=STEWARD_HEADERS)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "The user was not found."
+
+
+def test_get_claim_for_same_user(client):
+    """Test that getting user claims for the same user is not forbidden."""
+
+    response = client.get("/users/steve-internal/claims", headers=STEWARD_HEADERS)
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "The user was not found."
+
+
+def test_get_claim_without_permission(client):
+    """Test that getting user claims without permission does not work."""
+
+    response = client.get("/users/john@ghga.de/claims")
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authenticated"
+
+    response = client.get("/users/john@ghga.de/claims", headers=NO_STEWARD_HEADERS)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authenticated"
 
 
 def test_patch_claim(client_with_db):
@@ -136,7 +198,9 @@ def test_patch_claim(client_with_db):
     user_id = "john@ghga.de"
 
     # post test claim
-    response = client_with_db.post(f"/users/{user_id}/claims", json=CLAIM_DATA)
+    response = client_with_db.post(
+        f"/users/{user_id}/claims", json=CLAIM_DATA, headers=STEWARD_HEADERS
+    )
     posted_claim = response.json()
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -149,12 +213,12 @@ def test_patch_claim(client_with_db):
     revocation_date = "2022-10-15T12:00:00+00:00"
     patch_data = {"revocation_date": revocation_date}
     response = client_with_db.patch(
-        f"/users/{user_id}/claims/{claim_id}", json=patch_data
+        f"/users/{user_id}/claims/{claim_id}", json=patch_data, headers=STEWARD_HEADERS
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # tset that claim has been revoked
-    response = client_with_db.get(f"/users/{user_id}/claims")
+    response = client_with_db.get(f"/users/{user_id}/claims", headers=STEWARD_HEADERS)
     assert response.status_code == status.HTTP_200_OK
     claims = response.json()
     assert len(claims) == 1
@@ -166,14 +230,14 @@ def test_patch_claim(client_with_db):
     # test without revocation date
     patch_data = {"revocation_date": None}  # type: ignore
     response = client_with_db.patch(
-        f"/users/{user_id}/claims/{claim_id}", json=patch_data
+        f"/users/{user_id}/claims/{claim_id}", json=patch_data, headers=STEWARD_HEADERS
     )
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     # test with later revocation date
     patch_data = {"revocation_date": "2022-10-15T13:00:00+00:00"}
     response = client_with_db.patch(
-        f"/users/{user_id}/claims/{claim_id}", json=patch_data
+        f"/users/{user_id}/claims/{claim_id}", json=patch_data, headers=STEWARD_HEADERS
     )
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     assert response.json()["detail"] == "Already revoked earlier."
@@ -182,12 +246,12 @@ def test_patch_claim(client_with_db):
     revocation_date = "2022-10-15T11:00:00+00:00"
     patch_data = {"revocation_date": revocation_date}
     response = client_with_db.patch(
-        f"/users/{user_id}/claims/{claim_id}", json=patch_data
+        f"/users/{user_id}/claims/{claim_id}", json=patch_data, headers=STEWARD_HEADERS
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # test that revocation was advanced
-    response = client_with_db.get(f"/users/{user_id}/claims")
+    response = client_with_db.get(f"/users/{user_id}/claims", headers=STEWARD_HEADERS)
     assert response.status_code == status.HTTP_200_OK
     claims = response.json()
     assert len(claims) == 1
@@ -198,16 +262,52 @@ def test_patch_claim(client_with_db):
 
     # test with non-existing user
     response = client_with_db.patch(
-        f"/users/john@haag.de/claims/{claim_id}", json=patch_data
+        f"/users/john@haag.de/claims/{claim_id}",
+        json=patch_data,
+        headers=STEWARD_HEADERS,
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "The user was not found."
     # test with non-existing claim
     response = client_with_db.patch(
-        f"/users/{user_id}/claims/invalid-claim-id", json=patch_data
+        f"/users/{user_id}/claims/invalid-claim-id",
+        json=patch_data,
+        headers=STEWARD_HEADERS,
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "The user claim was not found."
+
+
+def test_patch_claim_for_same_user(client):
+    """Test that modifying a user claim for the same user does not work."""
+
+    revocation_date = "2000-01-01T00:00:00+00:00"
+    patch_data = {"revocation_date": revocation_date}
+    response = client.patch(
+        "/users/steve-internal/claims/some-claim",
+        json=patch_data,
+        headers=STEWARD_HEADERS,
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Cannot modify own claims."
+
+
+def test_patch_claim_without_permission(client):
+    """Test that modifying a user claim without permission does not work."""
+
+    revocation_date = "2000-01-01T00:00:00+00:00"
+    patch_data = {"revocation_date": revocation_date}
+    response = client.patch("/users/some-user/claims/some-claim", json=patch_data)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authenticated"
+
+    response = client.patch(
+        "/users/some-user/claims/some-claim",
+        json=patch_data,
+        headers=NO_STEWARD_HEADERS,
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authenticated"
 
 
 def test_delete_claim(client_with_db):
@@ -223,7 +323,9 @@ def test_delete_claim(client_with_db):
     claim2 = CLAIM_DATA.copy()
     claim2["visa_type"] = "RESEARCHER_STATUS"
     for claim in (claim1, claim2):
-        response = client_with_db.post(f"/users/{user_id}/claims", json=claim)
+        response = client_with_db.post(
+            f"/users/{user_id}/claims", json=claim, headers=STEWARD_HEADERS
+        )
         assert response.status_code == status.HTTP_201_CREATED
         claim_id = response.json()["id"]
         assert claim_id
@@ -231,21 +333,25 @@ def test_delete_claim(client_with_db):
 
     # test deletion of first claim with non-existing user
     claim_id = claim1["id"]
-    response = client_with_db.delete(f"/users/john@haag.de/claims/{claim_id}")
+    response = client_with_db.delete(
+        f"/users/john@haag.de/claims/{claim_id}", headers=STEWARD_HEADERS
+    )
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
     # test that claims have been posted
-    response = client_with_db.get(f"/users/{user_id}/claims")
+    response = client_with_db.get(f"/users/{user_id}/claims", headers=STEWARD_HEADERS)
     assert response.status_code == status.HTTP_200_OK
     claims = response.json()
     assert len(claims) == 2
 
     # delete first claim properly
-    response = client_with_db.delete(f"/users/{user_id}/claims/{claim_id}")
+    response = client_with_db.delete(
+        f"/users/{user_id}/claims/{claim_id}", headers=STEWARD_HEADERS
+    )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # test that claim has been deleted
-    response = client_with_db.get(f"/users/{user_id}/claims")
+    response = client_with_db.get(f"/users/{user_id}/claims", headers=STEWARD_HEADERS)
     assert response.status_code == status.HTTP_200_OK
     claims = response.json()
     assert len(claims) == 1
@@ -254,20 +360,50 @@ def test_delete_claim(client_with_db):
     assert claim["visa_type"] == "RESEARCHER_STATUS"
 
     # delete again
-    response = client_with_db.delete(f"/users/{user_id}/claims/{claim_id}")
+    response = client_with_db.delete(
+        f"/users/{user_id}/claims/{claim_id}", headers=STEWARD_HEADERS
+    )
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
     # delete second claim
     claim_id = claim2["id"]
-    response = client_with_db.delete(f"/users/{user_id}/claims/{claim_id}")
+    response = client_with_db.delete(
+        f"/users/{user_id}/claims/{claim_id}", headers=STEWARD_HEADERS
+    )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # test that claim has been deleted
-    response = client_with_db.get(f"/users/{user_id}/claims")
+    response = client_with_db.get(f"/users/{user_id}/claims", headers=STEWARD_HEADERS)
     assert response.status_code == status.HTTP_200_OK
     claims = response.json()
     assert len(claims) == 0
 
     # delete again
-    response = client_with_db.delete(f"/users/{user_id}/claims/{claim_id}")
+    response = client_with_db.delete(
+        f"/users/{user_id}/claims/{claim_id}", headers=STEWARD_HEADERS
+    )
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_delete_claim_for_same_user(client):
+    """Test that deleting a user claim for the same user does not work."""
+
+    response = client.delete(
+        "/users/steve-internal/claims/some-claim", headers=STEWARD_HEADERS
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Cannot modify own claims."
+
+
+def test_delete_claim_without_permission(client):
+    """Test that deleting a user claim without permission does not work."""
+
+    response = client.delete("/users/some-user/claims/some-claim")
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authenticated"
+
+    response = client.delete(
+        "/users/some-user/claims/some-claim", headers=NO_STEWARD_HEADERS
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authenticated"

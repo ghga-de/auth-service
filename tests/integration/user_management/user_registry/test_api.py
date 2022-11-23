@@ -489,11 +489,8 @@ def test_delete_user_as_data_steward(client_with_db):
     assert response.status_code == status.HTTP_201_CREATED
     expected_user = response.json()
     id_ = expected_user["id"]
-    print("internal id for test =", id_)
 
     response = client_with_db.get(f"/users/{id_}", headers=STEWARD_HEADERS)
-    print("response = ", response)
-    print("response text = ", response.text)
     assert response.status_code == status.HTTP_200_OK
     user = response.json()
     assert user["id"] == id_
