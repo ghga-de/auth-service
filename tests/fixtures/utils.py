@@ -112,6 +112,16 @@ def create_internal_token(
     return internal_token
 
 
+def get_headers_for(
+    key: Optional[jwk.JWK] = None,
+    expired: bool = False,
+    **kwargs: Optional[str],
+) -> dict[str, str]:
+    """Create the headers for an internal token with the given arguments."""
+    token = create_internal_token(key=key, expired=expired, **kwargs)
+    return {"Authorization": f"Bearer {token}"}
+
+
 def get_claims_from_token(token: str, key: Optional[jwk.JWK] = None) -> dict[str, Any]:
     """Decode the given JWT token and get its claims.
 

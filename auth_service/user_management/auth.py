@@ -93,6 +93,14 @@ class AuthToken(BaseModel):
     role: Optional[str]
     status: Optional[UserStatus]
 
+    def has_role(self, role: str) -> bool:
+        """Check whether the user has the given role, no matter w"""
+        return (
+            self.status == UserStatus.ACTIVATED
+            and self.role is not None
+            and self.role.split("@", 1)[0] == role
+        )
+
 
 forbidden_error = HTTPException(
     status_code=HTTP_403_FORBIDDEN, detail="Not authenticated"

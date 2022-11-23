@@ -34,7 +34,7 @@ from auth_service.user_management.auth import (
 )
 from auth_service.user_management.user_registry.models.dto import UserStatus
 
-from ..fixtures.utils import create_internal_token, request_with_authorization
+from ...fixtures.utils import create_internal_token, request_with_authorization
 
 # Test the internally used "decode_and_validate_token" function
 
