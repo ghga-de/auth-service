@@ -55,19 +55,19 @@ STEWARD_HEADERS = get_headers_for(
 )
 
 
-def test_get_from_root(client):
-    """Test that a simple GET request passes."""
+def test_health_check(client):
+    """Test that the health check endpoint works."""
 
-    response = client.get("/")
+    response = client.get("/health")
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.text == '"Index of the User Management Service"'
+    assert response.json() == {"status": "OK"}
 
 
-def test_get_from_some_other_path(client):
+def test_get_from_a_random_path(client):
     """Test that a GET request to a random path raises a not found error."""
 
-    response = client.post("/some/path")
+    response = client.post("/some/random/path")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
