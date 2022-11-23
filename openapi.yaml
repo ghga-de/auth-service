@@ -428,17 +428,19 @@ info:
   version: 0.2.1
 openapi: 3.0.2
 paths:
-  /:
+  /health:
     get:
-      description: Index of the User Management Service.
-      operationId: index
+      description: Used to check that this service is alive
+      operationId: health_health_get
       responses:
         '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-      summary: Index
+      summary: health
+      tags:
+      - health
   /users:
     post:
       description: Endpoint used to register a new user. May only be performed by
