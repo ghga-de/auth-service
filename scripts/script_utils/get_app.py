@@ -14,10 +14,20 @@
 # limitations under the License.
 #
 
-"""Used to define the location of the main FastAPI app object."""
+"""Used to get the main FastAPI app object."""
 
-# flake8: noqa
-# pylint: skip-file
+from fastapi import FastAPI
 
-# Please adapt to package structure:
-from auth_service.user_management.api.main import app
+from tests.fixtures.auth_keys import set_auth_keys_env
+
+__all__ = ["get_app"]
+
+
+# pylint: disable=import-outside-toplevel
+def get_app(create_auth_keys=False) -> FastAPI:
+    """Get the main FAastAPI app object."""
+    if create_auth_keys:
+        set_auth_keys_env()
+    from auth_service.user_management.api.main import app
+
+    return app
