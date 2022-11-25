@@ -59,7 +59,7 @@ class TokenValidationError(AuthError):
 class JWTConfig:
     """A container for the JWT related configuration."""
 
-    internal_jwk: Optional[jwk.JWK] = None  # the internal key pair
+    internal_jwk: Optional[jwk.JWK] = None  # the internal public key 
     internal_algs: list[str] = ["ES256", "RS256"]  # allowed internal signing algorithms
     check_claims: dict[str, Any] = {  # claims that shall be verified
         "name": None,
