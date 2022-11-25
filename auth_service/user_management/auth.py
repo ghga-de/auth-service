@@ -21,7 +21,6 @@ These should be eventually made available to all services via a library.
 """
 
 import json
-import sys
 from typing import Any, Optional
 
 from fastapi import HTTPException, Request
@@ -59,7 +58,7 @@ class TokenValidationError(AuthError):
 class JWTConfig:
     """A container for the JWT related configuration."""
 
-    internal_jwk: Optional[jwk.JWK] = None  # the internal public key 
+    internal_jwk: Optional[jwk.JWK] = None  # the internal public key
     internal_algs: list[str] = ["ES256", "RS256"]  # allowed internal signing algorithms
     check_claims: dict[str, Any] = {  # claims that shall be verified
         "name": None,
@@ -72,12 +71,23 @@ class JWTConfig:
         """Load the JWT related configuration parameters."""
 
         internal_keys = config.auth_int_keys
-        if internal_keys:
-            self.internal_jwk = jwk.JWK.from_json(internal_keys)
-        else:
-            if "update_openapi_docs" not in sys.argv[0]:
-                # raise config errors early if we are not just updating openapi docs
-                raise ConfigurationMissingKey("No internal signing keys configured.")
+        if not internal_keys:
+            raise ConfigurationMissingKey("No internal signing keys configured.")
+        internal_jwk = jwk.JWK.from_json(internal_keys)
+        if not internal_jwk.has_public:
+            raise ConfigurationMissingKey("No public internal signing keys found.")
+        if internal_jwk.has_private:
+            raise ConfigurationMissingKey(
+                "Private internal signing keys found,"
+                " these should not be put in the user management configuration."
+            )
+        self.internal_jwk = internal_jwk
+
+        if config.auth_ext_keys:
+            raise ConfigurationMissingKey(
+                "External signing keys found,"
+                " these should not be put in the user management configuration."
+            )
 
 
 jwt_config = JWTConfig()
@@ -172,7 +182,7 @@ class RequireAuthToken(SecurityBase):
 
 
 def decode_and_validate_token(
-    token: str, key: Optional[jwk.JWK] = None
+    token: str, key: jwk.JWK = jwt_config.internal_jwk
 ) -> dict[str, Any]:
     """Decode and validate the given JSON Web Token.
 
@@ -182,12 +192,6 @@ def decode_and_validate_token(
     """
     if not token:
         raise TokenValidationError("Empty token")
-    if not key:
-        key = jwt_config.internal_jwk
-        if not key:
-            raise TokenValidationError(
-                "No internal signing key, cannot validate token."
-            )
     try:
         jwt_token = jwt.JWT(
             jwt=token,

@@ -24,14 +24,7 @@ from ghga_service_chassis_lib.utils import UTC, now_as_utc
 from jwcrypto import jwk
 from pytest import mark, raises
 
-from auth_service.user_management.auth import (
-    AuthToken,
-    FetchAuthToken,
-    RequireAuthToken,
-    TokenValidationError,
-    decode_and_validate_token,
-    jwt_config,
-)
+from auth_service.user_management import auth
 from auth_service.user_management.user_registry.models.dto import UserStatus
 
 from ...fixtures.utils import create_internal_token, request_with_authorization
@@ -43,7 +36,7 @@ def test_decodes_and_validates_an_internal_token():
     """Test that a valid internal token is decoded and validated."""
 
     internal_token = create_internal_token()
-    claims = decode_and_validate_token(internal_token)
+    claims = auth.decode_and_validate_token(internal_token)
     assert isinstance(claims, dict)
     assert set(claims) == {
         "name",
@@ -64,7 +57,7 @@ def test_validates_internal_token_with_rsa_signature():
     """Test that an internal tokens with RSA signature can be validated."""
     key = jwk.JWK.generate(kty="RSA", size=1024)
     internal_token = create_internal_token(key=key)
-    claims = decode_and_validate_token(internal_token, key=key)
+    claims = auth.decode_and_validate_token(internal_token, key=key)
     assert isinstance(claims, dict)
     assert claims["name"] == "John Doe"
 
@@ -73,24 +66,24 @@ def test_validates_internal_token_with_ec_signature():
     """Test that an internal tokens with EC signature can be validated."""
     key = jwk.JWK.generate(kty="EC", crv="P-256")
     internal_token = create_internal_token(key=key)
-    claims = decode_and_validate_token(internal_token, key=key)
+    claims = auth.decode_and_validate_token(internal_token, key=key)
     assert isinstance(claims, dict)
     assert claims["name"] == "John Doe"
 
 
 def test_does_not_validate_an_empty_token():
     """Test that an empty internal token rejected."""
-    with raises(TokenValidationError, match="Empty token"):
-        decode_and_validate_token(None)  # type: ignore
-    with raises(TokenValidationError, match="Empty token"):
-        decode_and_validate_token("")
+    with raises(auth.TokenValidationError, match="Empty token"):
+        auth.decode_and_validate_token(None)  # type: ignore
+    with raises(auth.TokenValidationError, match="Empty token"):
+        auth.decode_and_validate_token("")
 
 
 def test_does_not_validate_an_internal_token_with_wrong_format():
     """Test that an internal token with a completely wrong format is rejected."""
     internal_token = "random.garbage"
-    with raises(TokenValidationError, match="Token format unrecognized"):
-        decode_and_validate_token(internal_token)
+    with raises(auth.TokenValidationError, match="Token format unrecognized"):
+        auth.decode_and_validate_token(internal_token)
 
 
 def test_does_not_validate_an_internal_token_with_bad_signature():
@@ -98,52 +91,41 @@ def test_does_not_validate_an_internal_token_with_bad_signature():
     internal_token = create_internal_token()
     internal_token = ".".join(internal_token.split(".")[:-1] + ["somebadsignature"])
     with raises(
-        TokenValidationError,
+        auth.TokenValidationError,
         match="Not a valid token: Verification failed for all signatures",
     ):
-        decode_and_validate_token(internal_token)
-
-
-def test_does_not_validate_an_internal_token_when_internal_key_is_missing():
-    """Test that an internal token is not validated if no internal key is provided."""
-    internal_token = create_internal_token()
-    internal_jwk, jwt_config.internal_jwk = jwt_config.internal_jwk, None
-    try:
-        with raises(TokenValidationError) as exc_info:
-            decode_and_validate_token(internal_token)
-    finally:
-        jwt_config.internal_jwk = internal_jwk
-    assert str(exc_info.value) == "No internal signing key, cannot validate token."
+        auth.decode_and_validate_token(internal_token)
 
 
 def test_does_not_validate_an_internal_token_when_alg_is_not_allowed():
     """Test that an internal token must be signed with an allowed algorithm."""
     internal_token = create_internal_token()
-    internal_algs = jwt_config.internal_algs
+    internal_algs = auth.jwt_config.internal_algs
     assert isinstance(internal_algs, list)
-    jwt_config.internal_algs = internal_algs[:]
+    auth.jwt_config.internal_algs = internal_algs[:]
     try:
-        jwt_config.internal_algs.remove("ES256")
+        auth.jwt_config.internal_algs.remove("ES256")
         with raises(
-            TokenValidationError,
+            auth.TokenValidationError,
             match="Not a valid token: Verification failed for all signatures",
         ):
-            decode_and_validate_token(internal_token)
+            auth.decode_and_validate_token(internal_token)
     finally:
-        jwt_config.internal_algs = internal_algs
+        auth.jwt_config.internal_algs = internal_algs
 
 
 def test_does_not_validate_an_expired_internal_token():
     """Test that internal tokens that have expired are rejected."""
     internal_token = create_internal_token(expired=True)
-    with raises(TokenValidationError, match="Not a valid token: Expired"):
-        decode_and_validate_token(internal_token)
+    with raises(auth.TokenValidationError, match="Not a valid token: Expired"):
+        auth.decode_and_validate_token(internal_token)
 
 
 def test_does_not_validate_token_with_invalid_payload():
     """Test that internal tokens with invalid payload are rejected."""
     key = jwk.JWK(kty="oct", k="r0TSf_aAU9eS7I5JPPJ20pmkPmR__9LsfnZaKfXZYp8")
-    internal_algs, jwt_config.internal_algs = jwt_config.internal_algs, ["HS256"]
+    internal_algs = auth.jwt_config.internal_algs
+    auth.jwt_config.internal_algs = ["HS256"]
     try:
         token_with_valid_payload = (
             "eyJhbGciOiJIUzI1NiJ9."
@@ -151,33 +133,33 @@ def test_does_not_validate_token_with_invalid_payload():
             "RQYHxFwGjMdVh-umuuA1Yd4Ssx6TAYkg1INYK6_lKVw"
         )
         with raises(
-            TokenValidationError, match="Not a valid token: Claim name is missing"
+            auth.TokenValidationError, match="Not a valid token: Claim name is missing"
         ):
-            decode_and_validate_token(token_with_valid_payload, key=key)
+            auth.decode_and_validate_token(token_with_valid_payload, key=key)
         token_with_text_as_payload = (
             "eyJhbGciOiJIUzI1NiJ9."
             "VGhpcyBpcyBub3QgSlNPTiE."
             "bKt6NQoZGLOLqqqB-XT99ENnsmv-hxLId08FxR4LUOw"
         )
         with raises(
-            TokenValidationError, match="Not a valid token: .* not a json dict"
+            auth.TokenValidationError, match="Not a valid token: .* not a json dict"
         ):
-            decode_and_validate_token(token_with_text_as_payload, key=key)
+            auth.decode_and_validate_token(token_with_text_as_payload, key=key)
         token_with_bad_encoding = (
             "eyJhbGciOiJIUzI1NiJ9."
             "eyJzdWIiOiAiRnLpZOlyaWMgQ2hvcGluIn0."
             "8OTfVB6CN2pXgPHZBPdbkqWGd2XhtbVDhlcYdYNh6d4"
         )
-        with raises(TokenValidationError, match="'utf-8' codec can't decode"):
-            decode_and_validate_token(token_with_bad_encoding, key=key)
+        with raises(auth.TokenValidationError, match="'utf-8' codec can't decode"):
+            auth.decode_and_validate_token(token_with_bad_encoding, key=key)
     finally:
-        jwt_config.internal_algs = internal_algs
+        auth.jwt_config.internal_algs = internal_algs
 
 
 # Test the injectable FetchAuthToken  class
 
 
-@mark.parametrize("fetcher", [FetchAuthToken, RequireAuthToken])
+@mark.parametrize("fetcher", [auth.FetchAuthToken, auth.RequireAuthToken])
 @mark.asyncio
 async def test_fetches_internal_token_from_an_authorization_header(fetcher: type):
     """Test that an internal token is fetched from an authorization header."""
@@ -187,7 +169,7 @@ async def test_fetches_internal_token_from_an_authorization_header(fetcher: type
     fetch_auth_token = fetcher()
     token = await fetch_auth_token(request=request)
     assert token
-    assert isinstance(token, AuthToken)
+    assert isinstance(token, auth.AuthToken)
 
     assert token.name == "John Doe"
     assert token.email == "john@home.org"
@@ -199,7 +181,7 @@ async def test_fetches_internal_token_from_an_authorization_header(fetcher: type
     assert token.status == UserStatus.ACTIVATED
 
 
-@mark.parametrize("fetcher", [FetchAuthToken, RequireAuthToken])
+@mark.parametrize("fetcher", [auth.FetchAuthToken, auth.RequireAuthToken])
 @mark.asyncio
 async def test_fetches_internal_token_with_additional_attributes(fetcher: type):
     """Test that an internal token with additional attributes can be fetched."""
@@ -215,7 +197,7 @@ async def test_fetches_internal_token_with_additional_attributes(fetcher: type):
     fetch_auth_token = fetcher()
     token = await fetch_auth_token(request=request)
     assert token
-    assert isinstance(token, AuthToken)
+    assert isinstance(token, auth.AuthToken)
 
     assert token.name == "John Doe"
     assert token.id == "some-internal-id"
@@ -224,7 +206,7 @@ async def test_fetches_internal_token_with_additional_attributes(fetcher: type):
     assert token.role == "admin@some.hub"
 
 
-@mark.parametrize("fetcher", [FetchAuthToken, RequireAuthToken])
+@mark.parametrize("fetcher", [auth.FetchAuthToken, auth.RequireAuthToken])
 @mark.asyncio
 async def test_fetches_internal_token_with_unknown_attributes(fetcher: type):
     """Test that unknown attributes in an internal token are silently ignored."""
@@ -234,12 +216,12 @@ async def test_fetches_internal_token_with_unknown_attributes(fetcher: type):
     fetch_auth_token = fetcher()
     token = await fetch_auth_token(request=request)
     assert token
-    assert isinstance(token, AuthToken)
+    assert isinstance(token, auth.AuthToken)
 
     assert token.name == "John Doe"
 
 
-@mark.parametrize("fetcher", [FetchAuthToken, RequireAuthToken])
+@mark.parametrize("fetcher", [auth.FetchAuthToken, auth.RequireAuthToken])
 @mark.asyncio
 async def test_does_not_accept_an_expired_internal_token(fetcher: type):
     """Test that an expired internal token is rejected."""
@@ -253,7 +235,7 @@ async def test_does_not_accept_an_expired_internal_token(fetcher: type):
     assert exc_info.value.detail == "Not authenticated"
 
 
-@mark.parametrize("fetcher", [FetchAuthToken, RequireAuthToken])
+@mark.parametrize("fetcher", [auth.FetchAuthToken, auth.RequireAuthToken])
 @mark.parametrize("claim", ["name", "email", "exp", "iat"])
 @mark.asyncio
 async def test_does_not_accept_an_internal_token_with_missing_claims(
@@ -277,7 +259,7 @@ async def test_accepts_missing_token_when_optional():
     """Test that internal token is None when not available and fetched as optional."""
 
     request = request_with_authorization("")
-    fetch_auth_token = FetchAuthToken()
+    fetch_auth_token = auth.FetchAuthToken()
     assert await fetch_auth_token(request=request) is None
 
 
@@ -286,7 +268,7 @@ async def test_does_not_accept_missing_token_when_required():
     """Test that an error is raised when internal token not available and required."""
 
     request = request_with_authorization("")
-    fetch_auth_token = RequireAuthToken()
+    fetch_auth_token = auth.RequireAuthToken()
     with raises(HTTPException) as exc_info:
         assert await fetch_auth_token(request=request) is None
 
@@ -300,10 +282,10 @@ async def test_accepts_an_inactivated_user_when_optional():
 
     request = request_with_authorization(create_internal_token(status="inactivated"))
 
-    fetch_auth_token = FetchAuthToken()
+    fetch_auth_token = auth.FetchAuthToken()
     token = await fetch_auth_token(request=request)
     assert token
-    assert isinstance(token, AuthToken)
+    assert isinstance(token, auth.AuthToken)
 
     assert token.name == "John Doe"
     assert token.status == UserStatus.INACTIVATED
@@ -314,7 +296,7 @@ async def test_does_not_accept_inactivated_user_when_required_by_default():
     """Test that an error is raised when the user is inactivated and required."""
 
     request = request_with_authorization(create_internal_token(status="inactivated"))
-    fetch_auth_token = RequireAuthToken()
+    fetch_auth_token = auth.RequireAuthToken()
     with raises(HTTPException) as exc_info:
         assert await fetch_auth_token(request=request) is None
 
@@ -328,17 +310,17 @@ async def test_can_fetch_an_inactivated_but_required_user():
 
     request = request_with_authorization(create_internal_token(status="inactivated"))
 
-    fetch_auth_token = RequireAuthToken(activated=False)
+    fetch_auth_token = auth.RequireAuthToken(activated=False)
     token = await fetch_auth_token(request=request)
     assert token
-    assert isinstance(token, AuthToken)
+    assert isinstance(token, auth.AuthToken)
 
     assert token.name == "John Doe"
     assert token.status == UserStatus.INACTIVATED
 
 
-@mark.parametrize("required_role", [None, "admin", "admin@some_hub", "boss"])
-@mark.parametrize("user_role", [None, "admin", "admin@some.hub", "boss", "user"])
+@mark.parametrize("required_role", [None, "", "admin", "admin@some_hub", "boss"])
+@mark.parametrize("user_role", [None, "", "admin", "admin@some.hub", "boss", "user"])
 @mark.asyncio
 async def test_can_require_a_certain_role(
     required_role: Optional[str], user_role: Optional[str]
@@ -354,13 +336,13 @@ async def test_can_require_a_certain_role(
 
     request = request_with_authorization(create_internal_token(role=user_role))
 
-    fetch_auth_token = RequireAuthToken(role=required_role)
+    fetch_auth_token = auth.RequireAuthToken(role=required_role)
 
     if accept:
 
         token = await fetch_auth_token(request=request)
         assert token
-        assert isinstance(token, AuthToken)
+        assert isinstance(token, auth.AuthToken)
 
         assert token.name == "John Doe"
         assert token.role == user_role

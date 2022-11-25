@@ -13,8 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Test configuration"""
+"""Test configuration for the auth adapter"""
 
-from .fixtures.auth_keys import set_auth_keys_env
+from pytest import fixture
 
-set_auth_keys_env()  # set signing keys in environment for testing
+from ...fixtures import auth_keys
+
+
+@fixture(autouse=True, scope="package")
+def config_for_auth_adapter() -> None:
+    """Set the environment for the auth adapter"""
+    auth_keys.reload_auth_key_config(auth_adapter=True)

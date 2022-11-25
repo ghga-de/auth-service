@@ -247,8 +247,6 @@ async def delete_user(
     try:
         if not is_internal_id(id_):
             raise ResourceNotFoundError(id_=id_)
-        if id_ == auth_token.id:
-            raise ValueError("Cannot delete own user account.")
         await user_dao.delete(id_=id_)
     except ResourceNotFoundError as error:
         raise HTTPException(
