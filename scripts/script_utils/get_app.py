@@ -12,24 +12,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
-"""Entrypoint of the package"""
+"""Used to get the main FastAPI app object."""
 
-import asyncio
+from fastapi import FastAPI
 
-from ghga_service_chassis_lib.api import run_server
-from ghga_service_chassis_lib.utils import assert_tz_is_utc
+from tests.fixtures.auth_keys import set_auth_keys_env
 
-from .config import CONFIG, Config
-
-
-def run(config: Config = CONFIG):
-    """Run the service"""
-    assert_tz_is_utc()
-    service = "auth_adapter" if config.run_auth_adapter else "user_management"
-    print(f"Starting {service} service", service)
-    asyncio.run(run_server(app=f"auth_service.{service}.api.main:app", config=config))
+__all__ = ["get_app"]
 
 
-if __name__ == "__main__":
-    run()
+# pylint: disable=import-outside-toplevel
+def get_app(create_auth_keys=False) -> FastAPI:
+    """Get the main FAastAPI app object."""
+    if create_auth_keys:
+        set_auth_keys_env()
+    from auth_service.user_management.api.main import app
+
+    return app

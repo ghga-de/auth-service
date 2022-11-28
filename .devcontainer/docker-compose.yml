@@ -34,7 +34,7 @@ services:
       AUTH_SERVICE_CONFIG_YAML: /workspace/.devcontainer/.dev_config.yaml
 
   mongodb:
-    image: mongo:5.0.11
+    image: mongo:6.0.3
     restart: unless-stopped
     volumes:
       - mongo_fs:/data/db

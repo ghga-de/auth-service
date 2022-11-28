@@ -12,12 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
 
-"""Used to define the location of the main FastAPI app object."""
+"""Unit tests for the user management service"""
 
-# flake8: noqa
-# pylint: skip-file
+from ...fixtures import auth_keys
 
-# Please adapt to package structure:
-from auth_service.user_management.api.main import app
+auth_keys.reload_auth_key_config(auth_adapter=False)  # needed for collecting tests
