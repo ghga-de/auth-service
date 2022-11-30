@@ -13,25 +13,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.10.5-alpine3.16
-
+## creating building container
+FROM python:3.10-slim AS builder
+# update and install dependencies
+RUN apt upgrade
+RUN apt dist-upgrade
+RUN pip install build
+# copy code
 COPY . /service
 WORKDIR /service
+# build wheel
+RUN python -m build
 
-RUN apk update && apk upgrade
-RUN apk add --no-cache gcc
-RUN apk add --update alpine-sdk
-# Security patch toss busybox
-RUN apk upgrade busybox --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
-
-RUN pip install .
-
+# creating running container
+FROM python:3.10-slim
+# update and install dependencies
+RUN apt upgrade
+RUN apt dist-upgrade
+# copy and install wheel
+WORKDIR /service
+COPY --from=builder /service/dist/ /service
+RUN pip install *.whl
 # create new user and execute as that user
-RUN addgroup -S appuser && adduser -S appuser -G appuser
-USER appuser
+RUN useradd --create-home appuser
 WORKDIR /home/appuser
-
+USER appuser
+# set environment
 ENV PYTHONUNBUFFERED=1
-
 # Please adapt to package name:
 ENTRYPOINT ["auth-service"]
