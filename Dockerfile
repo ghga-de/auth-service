@@ -16,8 +16,8 @@
 ## creating building container
 FROM python:3.10-slim AS builder
 # update and install dependencies
-RUN apt upgrade
-RUN apt dist-upgrade
+RUN apt update
+RUN apt upgrade -y
 RUN pip install build
 # copy code
 COPY . /service
@@ -28,8 +28,8 @@ RUN python -m build
 # creating running container
 FROM python:3.10-slim
 # update and install dependencies
-RUN apt upgrade
-RUN apt dist-upgrade
+RUN apt update
+RUN apt upgrade -y
 # copy and install wheel
 WORKDIR /service
 COPY --from=builder /service/dist/ /service
