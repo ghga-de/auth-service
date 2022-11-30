@@ -71,7 +71,7 @@ jobs:
         with:
           image-ref: 'docker.io/ghga/${{ github.event.repository.name }}:${{ needs.get_commit_version.outputs.version }}'
           format: 'table'
-   #       exit-code: '1'
+          exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
