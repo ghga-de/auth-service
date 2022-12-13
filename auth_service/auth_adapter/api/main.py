@@ -48,6 +48,8 @@ configure_app(app, config=CONFIG)
 # the auth adapter needs to handle all HTTP methods
 HANDLE_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"]
 
+PATH_PREFIX = "api/auth/"
+
 
 @app.api_route("/.well-known/{path:path}", methods=["GET"])
 async def ext_auth_well_known() -> dict:
@@ -94,6 +96,7 @@ async def ext_auth(  # pylint:disable=too-many-arguments
 
 def path_needs_ext_info(path: str, method: str) -> bool:
     """Check whether the given request path and method need external user info."""
+    path.removeprefix(PATH_PREFIX)
     return (method == "POST" and path == "users") or (
         method == "GET" and path.startswith("users/") and "@" in path
     )
