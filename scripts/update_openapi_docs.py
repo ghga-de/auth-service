@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Udates OpenAPI-based documentation"""
+"""Updates OpenAPI-based documentation"""
 
 import sys
 from pathlib import Path
@@ -31,13 +31,11 @@ OPENAPI_YAML = REPO_ROOT_DIR / "openapi.yaml"
 
 
 class ValidationError(RuntimeError):
-    """Raised when validation of openapi documentation failes."""
+    """Raised when validation of OpenAPI documentation fails."""
 
 
 def get_openapi_spec() -> str:
-    """Get an openapi spec in YAML format from the main FastAPI app as defined in the
-    _fastapi_app_location.py file.
-    """
+    """Get an openapi spec in YAML format from the main FastAPI app."""
 
     openapi_spec = get_app(create_auth_keys=True).openapi()
     return yaml.safe_dump(openapi_spec)
