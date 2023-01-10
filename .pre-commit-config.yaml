@@ -8,7 +8,7 @@ minimum_pre_commit_version: 2.13.0
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.0.1
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -37,27 +37,27 @@ repos:
       - id: debug-statements
       - id: debug-statements
   - repo: https://github.com/psf/black
-    rev: 22.12.0
+    rev: 22.3.0
     hooks:
       - id: black
   - repo: https://github.com/pycqa/isort
-    rev: 5.11.2
+    rev: 5.10.1
     hooks:
       - id: isort
         args: [--profile, black]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.991
+    rev: v0.981
     hooks:
       - id: mypy
         args: [--no-warn-unused-ignores]
   - repo: https://github.com/PyCQA/pylint
-    rev: v2.15.8
+    rev: v2.13.3
     hooks:
       - id: pylint
         args: [--disable=E0401]
         exclude: tests|.devcontainer
   - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
+    rev: 4.0.1
     hooks:
       - id: flake8
         args: [--config, .flake8]
