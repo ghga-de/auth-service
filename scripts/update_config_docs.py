@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2021 - 2022 Universität Tübingen, DKFZ and EMBL
+# Copyright 2021 - 2023 Universität Tübingen, DKFZ and EMBL
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,10 +26,9 @@ import sys
 from pathlib import Path
 from typing import Any, Type
 
-import typer
 import yaml
 from pydantic import BaseSettings
-from script_utils.cli import echo_failure, echo_success
+from script_utils.cli import echo_failure, echo_success, run
 
 HERE = Path(__file__).parent.resolve()
 REPO_ROOT_DIR = HERE.parent
@@ -125,9 +124,8 @@ def check_docs():
         )
 
 
-def cli_main(check: bool = False):
-    """Main function to be run by the typer CLI to update or check config documentation
-    files."""
+def main(check: bool = False):
+    """Update or check the config documentation files."""
 
     if check:
         try:
@@ -142,10 +140,5 @@ def cli_main(check: bool = False):
     echo_success("Successfully updated the config docs.")
 
 
-def main():
-    """Main function that runs the CLI."""
-    typer.run(cli_main)
-
-
 if __name__ == "__main__":
-    main()
+    run(main)

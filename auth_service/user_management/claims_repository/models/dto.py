@@ -108,7 +108,7 @@ class Identity(BaseDto):
     sub: str = Field(default=..., title="Subject", description="OpenID Subject")
 
 
-# pylint: disable=no-self-argument,no-self-use
+# pylint: disable=no-self-argument
 class ClaimCreation(BaseDto):
     """A claim made about a user with a user ID"""
 
