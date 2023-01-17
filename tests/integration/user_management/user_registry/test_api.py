@@ -165,7 +165,7 @@ def test_post_user_with_different_ls_id(client, user_headers):
     assert error["detail"] == "Not authorized to register user."
 
 
-def test_post_user_unathenticated(client_with_db, user_headers):
+def test_post_user_unauthenticated(client_with_db, user_headers):
     """Test that registering a user without authentication does not work."""
 
     response = client_with_db.post("/users", json=MAX_USER_DATA)
