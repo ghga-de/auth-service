@@ -108,12 +108,12 @@ class UserAutomaticData(BaseModel):
 
     status_change: Optional[StatusChange] = None
 
-    submissions: list[str] = Field(
+    active_submissions: list[str] = Field(
         default=[],
         title="Submissions",
         description="List of IDs of all active submissions created by the user",
     )
-    access_requests: list[str] = Field(
+    active_access_requests: list[str] = Field(
         default=[],
         title="Access requests",
         description="List of IDs of all active data access requests created by the user",

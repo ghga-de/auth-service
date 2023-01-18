@@ -291,12 +291,20 @@ components:
       additionalProperties: false
       description: Complete user model with ID
       properties:
-        access_requests:
+        active_access_requests:
           default: []
-          description: List of IDs of all data access requests created by the user
+          description: List of IDs of all active data access requests created by the
+            user
           items:
             type: string
           title: Access requests
+          type: array
+        active_submissions:
+          default: []
+          description: List of IDs of all active submissions created by the user
+          items:
+            type: string
+          title: Submissions
           type: array
         email:
           description: Preferred e-mail address of the user
@@ -330,13 +338,6 @@ components:
           title: Status
         status_change:
           $ref: '#/components/schemas/StatusChange'
-        submissions:
-          default: []
-          description: List of IDs of all submissions created by the user
-          items:
-            type: string
-          title: Submissions
-          type: array
         title:
           allOf:
           - $ref: '#/components/schemas/AcademicTitle'
