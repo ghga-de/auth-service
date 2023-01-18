@@ -111,7 +111,7 @@ class UserAutomaticData(BaseModel):
     submissions: list[str] = Field(
         default=[],
         title="Submissions",
-        description="List of IDs of all submissions created by the user",
+        description="List of IDs of all active submissions created by the user",
     )
     access_requests: list[str] = Field(
         default=[],
