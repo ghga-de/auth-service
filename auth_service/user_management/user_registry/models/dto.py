@@ -116,7 +116,7 @@ class UserAutomaticData(BaseModel):
     access_requests: list[str] = Field(
         default=[],
         title="Access requests",
-        description="List of IDs of all data access requests created by the user",
+        description="List of IDs of all active data access requests created by the user",
     )
 
 
