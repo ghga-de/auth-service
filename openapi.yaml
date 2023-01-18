@@ -291,6 +291,13 @@ components:
       additionalProperties: false
       description: Complete user model with ID
       properties:
+        access_requests:
+          default: []
+          description: List of IDs of all data access requests created by the user
+          items:
+            type: string
+          title: Access requests
+          type: array
         email:
           description: Preferred e-mail address of the user
           example: user@home.org
@@ -316,12 +323,6 @@ components:
           format: date-time
           title: Registration date
           type: string
-        registration_reason:
-          title: Reason for registration
-          type: string
-        research_topics:
-          title: Research topic(s)
-          type: string
         status:
           allOf:
           - $ref: '#/components/schemas/UserStatus'
@@ -329,6 +330,13 @@ components:
           title: Status
         status_change:
           $ref: '#/components/schemas/StatusChange'
+        submissions:
+          default: []
+          description: List of IDs of all submissions created by the user
+          items:
+            type: string
+          title: Submissions
+          type: array
         title:
           allOf:
           - $ref: '#/components/schemas/AcademicTitle'
@@ -363,12 +371,6 @@ components:
           description: Full name of the user
           example: Rosalind Franklin
           title: Name
-          type: string
-        registration_reason:
-          title: Reason for registration
-          type: string
-        research_topics:
-          title: Research topic(s)
           type: string
         title:
           allOf:
