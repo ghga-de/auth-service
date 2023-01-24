@@ -345,16 +345,57 @@ components:
           title: Academic title
       required:
       - registration_date
-      - ls_id
       - name
       - email
+      - ls_id
       - status
       - id
       title: User
       type: object
-    UserCreatableData:
+    UserBasicData:
       additionalProperties: false
-      description: User data
+      description: Basic data of a user
+      properties:
+        email:
+          description: Preferred e-mail address of the user
+          example: user@home.org
+          format: email
+          title: E-Mail
+          type: string
+        name:
+          description: Full name of the user
+          example: Rosalind Franklin
+          title: Name
+          type: string
+        title:
+          allOf:
+          - $ref: '#/components/schemas/AcademicTitle'
+          description: Academic title of the user
+          title: Academic title
+      required:
+      - name
+      - email
+      title: UserBasicData
+      type: object
+    UserModifiableData:
+      additionalProperties: false
+      description: User data that can be modified
+      properties:
+        status:
+          allOf:
+          - $ref: '#/components/schemas/UserStatus'
+          description: Registration status of the user
+          title: Status
+        title:
+          allOf:
+          - $ref: '#/components/schemas/AcademicTitle'
+          description: Academic title of the user
+          title: Academic title
+      title: UserModifiableData
+      type: object
+    UserRegisteredData:
+      additionalProperties: false
+      description: Basic data of a registered user
       properties:
         email:
           description: Preferred e-mail address of the user
@@ -379,34 +420,17 @@ components:
           description: Academic title of the user
           title: Academic title
       required:
-      - ls_id
       - name
       - email
-      title: UserCreatableData
-      type: object
-    UserModifiableData:
-      additionalProperties: false
-      description: User data that can be modified
-      properties:
-        status:
-          allOf:
-          - $ref: '#/components/schemas/UserStatus'
-          description: Registration status of the user
-          title: Status
-        title:
-          allOf:
-          - $ref: '#/components/schemas/AcademicTitle'
-          description: Academic title of the user
-          title: Academic title
-      title: UserModifiableData
+      - ls_id
+      title: UserRegisteredData
       type: object
     UserStatus:
       description: User status enum
       enum:
-      - registered
-      - activated
-      - inactivated
-      - deleted
+      - active
+      - inactive
+      - invalid
       title: UserStatus
       type: string
     VisaType:
@@ -457,7 +481,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserCreatableData'
+              $ref: '#/components/schemas/UserRegisteredData'
         required: true
       responses:
         '201':
@@ -466,8 +490,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: User was successfully registered.
-        '400':
-          description: User cannot be registered.
         '403':
           description: Not authorized to register user.
         '409':
@@ -575,6 +597,40 @@ paths:
       security:
       - HTTPBearer: []
       summary: Modify user data
+      tags:
+      - users
+    put:
+      description: Endpoint used to update a registered user when their name or email
+        used by LS Login have changed. May only be performed by the users themselves.
+        Data delivered by the OIDC provider may not be altered.
+      operationId: put_user
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          title: Internal ID
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserBasicData'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: User was successfully updated.
+        '403':
+          description: Not authorized to update user.
+        '422':
+          description: Validation error in submitted user data.
+      security:
+      - HTTPBearer: []
+      summary: Update a user
       tags:
       - users
   /users/{user_id}/claims:

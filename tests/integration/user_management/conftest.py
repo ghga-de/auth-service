@@ -29,7 +29,7 @@ def config_for_user_management() -> None:
 
 @fixture(autouse=True, scope="package")
 def user_headers() -> dict[str, str]:
-    """Get headers with authorization for a user with data steward role."""
+    """Get headers with authorization for an unregistered user."""
     return get_headers_for(
         ls_id="max@ls.org", name="Max Headroom", email="max@example.org"
     )

@@ -130,7 +130,7 @@ def create_internal_token(
     assert kty in ("EC", "RSA")
     header = {"alg": "ES256" if kty == "EC" else "RS256", "typ": "JWT"}
     claims: dict[str, Union[None, int, str]] = dict(
-        name="John Doe", email="john@home.org", status="activated"
+        name="John Doe", email="john@home.org", status="active"
     )
     iat = int(now_as_utc().timestamp())
     if expired:
@@ -193,6 +193,7 @@ class DummyUserDao:
         name="John Doe",
         email="john@home.org",
         ls_id="john@aai.org",
+        status=UserStatus.ACTIVE,
     ):
         """Initialize the dummy UserDao"""
         self.user = User(
@@ -200,7 +201,7 @@ class DummyUserDao:
             name=name,
             email=email,
             ls_id=ls_id,
-            status=UserStatus.ACTIVATED,
+            status=status,
             status_change=None,
             registration_date=datetime_utc(2020, 1, 1),
         )

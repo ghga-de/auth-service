@@ -54,7 +54,7 @@ async def test_user_creation(
 
     user_data = UserData(
         ls_id="max@ls.org",
-        status=UserStatus.ACTIVATED,
+        status=UserStatus.ACTIVE,
         name="Max Headroom",
         title=AcademicTitle.DR,
         email="max@example.org",

@@ -108,7 +108,7 @@ class AuthToken(BaseModel):
     def has_role(self, role: str) -> bool:
         """Check whether the user has the given role, no matter w"""
         return (
-            self.status == UserStatus.ACTIVATED
+            self.status == UserStatus.ACTIVE
             and self.role is not None
             and self.role.split("@", 1)[0] == role
         )
@@ -148,15 +148,15 @@ class FetchAuthToken(SecurityBase):
 class RequireAuthToken(SecurityBase):
     """Fetches a required internal authorization token."""
 
-    def __init__(self, activated: bool = True, role: Optional[str] = None):
+    def __init__(self, active: bool = True, role: Optional[str] = None):
         """Initialize authorization token fetcher.
 
-        By default, the user must be activated. A role can also be required.
+        By default, the user must be active. A role can also be required.
         """
         self.http_bearer = HTTPBearer(auto_error=True)
         self.model = self.http_bearer.model
         self.scheme_name = self.http_bearer.scheme_name
-        self.activated = activated
+        self.active = active
         self.role = role
 
     async def __call__(self, request: Request) -> AuthToken:
@@ -167,8 +167,8 @@ class RequireAuthToken(SecurityBase):
             raise forbidden_error
         try:
             token = AuthToken(**decode_and_validate_token(bearer_token))
-            if self.activated and token.status is not UserStatus.ACTIVATED:
-                raise ValueError("User is not activated")
+            if self.active and token.status is not UserStatus.ACTIVE:
+                raise ValueError("User is not active")
             role = self.role
             if role:
                 user_role = token.role

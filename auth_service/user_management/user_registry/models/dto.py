@@ -30,10 +30,9 @@ __all__ = ["User", "UserData", "UserStatus", "StatusChange"]
 class UserStatus(str, Enum):
     """User status enum"""
 
-    REGISTERED = "registered"
-    ACTIVATED = "activated"
-    INACTIVATED = "inactivated"
-    DELETED = "deleted"
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    INVALID = "invalid"
 
 
 class AcademicTitle(str, Enum):
@@ -64,15 +63,9 @@ class StatusChange(BaseDto):
     change_date: DateTimeUTC = Field(default=None, title="Date of last change")
 
 
-class UserCreatableData(BaseDto):
-    """User data"""
+class UserBasicData(BaseDto):
+    """Basic data of a user"""
 
-    ls_id: EmailStr = Field(
-        default=...,
-        title="LS ID",
-        description="Life Science ID",
-        example="user@lifescience-ri.eu",
-    )
     name: str = Field(
         default=...,
         title="Name",
@@ -87,6 +80,17 @@ class UserCreatableData(BaseDto):
         title="E-Mail",
         description="Preferred e-mail address of the user",
         example="user@home.org",
+    )
+
+
+class UserRegisteredData(UserBasicData):
+    """Basic data of a registered user"""
+
+    ls_id: EmailStr = Field(
+        default=...,
+        title="LS ID",
+        description="Life Science ID",
+        example="user@lifescience-ri.eu",
     )
 
 
@@ -120,7 +124,7 @@ class UserAutomaticData(BaseModel):
     )
 
 
-class UserData(UserCreatableData, UserAutomaticData):
+class UserData(UserRegisteredData, UserAutomaticData):
     """User data model without the ID"""
 
     status: UserStatus = Field(
