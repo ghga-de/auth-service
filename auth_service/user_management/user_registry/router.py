@@ -135,6 +135,11 @@ async def put_user(
         and auth_token.status in (UserStatus.ACTIVE, UserStatus.INVALID)
     ):
         raise HTTPException(status_code=403, detail="Not authorized to update user.")
+    if (
+        user_data.name != auth_token.name  # specified name must match token
+        or user_data.email != auth_token.email  # specified email must match token
+    ):
+        raise HTTPException(status_code=422, detail="User cannot be updated.")
     try:
         user = await user_dao.get_by_id(id_)
         user = user.copy(update=user_data.dict())

@@ -192,7 +192,7 @@ def test_put_user(client_with_db, user_headers):
     for key, value in new_data.items():
         assert value != old_data[key]
 
-    headers = get_headers_for(id=id_, name=old_data["name"], email=old_data["email"])
+    headers = get_headers_for(id=id_, name=new_data["name"], email=new_data["email"])
 
     response = client_with_db.put(f"/users/{id_}", json=new_data, headers=headers)
     assert response.status_code == status.HTTP_204_NO_CONTENT

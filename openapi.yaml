@@ -618,11 +618,7 @@ paths:
               $ref: '#/components/schemas/UserBasicData'
         required: true
       responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
+        '204':
           description: User was successfully updated.
         '403':
           description: Not authorized to update user.
