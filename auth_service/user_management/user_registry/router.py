@@ -71,9 +71,9 @@ async def post_user(
     auth_token: AuthToken = Depends(RequireAuthToken(active=False)),
 ) -> User:
     """Register a user"""
-    ls_id = user_data.ls_id
+    ext_id = user_data.ext_id
     # users can only register themselves
-    if ls_id != auth_token.ls_id:
+    if ext_id != auth_token.ext_id:
         raise HTTPException(status_code=403, detail="Not authorized to register user.")
     if (
         auth_token.id  # must not have been already registered
@@ -82,7 +82,7 @@ async def post_user(
     ):
         raise HTTPException(status_code=422, detail="User cannot be registered.")
     try:
-        user = await user_dao.find_one(mapping={"ls_id": ls_id})
+        user = await user_dao.find_one(mapping={"ext_id": ext_id})
     except NoHitsFoundError:
         pass
     else:
@@ -167,7 +167,7 @@ async def get_user(
     id_: str = Path(
         ...,
         alias="id",
-        title="Internal ID or LS ID",
+        title="Internal ID or External (LS) ID",
     ),
     user_dao: UserDao = Depends(get_user_dao),
     auth_token: AuthToken = Depends(RequireAuthToken(active=False)),
@@ -176,13 +176,13 @@ async def get_user(
     # Only data steward can request other user accounts
     if not (
         auth_token.has_role("data_steward")
-        or (is_external_id(id_) and id_ == auth_token.ls_id)
+        or (is_external_id(id_) and id_ == auth_token.ext_id)
         or (is_internal_id(id_) and id_ == auth_token.id)
     ):
         raise HTTPException(status_code=403, detail="Not authorized to request user.")
     try:
         if is_external_id(id_):
-            user = await user_dao.find_one(mapping={"ls_id": id_})
+            user = await user_dao.find_one(mapping={"ext_id": id_})
         elif is_internal_id(id_):
             user = await user_dao.get_by_id(id_)
         else:

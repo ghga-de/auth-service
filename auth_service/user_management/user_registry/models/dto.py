@@ -86,10 +86,10 @@ class UserBasicData(BaseDto):
 class UserRegisteredData(UserBasicData):
     """Basic data of a registered user"""
 
-    ls_id: EmailStr = Field(
+    ext_id: EmailStr = Field(
         default=...,
-        title="LS ID",
-        description="Life Science ID",
+        title="External ID",
+        description="External (Life Science) ID",
         example="user@lifescience-ri.eu",
     )
 

@@ -42,18 +42,18 @@ async def test_rejects_an_expired_access_token():
 async def test_exchanges_token_for_unknown_user_if_requested():
     """Test token exchange for a valid but unknown user with pass_sub flag."""
     access_token = create_access_token()
-    user_dao = DummyUserDao(ls_id="not.john@aai.org")
+    user_dao = DummyUserDao(ext_id="not.john@aai.org")
     internal_token = await auth.exchange_token(
         access_token, pass_sub=True, user_dao=user_dao
     )
     assert internal_token is not None
     claims = get_claims_from_token(internal_token)
     assert isinstance(claims, dict)
-    expected_claims = {"email", "name", "ls_id", "exp", "iat"}
+    expected_claims = {"email", "name", "ext_id", "exp", "iat"}
     assert set(claims) == expected_claims
     assert claims["name"] == "John Doe"
     assert claims["email"] == "john@home.org"
-    assert claims["ls_id"] == "john@aai.org"
+    assert claims["ext_id"] == "john@aai.org"
     assert isinstance(claims["iat"], int)
     assert isinstance(claims["exp"], int)
     assert claims["iat"] <= int(now_as_utc().timestamp()) < claims["exp"]
@@ -63,7 +63,7 @@ async def test_exchanges_token_for_unknown_user_if_requested():
 async def test_does_not_exchange_for_unknown_user_if_not_requested():
     """Test token exchange for a valid but unknown user without pass_sub flag."""
     access_token = create_access_token()
-    user_dao = DummyUserDao(ls_id="not.john@aai.org")
+    user_dao = DummyUserDao(ext_id="not.john@aai.org")
     assert await auth.exchange_token(access_token, user_dao=user_dao) is None
 
 
@@ -103,7 +103,7 @@ async def test_also_passes_sub_for_a_known_user():
     claims = get_claims_from_token(internal_token)
     assert isinstance(claims, dict)
     assert claims["id"] == "john@ghga.de"
-    assert claims["ls_id"] == "john@aai.org"
+    assert claims["ext_id"] == "john@aai.org"
 
 
 @mark.asyncio

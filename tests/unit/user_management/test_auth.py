@@ -189,7 +189,7 @@ async def test_fetches_internal_token_with_additional_attributes(fetcher: type):
     request = request_with_authorization(
         create_internal_token(
             id="some-internal-id",
-            ls_id="some-id@aai.org",
+            ext_id="some-id@aai.org",
             role="admin@some.hub",
         )
     )
@@ -201,7 +201,7 @@ async def test_fetches_internal_token_with_additional_attributes(fetcher: type):
 
     assert token.name == "John Doe"
     assert token.id == "some-internal-id"
-    assert token.ls_id == "some-id@aai.org"
+    assert token.ext_id == "some-id@aai.org"
     assert token.status == UserStatus.ACTIVE
     assert token.role == "admin@some.hub"
 

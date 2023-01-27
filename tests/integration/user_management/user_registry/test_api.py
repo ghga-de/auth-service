@@ -29,7 +29,7 @@ from ..fixtures import (  # noqa: F401; pylint: disable=unused-import
 )
 
 MIN_USER_DATA = {
-    "ls_id": "max@ls.org",
+    "ext_id": "max@ls.org",
     "name": "Max Headroom",
     "email": "max@example.org",
 }
@@ -158,10 +158,10 @@ def test_post_user_with_invalid_email(client, user_headers):
     assert error["detail"][0]["msg"] == "value is not a valid email address"
 
 
-def test_post_user_with_different_ls_id(client, user_headers):
-    """Test that registering a user with a different LS ID does not work."""
+def test_post_user_with_different_ext_id(client, user_headers):
+    """Test that registering a user with a different external ID does not work."""
 
-    user_data = {**MAX_USER_DATA, "ls_id": "frodo@ls.org"}
+    user_data = {**MAX_USER_DATA, "ext_id": "frodo@ls.org"}
     response = client.post("/users", json=user_data, headers=user_headers)
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -201,7 +201,7 @@ def test_put_user(client_with_db, user_headers):
     put_user = user.copy()
 
     assert user.pop("id") == id_
-    assert user.pop("ls_id") == old_data["ls_id"]
+    assert user.pop("ext_id") == old_data["ext_id"]
     assert user.pop("status") == "active"
     assert user.pop("status_change") is None
     date_diff = now_as_utc() - datetime.fromisoformat(user.pop("registration_date"))
@@ -222,7 +222,7 @@ def test_put_nonexisting_user(client_with_db):
     """Test updating a non-existing user."""
 
     user_data = MAX_USER_DATA.copy()
-    del user_data["ls_id"]
+    del user_data["ext_id"]
 
     id_ = "nonexisting-user-id"
     headers = get_headers_for(id=id_, name=user_data["name"], email=user_data["email"])
@@ -248,7 +248,7 @@ def test_put_user_with_invalid_data(client_with_db):
     """Test that updating a user with invalid email does not work."""
 
     user_data = MAX_USER_DATA.copy()
-    del user_data["ls_id"]
+    del user_data["ext_id"]
     id_ = "nonexisting-user-id"
     headers = get_headers_for(id=id_, name=user_data["name"], email=user_data["email"])
 
@@ -270,7 +270,7 @@ def test_put_inactive_user(client_with_db, user_headers):
     assert is_internal_id(id_)
 
     user_data = user_data.copy()
-    del user_data["ls_id"]
+    del user_data["ext_id"]
     headers = get_headers_for(
         id=id_,
         name=user_data["name"],
@@ -341,15 +341,15 @@ def test_get_user_via_id(client_with_db, user_headers):
     assert user == expected_user
 
 
-def test_get_user_via_ls_id(client_with_db, user_headers):
-    """Test that a registered user can be found via LS ID."""
+def test_get_user_via_ext_id(client_with_db, user_headers):
+    """Test that a registered user can be found via external ID."""
 
     user_data = MAX_USER_DATA
     response = client_with_db.post("/users", json=user_data, headers=user_headers)
     expected_user = response.json()
     assert response.status_code == status.HTTP_201_CREATED
 
-    id_ = expected_user["ls_id"]
+    id_ = expected_user["ext_id"]
     response = client_with_db.get(f"/users/{id_}", headers=user_headers)
 
     assert response.status_code == status.HTTP_200_OK
@@ -368,7 +368,7 @@ def test_get_different_user_as_data_steward(
     assert response.status_code == status.HTTP_201_CREATED
     expected_user = response.json()
 
-    id_ = expected_user["ls_id"]
+    id_ = expected_user["ext_id"]
     response = client_with_db.get(f"/users/{id_}", headers=steward_headers)
 
     assert response.status_code == status.HTTP_200_OK

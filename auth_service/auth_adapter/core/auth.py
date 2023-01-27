@@ -73,7 +73,7 @@ class JWTConfig:
     # the claims that are copied from the external to the internal token
     copied_claims = ("name", "email", "iat", "exp")
     # the key under which the subject is copied from the external token
-    copy_sub_as = "ls_id"
+    copy_sub_as = "ext_id"
 
     def __init__(self, config: Config = CONFIG) -> None:
         """Load the JWT related configuration parameters."""
@@ -145,7 +145,7 @@ async def exchange_token(
     will appear as "invalid" in the internal token, but the actual status
     will not  be changed in the user registry.
     If the user is not yet registered, and pass_sub is set, then the sub claim
-    will be included in the internal token as "ls_id", otherwise the value None
+    will be included in the internal token as "ext_id", otherwise the value None
     will be returned instead of a token.
     If the user has a special internal role, this is passed as the "role"
     claim of the internal token.
@@ -159,7 +159,7 @@ async def exchange_token(
     }
     sub = external_claims["sub"]
     try:
-        user = await user_dao.find_one(mapping={"ls_id": sub})
+        user = await user_dao.find_one(mapping={"ext_id": sub})
     except NoHitsFoundError:
         # user is not yet registered
         if not pass_sub:

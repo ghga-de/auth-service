@@ -216,7 +216,7 @@ def test_token_exchange_for_unknown_user(
 ):  # pylint:disable=too-many-statements
     """Test the token exchange for authenticated but unknown users."""
 
-    user_dao = DummyUserDao(ls_id="not.john@aai.org")
+    user_dao = DummyUserDao(ext_id="not.john@aai.org")
     client.app.dependency_overrides[get_user_dao] = lambda: user_dao
 
     auth = f"Bearer {create_access_token()}"
@@ -280,12 +280,12 @@ def test_token_exchange_for_unknown_user(
     assert internal_token
     claims = get_claims_from_token(internal_token)
     assert isinstance(claims, dict)
-    expected_claims = {"name", "email", "ls_id", "exp", "iat"}
+    expected_claims = {"name", "email", "ext_id", "exp", "iat"}
 
     assert set(claims) == expected_claims
     assert claims["name"] == "John Doe"
     assert claims["email"] == "john@home.org"
-    assert claims["ls_id"] == "john@aai.org"
+    assert claims["ext_id"] == "john@aai.org"
     assert isinstance(claims["iat"], int)
     assert isinstance(claims["exp"], int)
     assert claims["iat"] <= int(now_as_utc().timestamp()) < claims["exp"]
@@ -305,12 +305,12 @@ def test_token_exchange_for_unknown_user(
     assert internal_token
     claims = get_claims_from_token(internal_token)
     assert isinstance(claims, dict)
-    expected_claims = {"name", "email", "ls_id", "exp", "iat"}
+    expected_claims = {"name", "email", "ext_id", "exp", "iat"}
 
     assert set(claims) == expected_claims
     assert claims["name"] == "John Doe"
     assert claims["email"] == "john@home.org"
-    assert claims["ls_id"] == "john@aai.org"
+    assert claims["ext_id"] == "john@aai.org"
     assert isinstance(claims["iat"], int)
     assert isinstance(claims["exp"], int)
     assert claims["iat"] <= int(now_as_utc().timestamp()) < claims["exp"]
@@ -424,7 +424,7 @@ def test_token_exchange_for_known_user(
 def test_token_exchange_with_x_token(client):
     """Test that the external access token can be passed in separate header."""
 
-    user_dao = DummyUserDao(ls_id="not.john@aai.org")
+    user_dao = DummyUserDao(ext_id="not.john@aai.org")
     client.app.dependency_overrides[get_user_dao] = lambda: user_dao
 
     auth = f"Bearer {create_access_token()}"
@@ -454,12 +454,12 @@ def test_token_exchange_with_x_token(client):
     assert internal_token
     claims = get_claims_from_token(internal_token)
     assert isinstance(claims, dict)
-    expected_claims = {"name", "email", "ls_id", "exp", "iat"}
+    expected_claims = {"name", "email", "ext_id", "exp", "iat"}
 
     assert set(claims) == expected_claims
     assert claims["name"] == "John Doe"
     assert claims["email"] == "john@home.org"
-    assert claims["ls_id"] == "john@aai.org"
+    assert claims["ext_id"] == "john@aai.org"
     assert isinstance(claims["iat"], int)
     assert isinstance(claims["exp"], int)
     assert claims["iat"] <= int(now_as_utc().timestamp()) < claims["exp"]

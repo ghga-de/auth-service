@@ -101,7 +101,7 @@ class AuthToken(BaseModel):
     iat: DateTimeUTC
     exp: DateTimeUTC
     id: Optional[str]
-    ls_id: Optional[str]
+    ext_id: Optional[str]
     role: Optional[str]
     status: Optional[UserStatus]
 

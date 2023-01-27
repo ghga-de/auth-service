@@ -192,7 +192,7 @@ class DummyUserDao:
         id_="john@ghga.de",
         name="John Doe",
         email="john@home.org",
-        ls_id="john@aai.org",
+        ext_id="john@aai.org",
         status=UserStatus.ACTIVE,
     ):
         """Initialize the dummy UserDao"""
@@ -200,7 +200,7 @@ class DummyUserDao:
             id=id_,
             name=name,
             email=email,
-            ls_id=ls_id,
+            ext_id=ext_id,
             status=status,
             status_change=None,
             registration_date=datetime_utc(2020, 1, 1),
@@ -214,8 +214,8 @@ class DummyUserDao:
 
     async def find_one(self, *, mapping: Mapping[str, Any]) -> Optional[User]:
         """Find the dummy user via LS-ID."""
-        user, ls_id = self.user, mapping.get("ls_id")
-        if user and ls_id and ls_id == user.ls_id:
+        user, ext_id = self.user, mapping.get("ext_id")
+        if user and ext_id and ext_id == user.ext_id:
             return user
         raise NoHitsFoundError(mapping=mapping)
 

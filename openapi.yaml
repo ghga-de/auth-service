@@ -312,15 +312,15 @@ components:
           format: email
           title: E-Mail
           type: string
+        ext_id:
+          description: External (Life Science) ID
+          example: user@lifescience-ri.eu
+          format: email
+          title: External ID
+          type: string
         id:
           description: Internally used ID
           title: ID
-          type: string
-        ls_id:
-          description: Life Science ID
-          example: user@lifescience-ri.eu
-          format: email
-          title: LS ID
           type: string
         name:
           description: Full name of the user
@@ -347,7 +347,7 @@ components:
       - registration_date
       - name
       - email
-      - ls_id
+      - ext_id
       - status
       - id
       title: User
@@ -403,11 +403,11 @@ components:
           format: email
           title: E-Mail
           type: string
-        ls_id:
-          description: Life Science ID
+        ext_id:
+          description: External (Life Science) ID
           example: user@lifescience-ri.eu
           format: email
-          title: LS ID
+          title: External ID
           type: string
         name:
           description: Full name of the user
@@ -422,7 +422,7 @@ components:
       required:
       - name
       - email
-      - ls_id
+      - ext_id
       title: UserRegisteredData
       type: object
     UserStatus:
@@ -541,7 +541,7 @@ paths:
         name: id
         required: true
         schema:
-          title: Internal ID or LS ID
+          title: Internal ID or External (LS) ID
           type: string
       responses:
         '200':

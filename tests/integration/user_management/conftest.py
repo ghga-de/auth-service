@@ -31,7 +31,7 @@ def config_for_user_management() -> None:
 def user_headers() -> dict[str, str]:
     """Get headers with authorization for an unregistered user."""
     return get_headers_for(
-        ls_id="max@ls.org", name="Max Headroom", email="max@example.org"
+        ext_id="max@ls.org", name="Max Headroom", email="max@example.org"
     )
 
 
