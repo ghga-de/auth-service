@@ -110,11 +110,11 @@ async def post_user(
     " May only be performed by the users themselves."
     " Data delivered by the OIDC provider may not be altered.",
     responses={
-        200: {"model": User, "description": "User was successfully updated."},
+        204: {"description": "User was successfully updated."},
         403: {"description": "Not authorized to update user."},
         422: {"description": "Validation error in submitted user data."},
     },
-    status_code=200,
+    status_code=204,
 )
 async def put_user(
     user_data: UserBasicData,
@@ -125,7 +125,7 @@ async def put_user(
     ),
     user_dao: UserDao = Depends(get_user_dao),
     auth_token: AuthToken = Depends(RequireAuthToken(active=False)),
-) -> User:
+) -> Response:
     """Update a user"""
     # users can only update themselves,
     # invalid users are allowed to update themselves in order to become valid again
@@ -144,7 +144,8 @@ async def put_user(
         raise HTTPException(
             status_code=500, detail="User cannot be updated."
         ) from error
-    return user
+
+    return Response(status_code=204)
 
 
 @router.get(

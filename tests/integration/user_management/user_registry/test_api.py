@@ -195,10 +195,12 @@ def test_put_user(client_with_db, user_headers):
     headers = get_headers_for(id=id_, name=old_data["name"], email=old_data["email"])
 
     response = client_with_db.put(f"/users/{id_}", json=new_data, headers=headers)
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not response.text
 
+    response = client_with_db.get(f"/users/{id_}", headers=headers)
+    assert response.status_code == status.HTTP_200_OK
     user = response.json()
-    put_user = user.copy()
 
     assert user.pop("id") == id_
     assert user.pop("ext_id") == old_data["ext_id"]
@@ -210,12 +212,6 @@ def test_put_user(client_with_db, user_headers):
     assert user.pop("active_access_requests") == []
 
     assert user == new_data
-
-    response = client_with_db.get(f"/users/{id_}", headers=headers)
-    assert response.status_code == status.HTTP_200_OK
-    user = response.json()
-
-    assert user == put_user
 
 
 def test_put_nonexisting_user(client_with_db):
