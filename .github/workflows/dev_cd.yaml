@@ -6,6 +6,7 @@ on:
       - "main"
       # you may add other branches to
       # activate deployment for them, too.
+  workflow_dispatch: {}
 
 jobs:
   get_commit_version:
