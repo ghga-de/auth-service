@@ -26,7 +26,7 @@ WORKDIR /service
 RUN python -m build
 
 # creating running container
-FROM python:3.10-slim AS builder
+FROM python:3.10-slim
 # update and install dependencies
 RUN apt update
 RUN apt upgrade -y
