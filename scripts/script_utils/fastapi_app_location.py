@@ -20,4 +20,4 @@
 # pylint: skip-file
 
 # Please adapt to package structure:
-from my_microservice.api.main import app
+from auth_service.user_management.api.main import app
