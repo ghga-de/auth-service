@@ -14,20 +14,10 @@
 # limitations under the License.
 #
 
-"""
-Core utilities for the Claims Repository.
-"""
+"""Used to define the location of the main FastAPI app object."""
 
-from hexkit.protocols.dao import ResourceNotFoundError
+# flake8: noqa
+# pylint: skip-file
 
-from auth_service.user_management.user_registry.deps import UserDao
-
-
-async def user_exists(user_id: str, user_dao: UserDao) -> bool:
-    """Check whether the user with the given id exists."""
-    try:
-        await user_dao.get_by_id(user_id)
-    except ResourceNotFoundError:
-        return False
-    else:
-        return True
+# Please adapt to package structure:
+from my_microservice.api.main import app
