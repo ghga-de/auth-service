@@ -18,6 +18,7 @@
 """Updates OpenAPI-based documentation"""
 
 import sys
+from difflib import unified_diff
 from pathlib import Path
 
 import yaml
@@ -30,12 +31,12 @@ OPENAPI_YAML = REPO_ROOT_DIR / "openapi.yaml"
 
 
 class ValidationError(RuntimeError):
-    """Raised when validation of openapi documentation failes."""
+    """Raised when validation of OpenAPI documentation fails."""
 
 
 def get_openapi_spec() -> str:
-    """Get an openapi spec in YAML format from the main FastAPI app as defined in the
-    _fastapi_app_location.py file.
+    """Get an OpenAPI spec in YAML format from the main FastAPI app as defined in the
+    fastapi_app_location.py file.
     """
 
     openapi_spec = app.openapi()
@@ -48,6 +49,18 @@ def update_docs():
     openapi_spec = get_openapi_spec()
     with open(OPENAPI_YAML, "w", encoding="utf-8") as openapi_file:
         openapi_file.write(openapi_spec)
+
+
+def print_diff(expected: str, observed: str):
+    """Print differences between expected and observed files."""
+    echo_failure("Differences in OpenAPI YAML:")
+    for line in unified_diff(
+        expected.splitlines(keepends=True),
+        observed.splitlines(keepends=True),
+        fromfile="expected",
+        tofile="observed",
+    ):
+        print("   ", line.rstrip())
 
 
 def check_docs():
@@ -63,6 +76,7 @@ def check_docs():
         openapi_observed = openapi_file.read()
 
     if openapi_expected != openapi_observed:
+        print_diff(openapi_expected, openapi_observed)
         raise ValidationError(
             f"The OpenAPI YAML at '{OPENAPI_YAML}' is not up to date."
         )
