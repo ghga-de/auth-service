@@ -16,8 +16,15 @@
 
 """Used to define the location of the main FastAPI app object."""
 
-# flake8: noqa
 # pylint: skip-file
 
-# Please adapt to package structure:
-from auth_service.user_management.api.main import app
+from tests.fixtures.auth_keys import reload_auth_key_config
+
+__all__ = ["app"]
+
+try:
+    from auth_service.user_management.api.main import app
+except Exception:
+    # this needs to be fixed properly (no global config)
+    reload_auth_key_config(False)
+    from auth_service.user_management.api.main import app
