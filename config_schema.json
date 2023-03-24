@@ -217,6 +217,14 @@
       ],
       "type": "string"
     },
+    "oidc_userinfo_endpoint": {
+      "title": "Oidc Userinfo Endpoint",
+      "default": "https://proxy.aai.lifescience-ri.eu/OIDC/userinfo",
+      "env_names": [
+        "auth_service_oidc_userinfo_endpoint"
+      ],
+      "type": "string"
+    },
     "oidc_client_id": {
       "title": "Oidc Client Id",
       "default": "ghga-data-portal",

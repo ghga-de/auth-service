@@ -82,6 +82,7 @@ class Config(ApiConfigBase):
 
     # expected external token content for validation in auth adapter
     oidc_authority_url: str = "https://proxy.aai.lifescience-ri.eu"
+    oidc_userinfo_endpoint: Optional[str] = oidc_authority_url + "/OIDC/userinfo"
     oidc_client_id: str = "ghga-data-portal"
 
     # the URL used as source for internal claims

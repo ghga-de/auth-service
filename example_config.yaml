@@ -3,17 +3,20 @@ api_root_path: /
 auth_ext_algs:
 - RS256
 - ES256
-auth_ext_keys: null
-auth_int_keys: null
+auth_ext_keys: ''
+auth_int_keys: '{"crv":"P-256","d":"j_PWLv4oCixBy7FOXtENVGTS0v4uc5mMb8FA9FOfnRc","kty":"EC","x":"Q-aCZxdOdZD6zxvuvPbGmDWUV3IhqkMX6Yd1lbHjWEs","y":"uzBoSha4mMuEtU_Tag1l_NekUYq5dikoob3x4bEoTrg"}'
 auto_reload: true
 basic_auth_pwd: null
 basic_auth_realm: GHGA Data Portal
 basic_auth_user: null
 claims_collection: claims
-cors_allow_credentials: null
-cors_allowed_headers: null
-cors_allowed_methods: null
-cors_allowed_origins: null
+cors_allow_credentials: true
+cors_allowed_headers:
+- '*'
+cors_allowed_methods:
+- '*'
+cors_allowed_origins:
+- '*'
 db_name: user-management
 db_url: mongodb://mongodb:27017/
 docs_url: /docs
@@ -21,10 +24,11 @@ host: 0.0.0.0
 log_level: debug
 oidc_authority_url: https://proxy.aai.lifescience-ri.eu
 oidc_client_id: ghga-data-portal
+oidc_userinfo_endpoint: https://proxy.aai.lifescience-ri.eu/OIDC/userinfo
 openapi_url: /openapi.json
 organization_url: https://ghga.de
-port: 8080
-run_auth_adapter: false
+port: 9000
+run_auth_adapter: true
 service_name: auth_service
 users_collection: users
 workers: 1
