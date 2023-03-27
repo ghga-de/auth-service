@@ -191,10 +191,10 @@ class JWTConfig:
         else:
             log.warning("No OIDC client ID configured.")
 
-        userinfo_endpoint = config.oidc_userinfo_endpoint
+        userinfo_endpoint = str(config.oidc_userinfo_endpoint)
         if not userinfo_endpoint:
             log.warning("No external userinfo endpoint configured, using discovery.")
-            userinfo_endpoint = discovery.userinfo_endpoint
+            userinfo_endpoint = str(discovery.userinfo_endpoint)
         self.userinfo_endpoint = userinfo_endpoint
 
 
