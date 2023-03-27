@@ -75,24 +75,11 @@ class OIDCDiscovery:
     and all network requests are cached.
     """
 
-    _authority_url: Optional[str]
-
     def __init__(self, authority_url: str):
         """Initialize with the authority URL."""
-        if not authority_url or not authority_url.startswith("https://"):
-            self._authority_url = None
-        else:
-            if not authority_url.endswith("/"):
-                authority_url += "/"
-            self._authority_url = authority_url
-
-    @property
-    def authority_url(self) -> str:
-        """Get the authority URL with a trailing slash."""
-        authority_url = self._authority_url
-        if authority_url is None:
-            raise ConfigurationMissingKey("No valid OIDC authority URL configured")
-        return authority_url
+        if not authority_url.endswith("/"):
+            authority_url += "/"
+        self.authority_url = authority_url
 
     @property
     def config_url(self) -> str:
