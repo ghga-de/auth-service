@@ -289,7 +289,7 @@
     },
     "db_url": {
       "title": "Db Url",
-      "default": "mongodb://localhost:27017",
+      "default": "mongodb://mongodb:27017",
       "env_names": [
         "auth_service_db_url"
       ],

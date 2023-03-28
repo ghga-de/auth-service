@@ -98,7 +98,7 @@ class Config(ApiConfigBase, AuthConfig):
     # the URL used as source for internal claims
     organization_url: HttpUrl = "https://ghga.de"  # type: ignore
 
-    db_url: SecretStr = "mongodb://localhost:27017"  # type: ignore
+    db_url: SecretStr = "mongodb://mongodb:27017"  # type: ignore
     db_name: str = "user-management"
     users_collection: str = "users"
     claims_collection: str = "claims"
