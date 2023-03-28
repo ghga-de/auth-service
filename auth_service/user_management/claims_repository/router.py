@@ -25,7 +25,7 @@ from hexkit.protocols.dao import ResourceNotFoundError
 
 from auth_service.user_management.user_registry.deps import UserDao, get_user_dao
 
-from ..auth import AuthToken, RequireAuthToken
+from ..auth import AuthContext, require_steward
 from .core.utils import user_exists
 from .deps import ClaimDao, Depends, get_claim_dao
 from .models.dto import Claim, ClaimCreation, ClaimFullCreation, ClaimUpdate
@@ -36,8 +36,6 @@ log = logging.getLogger(__name__)
 
 router = APIRouter()
 
-
-require_data_steward = Depends(RequireAuthToken(role="data_steward"))
 
 user_not_found_error = HTTPException(status_code=404, detail="The user was not found.")
 claim_not_found_error = HTTPException(
@@ -71,10 +69,10 @@ async def post_claim(
     ),
     user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
-    auth_token: AuthToken = require_data_steward,
+    auth_context: AuthContext = require_steward,
 ) -> Claim:
     """Store a user claim"""
-    if user_id == auth_token.id:
+    if user_id == auth_context.id:
         raise own_claim_error
 
     if not await user_exists(user_id, user_dao):
@@ -124,7 +122,7 @@ async def get_claims(
     ),
     user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
-    _auth_token: AuthToken = require_data_steward,
+    _auth_context: AuthContext = require_steward,
 ) -> list[Claim]:
     """Get all claims for a given user"""
     if not await user_exists(user_id, user_dao):
@@ -162,10 +160,10 @@ async def patch_user(
     ),
     user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
-    auth_token: AuthToken = require_data_steward,
+    auth_context: AuthContext = require_steward,
 ) -> Response:
     """Revoke an existing user claim"""
-    if user_id == auth_token.id:
+    if user_id == auth_context.id:
         raise own_claim_error
 
     if not await user_exists(user_id, user_dao):
@@ -223,10 +221,10 @@ async def delete_claim(
     ),
     user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
-    auth_token: AuthToken = require_data_steward,
+    auth_context: AuthContext = require_steward,
 ) -> Response:
     """Delete an existing user claim"""
-    if user_id == auth_token.id:
+    if user_id == auth_context.id:
         raise own_claim_error
 
     if not await user_exists(user_id, user_dao):

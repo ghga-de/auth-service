@@ -417,7 +417,7 @@ def test_token_exchange_for_known_user(
     # Check that the user was not changed in the database
     assert user.name == "John Doe"
     assert user.email == "john@home.org"
-    assert user.status == UserStatus.ACTIVE
+    assert user.status is UserStatus.ACTIVE
     assert user.status_change is None
 
 

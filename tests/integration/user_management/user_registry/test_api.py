@@ -634,7 +634,7 @@ def test_delete_user_as_same_user(client):
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     error = response.json()
-    assert error == {"detail": "Not authenticated"}
+    assert error == {"detail": "Not authorized"}
 
     # even data stewards cannot delete their own accounts
     headers = get_headers_for(

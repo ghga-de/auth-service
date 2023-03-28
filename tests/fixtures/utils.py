@@ -57,7 +57,7 @@ class SigningKeys:
     """Signing keys that can be used for testing."""
 
     internal_jwk: jwk.JWK
-    external_jwk: Optional[jwk.JWKSet]
+    external_jwk: Optional[jwk.JWK]
 
     def __init__(self):
         config = AdditionalConfig()  # pyright: ignore
@@ -87,16 +87,16 @@ def create_access_token(
     kty = key["kty"]
     assert kty in ("EC", "RSA")
     header = {"alg": "ES256" if kty == "EC" else "RS256", "typ": "JWT"}
-    claims: dict[str, Union[None, str, int]] = dict(
-        name="John Doe",
-        email="john@home.org",
-        jti="123-456-789-0",
-        sub="john@aai.org",
-        iss=CONFIG.oidc_authority_url,
-        client_id=CONFIG.oidc_client_id,
-        foo="bar",
-        token_class="access_token",
-    )
+    claims: dict[str, Union[None, str, int]] = {
+        "name": "John Doe",
+        "email": "john@home.org",
+        "jti": "123-456-789-0",
+        "sub": "john@aai.org",
+        "iss": CONFIG.oidc_authority_url,
+        "client_id": CONFIG.oidc_client_id,
+        "foo": "bar",
+        "token_class": "access_token",
+    }
     iat = int(now_as_utc().timestamp())
     if expired:
         exp = iat - 60 * 10  # expired 10 minutes ago
@@ -129,9 +129,11 @@ def create_internal_token(
     kty = key["kty"]
     assert kty in ("EC", "RSA")
     header = {"alg": "ES256" if kty == "EC" else "RS256", "typ": "JWT"}
-    claims: dict[str, Union[None, int, str]] = dict(
-        name="John Doe", email="john@home.org", status="active"
-    )
+    claims: dict[str, Union[None, int, str]] = {
+        "name": "John Doe",
+        "email": "john@home.org",
+        "status": "active",
+    }
     iat = int(now_as_utc().timestamp())
     if expired:
         exp = iat - 60 * 10  # expired 10 minutes ago
@@ -181,7 +183,7 @@ def get_claims_from_token(token: str, key: Optional[jwk.JWK] = None) -> dict[str
 def request_with_authorization(token: str = "") -> Request:
     """Get a dummy request with the given bearer token in the authorization header."""
     authorization = f"Bearer {token}".encode("ascii")
-    return Request(dict(type="http", headers=[(b"authorization", authorization)]))
+    return Request({"type": "http", "headers": [(b"authorization", authorization)]})
 
 
 class DummyUserDao:

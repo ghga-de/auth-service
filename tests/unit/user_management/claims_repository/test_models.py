@@ -58,7 +58,7 @@ def test_good_visa_values(value):
         "bad@email@org",
         "ftp://bad.url.org",
         ["not-an-identity"],
-        [dict(iss="foo", sub="bar")],
+        [{"iss": "foo", "sub": "bar"}],
     ],
 )
 def test_bad_visa_values(value):

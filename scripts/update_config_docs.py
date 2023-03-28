@@ -23,6 +23,7 @@ import importlib
 import json
 import subprocess
 import sys
+from difflib import unified_diff
 from pathlib import Path
 from typing import Any, Type
 
@@ -39,7 +40,7 @@ CONFIG_SCHEMA_JSON = REPO_ROOT_DIR / "config_schema.json"
 
 
 class ValidationError(RuntimeError):
-    """Raised when validation of config documentation failes."""
+    """Raised when validation of config documentation fails."""
 
 
 def get_config_class() -> Type[BaseSettings]:
@@ -79,11 +80,11 @@ def get_schema() -> str:
 
 
 def get_example() -> str:
-    """Retruns an example config yaml."""
+    """Returns an example config YAML."""
 
     config = get_dev_config()
     normalized_config_dict = json.loads(config.json())
-    return yaml.dump(normalized_config_dict)
+    return yaml.dump(normalized_config_dict)  # pyright: ignore
 
 
 def update_docs():
@@ -99,6 +100,18 @@ def update_docs():
         schema_file.write(schema)
 
 
+def print_diff(expected: str, observed: str):
+    """Print differences between expected and observed files."""
+    echo_failure("Differences in Config YAML:")
+    for line in unified_diff(
+        expected.splitlines(keepends=True),
+        observed.splitlines(keepends=True),
+        fromfile="expected",
+        tofile="observed",
+    ):
+        print("   ", line.rstrip())
+
+
 def check_docs():
     """Check whether the example config and config schema files documenting the config
     options are up to date.
@@ -111,6 +124,7 @@ def check_docs():
     with open(EXAMPLE_CONFIG_YAML, "r", encoding="utf-8") as example_file:
         example_observed = example_file.read()
     if example_expected != example_observed:
+        print_diff(example_expected, example_observed)
         raise ValidationError(
             f"Example config YAML at '{EXAMPLE_CONFIG_YAML}' is not up to date."
         )
