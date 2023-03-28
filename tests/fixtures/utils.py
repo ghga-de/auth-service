@@ -26,7 +26,6 @@ from ghga_service_commons.utils.utc_dates import DateTimeUTC, now_as_utc
 from hexkit.config import config_from_yaml
 from hexkit.protocols.dao import NoHitsFoundError, ResourceNotFoundError
 from jwcrypto import jwk, jwt
-from pydantic import EmailStr
 
 from auth_service.config import CONFIG
 from auth_service.user_management.claims_repository.models.dto import (

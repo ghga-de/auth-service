@@ -84,10 +84,6 @@ async def ext_auth(  # pylint:disable=too-many-arguments
             internal_token = await exchange_token(
                 access_token, pass_sub=pass_sub, user_dao=user_dao, claim_dao=claim_dao
             )
-        except UserInfoError as exc:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Error in user info"
-            ) from exc
         except TokenValidationError as exc:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token"

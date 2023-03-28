@@ -18,6 +18,7 @@
 
 import json
 import logging
+from functools import cached_property, lru_cache
 from typing import Any, Optional, Union
 
 import httpx
@@ -88,8 +89,8 @@ class OIDCDiscovery:
     @cached_property
     def config(self) -> dict[str, Any]:
         """Fetch the OIDC configuration directory."""
-        respsonse = httpx.get(self.config_url, timeout=TIMEOUT)
-        config = respsonse.json()
+        response = httpx.get(self.config_url, timeout=TIMEOUT)
+        config = response.json()
         if not isinstance(config, dict) or "version" not in config:
             raise ConfigurationDiscoveryError("Unexpected discovery object")
         return config
