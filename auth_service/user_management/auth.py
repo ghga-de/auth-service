@@ -26,7 +26,7 @@ from typing import Any, Optional
 from fastapi import HTTPException, Request
 from fastapi.security import HTTPBearer
 from fastapi.security.base import SecurityBase
-from ghga_service_chassis_lib.utils import DateTimeUTC
+from ghga_service_commons.utils.utc_dates import DateTimeUTC
 from jwcrypto import jwk, jwt
 from jwcrypto.common import JWException
 from pydantic import BaseModel

@@ -18,7 +18,7 @@
 
 from datetime import datetime
 
-from ghga_service_chassis_lib.utils import DateTimeUTC
+from ghga_service_commons.utils.utc_dates import DateTimeUTC
 
 from auth_service.config import CONFIG
 from auth_service.user_management.claims_repository.core.claims import (

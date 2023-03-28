@@ -4,7 +4,7 @@ auth_ext_algs:
 - RS256
 - ES256
 auth_ext_keys: null
-auth_int_keys: null
+auth_int_keys: '{"crv":"P-256","kty":"EC","x":"YpkGgvYtdnn9TUyYFP4cD5ywzmpu3nnaTGKyVWN-eBk","y":"kvFyc8AWSUlISveBv0ArXnqVkRGSsqgdIDMyJ3bf8LE"}'
 auto_reload: true
 basic_auth_pwd: null
 basic_auth_realm: GHGA Data Portal

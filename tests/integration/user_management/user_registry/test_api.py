@@ -18,7 +18,7 @@
 from datetime import datetime
 
 from fastapi import status
-from ghga_service_chassis_lib.utils import now_as_utc
+from ghga_service_commons.utils.utc_dates import now_as_utc
 
 from auth_service.user_management.user_registry.utils import is_internal_id
 

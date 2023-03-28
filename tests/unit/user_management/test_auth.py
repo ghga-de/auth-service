@@ -20,7 +20,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi.exceptions import HTTPException
-from ghga_service_chassis_lib.utils import UTC, now_as_utc
+from ghga_service_commons.utils.utc_dates import UTC, now_as_utc
 from jwcrypto import jwk
 from pytest import mark, raises
 

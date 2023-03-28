@@ -18,7 +18,7 @@
 from base64 import b64encode
 
 from fastapi import status
-from ghga_service_chassis_lib.utils import now_as_utc
+from ghga_service_commons.utils.utc_dates import now_as_utc
 
 from auth_service.auth_adapter.api.headers import get_bearer_token
 from auth_service.config import CONFIG

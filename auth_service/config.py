@@ -18,8 +18,8 @@
 import logging.config
 from typing import Optional
 
-from ghga_service_chassis_lib.api import ApiConfigBase, LogLevel
-from ghga_service_chassis_lib.config import config_from_yaml
+from ghga_service_commons.api import ApiConfigBase, LogLevel
+from hexkit.config import config_from_yaml
 
 
 def configure_logging():
@@ -93,4 +93,4 @@ class Config(ApiConfigBase):
     claims_collection: str = "claims"
 
 
-CONFIG = Config()
+CONFIG = Config()  # pyright: ignore

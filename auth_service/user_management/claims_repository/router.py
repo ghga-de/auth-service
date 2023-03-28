@@ -20,7 +20,7 @@ import logging
 
 from fastapi import APIRouter, Path, Response
 from fastapi.exceptions import HTTPException
-from ghga_service_chassis_lib.utils import now_as_utc
+from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.protocols.dao import ResourceNotFoundError
 
 from auth_service.user_management.user_registry.deps import UserDao, get_user_dao

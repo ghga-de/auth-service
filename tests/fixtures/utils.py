@@ -21,9 +21,9 @@ from pathlib import Path
 from typing import Any, AsyncIterator, Mapping, Optional, Union
 
 from fastapi import Request
-from ghga_service_chassis_lib.api import ApiConfigBase
-from ghga_service_chassis_lib.config import config_from_yaml
-from ghga_service_chassis_lib.utils import DateTimeUTC, now_as_utc
+from ghga_service_commons.api import ApiConfigBase
+from ghga_service_commons.utils.utc_dates import DateTimeUTC, now_as_utc
+from hexkit.config import config_from_yaml
 from hexkit.protocols.dao import NoHitsFoundError, ResourceNotFoundError
 from jwcrypto import jwk, jwt
 

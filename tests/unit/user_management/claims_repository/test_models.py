@@ -16,7 +16,7 @@
 
 """Test Claims models and show some usage examples."""
 
-from ghga_service_chassis_lib.utils import DateTimeUTC
+from ghga_service_commons.utils.utc_dates import DateTimeUTC
 from pytest import mark, raises
 
 from auth_service.user_management.claims_repository.models.dto import (

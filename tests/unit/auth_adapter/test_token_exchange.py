@@ -16,7 +16,7 @@
 
 """Unit tests for the auth adapter core token exchange feature"""
 
-from ghga_service_chassis_lib.utils import now_as_utc
+from ghga_service_commons.utils.utc_dates import now_as_utc
 from pytest import mark, raises
 
 from auth_service.auth_adapter.core import auth
