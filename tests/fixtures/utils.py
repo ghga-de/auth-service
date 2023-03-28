@@ -47,21 +47,21 @@ class AdditionalConfig(ApiConfigBase):
     Should be set as additional environment variables when running the test.
     """
 
-    # full internal key for user management and auth adatper
-    auth_int_keys: str
+    # full internal key for user management and auth adapter
+    auth_key: str
     # full external key set for auth adapter
     auth_ext_keys: Optional[str] = None
 
 
 class SigningKeys:
-    """Signign keys that can be used for testing."""
+    """Signing keys that can be used for testing."""
 
     internal_jwk: jwk.JWK
     external_jwk: Optional[jwk.JWKSet]
 
     def __init__(self):
-        config = AdditionalConfig()
-        self.internal_jwk = jwk.JWK.from_json(config.auth_int_keys)
+        config = AdditionalConfig()  # pyright: ignore
+        self.internal_jwk = jwk.JWK.from_json(config.auth_key)
         self.external_jwk = (
             jwk.JWKSet.from_json(config.auth_ext_keys).get_key("test")
             if config.auth_ext_keys

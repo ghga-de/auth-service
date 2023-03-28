@@ -91,10 +91,10 @@ class JWTConfig:
             )
         self.external_jwks = external_jwks
 
-        internal_keys = config.auth_int_keys
-        if not internal_keys:
+        internal_key = config.auth_key
+        if not internal_key:
             raise ConfigurationMissingKey("No internal signing keys configured.")
-        internal_jwk = jwk.JWK.from_json(internal_keys)
+        internal_jwk = jwk.JWK.from_json(internal_key)
         if not internal_jwk.has_private:
             raise ConfigurationMissingKey("No private internal signing keys found.")
         self.internal_jwk = internal_jwk

@@ -40,10 +40,10 @@ def generate_jwk_set() -> jwk.JWKSet:
 def generate_keys() -> dict[str, Any]:
     """Generate dictionary with signing keys."""
     auth_adapter = environ.get("AUTH_SERVICE_RUN_AUTH_ADAPTER") == "true"
-    int_keys = generate_jwk().export
+    int_key = generate_jwk().export
     env: dict[str, Any] = {
-        "AUTH_SERVICE_AUTH_INT_KEYS": int_keys(private_key=auth_adapter),
-        "TEST_AUTH_SERVICE_AUTH_INT_KEYS": int_keys(private_key=True),
+        "AUTH_SERVICE_AUTH_KEY": int_key(private_key=auth_adapter),
+        "TEST_AUTH_SERVICE_AUTH_KEY": int_key(private_key=True),
     }
     if auth_adapter:
         ext_keys = generate_jwk_set().export

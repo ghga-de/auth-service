@@ -16,9 +16,10 @@
 """Config Parameter Modeling and Parsing"""
 
 import logging.config
-from typing import Optional
+from typing import Any, Optional
 
 from ghga_service_commons.api import ApiConfigBase, LogLevel
+from ghga_service_commons.auth.ghga import AuthConfig
 from hexkit.config import config_from_yaml
 
 
@@ -56,7 +57,7 @@ def configure_logging():
 
 
 @config_from_yaml(prefix="auth_service")
-class Config(ApiConfigBase):
+class Config(ApiConfigBase, AuthConfig):
     """Config parameters and their defaults."""
 
     service_name: str = "auth_service"
@@ -68,7 +69,13 @@ class Config(ApiConfigBase):
     api_ext_path: str = "/api/auth"
 
     # internal public key for user management (key pair for auth adapter)
-    auth_int_keys: Optional[str] = None
+    auth_key: Optional[str] = None
+    # allowed algorithms for signing internal tokens
+    auth_algs: list[str] = ["ES256"]
+    # internal claims that shall be verified
+    auth_check_claims: dict[str, Any] = dict.fromkeys("name email iat exp".split())
+    # mapping of claims to the internal auth context
+    auth_map_claims: dict[str, str] = {}
     # external public key set for auth adapter (not used for user management)
     auth_ext_keys: Optional[str] = None
     # allowed algorithms for signing external tokens
