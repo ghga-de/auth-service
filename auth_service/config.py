@@ -96,7 +96,7 @@ class Config(ApiConfigBase, AuthConfig):
     oidc_client_id: str = "ghga-data-portal"
 
     # the URL used as source for internal claims
-    organization_url: str = "https://ghga.de"
+    organization_url: HttpUrl = "https://ghga.de"  # type: ignore
 
     db_url: SecretStr = "mongodb://localhost:27017"  # type: ignore
     db_name: str = "user-management"

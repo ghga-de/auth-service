@@ -282,6 +282,9 @@
       "env_names": [
         "auth_service_organization_url"
       ],
+      "minLength": 1,
+      "maxLength": 2083,
+      "format": "uri",
       "type": "string"
     },
     "db_url": {

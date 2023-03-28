@@ -18,7 +18,6 @@
 
 import json
 import logging
-from functools import cached_property, lru_cache
 from typing import Any, Optional, Union
 
 import httpx
@@ -70,6 +69,7 @@ class ConfigurationDiscoveryError(ConfigurationMissingKey):
 
 class OIDCDiscovery:
     """Helper class for using the OIDC discovery mechanism.
+
     Configuration is only checked and data fetched over the network if needed,
     and all network requests are cached.
     """
@@ -159,7 +159,7 @@ class JWTConfig:
         external_keys = config.auth_ext_keys
         if not external_keys:
             log.warning("No external signing keys configured, using discovery.")
-            raise ConfigurationMissingKey("No external signing keys configured.")
+            external_keys = discovery.jwks_str
         external_jwks = jwk.JWKSet.from_json(external_keys)
         if not any(external_jwk.has_public for external_jwk in external_jwks):
             raise ConfigurationMissingKey("No public external signing keys found.")
@@ -232,11 +232,14 @@ async def exchange_token(
 
     The internal token will contain relevant claims from the access token and
     the user info as configured.
+
     If the user is already registered, the user id, status and title will be
     included in the internal token as well.
+
     If name or email do not match with the external userinfo, the user status
     will appear as "invalid" in the internal token, but the actual status
     will not  be changed in the user registry.
+
     If the user is not yet registered, and pass_sub is set, then the sub claim
     will be included in the internal token as "ext_id", otherwise the value None
     will be returned instead of a token.
@@ -295,6 +298,7 @@ def _assert_at_claims_not_empty(at_claims: dict[str, Any]) -> None:
 
 def _assert_ui_claims_not_empty(ui_claims: dict[str, Any]) -> None:
     """Make sure that all important user info claims are not empty.
+
     Raises a UserInfoError in case one of the claims is empty.
     """
     for claim in jwt_config.check_ui_claims:

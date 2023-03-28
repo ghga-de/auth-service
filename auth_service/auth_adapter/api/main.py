@@ -92,6 +92,10 @@ async def ext_auth(  # pylint:disable=too-many-arguments
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token"
             ) from exc
+        except UserInfoError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Error in user info"
+            ) from exc
     else:
         internal_token = ""  # nosec
     # since ExtAuth cannot delete a header, we set it to an empty string if invalid
