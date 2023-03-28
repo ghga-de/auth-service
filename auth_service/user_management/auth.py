@@ -16,7 +16,7 @@
 
 """Helper dependencies for requiring authentication and authorization."""
 
-
+from functools import partial
 from typing import Optional
 
 from fastapi import Depends, Security
@@ -24,14 +24,12 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from ghga_service_commons.auth.ghga import (
     AuthContext,
     GHGAAuthContextProvider,
-    UserStatus,
     has_role,
+    is_active,
 )
-
-# NOTE: require_auth_token_using_credentials has been renamed in service commons 0.2.1
-from ghga_service_commons.auth.policies import get_auth_context_using_credentials
 from ghga_service_commons.auth.policies import (
-    require_auth_token_using_credentials as require_auth_context_using_credentials,
+    get_auth_context_using_credentials,
+    require_auth_context_using_credentials,
 )
 
 from auth_service.config import CONFIG
@@ -63,19 +61,7 @@ async def require_auth_context(
     return await require_auth_context_using_credentials(credentials, auth_provider)
 
 
-def is_active(context: AuthContext) -> bool:
-    """Check whether the given context has an active status."""
-    return context.status is UserStatus.ACTIVE
-
-
-def is_steward(context: AuthContext) -> bool:
-    """Check whether the user is an active data steward."""
-    return context.status is UserStatus.ACTIVE and has_role(context, "data_steward")
-
-
-# NOTE: in service commons 0.2.1 "is_active" can be imported
-# and "is_steward" can be defined as:
-# is_steward = partial(has_role, role="data_steward")
+is_steward = partial(has_role, role="data_steward")
 
 
 async def require_active_context(
