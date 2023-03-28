@@ -21,6 +21,7 @@ from typing import Any, Optional
 from ghga_service_commons.api import ApiConfigBase, LogLevel
 from ghga_service_commons.auth.ghga import AuthConfig
 from hexkit.config import config_from_yaml
+from pydantic import HttpUrl, SecretStr
 
 
 def configure_logging():
@@ -88,13 +89,16 @@ class Config(ApiConfigBase, AuthConfig):
     basic_auth_realm: str = "GHGA Data Portal"
 
     # expected external token content for validation in auth adapter
-    oidc_authority_url: str = "https://proxy.aai.lifescience-ri.eu"
+    oidc_authority_url: HttpUrl = "https://proxy.aai.lifescience-ri.eu"  # type: ignore
+    oidc_userinfo_endpoint: Optional[HttpUrl] = (
+        oidc_authority_url + "/OIDC/userinfo"  # type: ignore
+    )
     oidc_client_id: str = "ghga-data-portal"
 
     # the URL used as source for internal claims
     organization_url: str = "https://ghga.de"
 
-    db_url: str = "mongodb://localhost:27017"
+    db_url: SecretStr = "mongodb://localhost:27017"  # type: ignore
     db_name: str = "user-management"
     users_collection: str = "users"
     claims_collection: str = "claims"

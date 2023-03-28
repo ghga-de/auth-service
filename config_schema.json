@@ -252,6 +252,20 @@
       "env_names": [
         "auth_service_oidc_authority_url"
       ],
+      "minLength": 1,
+      "maxLength": 2083,
+      "format": "uri",
+      "type": "string"
+    },
+    "oidc_userinfo_endpoint": {
+      "title": "Oidc Userinfo Endpoint",
+      "default": "https://proxy.aai.lifescience-ri.eu/OIDC/userinfo",
+      "env_names": [
+        "auth_service_oidc_userinfo_endpoint"
+      ],
+      "minLength": 1,
+      "maxLength": 2083,
+      "format": "uri",
       "type": "string"
     },
     "oidc_client_id": {
@@ -276,7 +290,9 @@
       "env_names": [
         "auth_service_db_url"
       ],
-      "type": "string"
+      "type": "string",
+      "writeOnly": true,
+      "format": "password"
     },
     "db_name": {
       "title": "Db Name",

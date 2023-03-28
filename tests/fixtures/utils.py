@@ -33,7 +33,7 @@ from auth_service.user_management.claims_repository.models.dto import (
     Claim,
     VisaType,
 )
-from auth_service.user_management.user_registry.models.dto import User, UserStatus
+from auth_service.user_management.user_registry.models.dto import User
 
 BASE_DIR = Path(__file__).parent.resolve()
 
@@ -88,8 +88,6 @@ def create_access_token(
     assert kty in ("EC", "RSA")
     header = {"alg": "ES256" if kty == "EC" else "RS256", "typ": "JWT"}
     claims: dict[str, Union[None, str, int]] = {
-        "name": "John Doe",
-        "email": "john@home.org",
         "jti": "123-456-789-0",
         "sub": "john@aai.org",
         "iss": CONFIG.oidc_authority_url,
@@ -189,21 +187,24 @@ def request_with_authorization(token: str = "") -> Request:
 class DummyUserDao:
     """UserDao that can retrieve one dummy user."""
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         id_="john@ghga.de",
         name="John Doe",
         email="john@home.org",
+        title=None,
         ext_id="john@aai.org",
-        status=UserStatus.ACTIVE,
+        status="active",
     ):
         """Initialize the dummy UserDao"""
         self.user = User(
             id=id_,
             name=name,
-            email=email,
-            ext_id=ext_id,
-            status=status,
+            email=email,  # pyright: ignore
+            title=title,
+            ext_id=ext_id,  # pyright: ignore
+            status=status,  # pyright: ignore
             status_change=None,
             registration_date=datetime_utc(2020, 1, 1),
             active_submissions=[],
