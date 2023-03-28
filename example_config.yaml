@@ -1,8 +1,8 @@
 api_ext_path: /api/auth
 api_root_path: /
 auth_ext_algs:
-  - RS256
-  - ES256
+- RS256
+- ES256
 auth_ext_keys: null
 auth_int_keys: null
 auto_reload: true
