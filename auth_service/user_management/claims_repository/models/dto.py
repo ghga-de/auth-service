@@ -40,7 +40,7 @@ __all__ = [
 
 
 class BaseDto(BaseModel):
-    """Base model preconfigured for use as Dto."""
+    """Base model pre-configured for use as Dto."""
 
     class Config:  # pylint: disable=missing-class-docstring
         extra = "forbid"
@@ -112,7 +112,9 @@ class Identity(BaseDto):
 class ClaimCreation(BaseDto):
     """A claim made about a user with a user ID"""
 
-    visa_type: str = Field(default=..., title="Visa type", example="AffiliationAndRole")
+    visa_type: VisaType = Field(
+        default=..., title="Visa type", example="AffiliationAndRole"
+    )
     visa_value: Union[EmailStr, HttpUrl, list[Identity]] = Field(
         default=...,
         title="Scope of the claim depending of the visa type",

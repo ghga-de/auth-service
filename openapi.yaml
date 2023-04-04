@@ -85,9 +85,10 @@ components:
           title: End date of validity
           type: string
         visa_type:
+          allOf:
+          - $ref: '#/components/schemas/VisaType'
           example: AffiliationAndRole
           title: Visa type
-          type: string
         visa_value:
           anyOf:
           - format: email
@@ -160,9 +161,10 @@ components:
           title: End date of validity
           type: string
         visa_type:
+          allOf:
+          - $ref: '#/components/schemas/VisaType'
           example: AffiliationAndRole
           title: Visa type
-          type: string
         visa_value:
           anyOf:
           - format: email
@@ -459,6 +461,44 @@ info:
   version: 0.3.0
 openapi: 3.0.2
 paths:
+  /datasets/{dataset_id}/users/{user_id}/download-access:
+    get:
+      description: Endpoint to check whether the given dataset can be downloaded by
+        the given user. For internal use only.
+      operationId: get_download_access
+      parameters:
+      - in: path
+        name: dataset_id
+        required: true
+        schema:
+          title: Internal ID of the user
+          type: string
+      - in: path
+        name: user_id
+        required: true
+        schema:
+          title: Internal ID of the user
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                enum:
+                - 'false'
+                - 'true'
+                items:
+                  $ref: '#/components/schemas/Claim'
+                title: Response 200 Get Download Access
+                type: array
+          description: User claims have been retrieved.
+        '404':
+          description: The user was not found.
+        '422':
+          description: Validation error in submitted user IDs.
+      summary: Check download access permission
+      tags:
+      - datasets
   /health:
     get:
       description: Used to check that this service is alive
