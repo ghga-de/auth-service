@@ -487,11 +487,9 @@ paths:
                 enum:
                 - 'false'
                 - 'true'
-                items:
-                  $ref: '#/components/schemas/Claim'
-                title: Response 200 Get Download Access
-                type: array
-          description: User claims have been retrieved.
+                title: Response Get Download Access
+                type: string
+          description: Download access has been checked.
         '404':
           description: The user was not found.
         '422':

@@ -38,6 +38,8 @@ log = logging.getLogger(__name__)
 
 router = APIRouter()
 
+BooleanAsString = Literal["false", "true"]
+
 
 user_not_found_error = HTTPException(status_code=404, detail="The user was not found.")
 claim_not_found_error = HTTPException(
@@ -256,7 +258,9 @@ async def delete_claim(
     description="Endpoint to check whether the given dataset"
     " can be downloaded by the given user. For internal use only.",
     responses={
-        200: {"model": list[Claim], "description": "User claims have been retrieved."},
+        200: {
+            "description": "Download access has been checked.",
+        },
         404: {"description": "The user was not found."},
         422: {"description": "Validation error in submitted user IDs."},
     },
@@ -276,7 +280,7 @@ async def get_download_access(
     user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
     # internal service, authorization without token via service mesh
-) -> Literal["false", "true"]:
+) -> BooleanAsString:
     """Check download access permission"""
     if not await user_exists(user_id, user_dao):
         raise user_not_found_error
