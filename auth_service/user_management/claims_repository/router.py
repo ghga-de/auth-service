@@ -69,7 +69,7 @@ async def post_claim(
     user_id: str = Path(
         ...,
         alias="user_id",
-        title="Internal ID of the user",
+        description="Internal ID of the user",
     ),
     user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
@@ -122,7 +122,7 @@ async def get_claims(
     user_id: str = Path(
         ...,
         alias="user_id",
-        title="Internal ID of the user",
+        description="Internal ID of the user",
     ),
     user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
@@ -155,12 +155,12 @@ async def patch_user(
     user_id: str = Path(
         ...,
         alias="user_id",
-        title="Internal user ID",
+        description="Internal user ID",
     ),
     claim_id: str = Path(
         ...,
         alias="claim_id",
-        title="Internal claim ID",
+        description="Internal claim ID",
     ),
     user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
@@ -216,12 +216,12 @@ async def delete_claim(
     user_id: str = Path(
         ...,
         alias="user_id",
-        title="Internal user ID",
+        description="Internal user ID",
     ),
     claim_id: str = Path(
         ...,
         alias="claim_id",
-        title="Internal claim ID",
+        description="Internal claim ID",
     ),
     user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
@@ -270,12 +270,12 @@ async def get_download_access(
     dataset_id: str = Path(
         ...,
         alias="dataset_id",
-        title="Internal ID of the user",
+        description="Internal ID of the user",
     ),
     user_id: str = Path(
         ...,
         alias="user_id",
-        title="Internal ID of the user",
+        description="Internal ID of the user",
     ),
     user_dao: UserDao = Depends(get_user_dao),
     claim_dao: ClaimDao = Depends(get_claim_dao),
