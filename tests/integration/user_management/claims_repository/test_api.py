@@ -492,6 +492,12 @@ def test_get_datasets_with_download_access(client_with_db, steward_headers):
     user_dao = DummyUserDao()
     client_with_db.app.dependency_overrides[get_user_dao] = lambda: user_dao
 
+    # should not have downloadable datasets in the beginning
+
+    response = client_with_db.get("/download-access/users/john@ghga.de/datasets")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
+
     # post valid access permission for some-dataset-id
 
     claim_data: dict[str, Any] = DATASET_CLAIM_DATA.copy()
