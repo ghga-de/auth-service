@@ -18,14 +18,17 @@
 Definitions and helper functions for validating user claims.
 """
 
+from datetime import timedelta
 from typing import Callable, Optional
 
 from ghga_service_commons.utils.utc_dates import DateTimeUTC, now_as_utc
+from pydantic import EmailStr
 
 from ....config import CONFIG
-from ..models.dto import AuthorityLevel, Claim, VisaType
+from ..models.dto import AuthorityLevel, Claim, ClaimFullCreation, VisaType
 
 __all__ = [
+    "create_data_steward_claim",
     "dataset_id_for_download_access",
     "is_valid_claim",
     "is_internal_claim",
@@ -36,8 +39,29 @@ __all__ = [
 
 
 INTERNAL_SOURCE = CONFIG.organization_url
+INTERNAL_DOMAIN = INTERNAL_SOURCE.split("://", 1)[-1]
 DATA_STEWARD_ROLE = "data_steward"
 DATASET_PREFIX = f"{INTERNAL_SOURCE}/datasets/"
+
+
+def create_data_steward_claim(user_id: str, valid_days=365) -> ClaimFullCreation:
+    """Create a claim for a data steward."""
+    valid_from = now_as_utc()
+    valid_until = now_as_utc() + timedelta(days=valid_days)
+    return ClaimFullCreation(
+        visa_type=VisaType.GHGA_ROLE,
+        visa_value=EmailStr(f"{DATA_STEWARD_ROLE}@{INTERNAL_DOMAIN}"),
+        assertion_date=valid_from,
+        valid_from=valid_from,
+        valid_until=valid_until,
+        source=INTERNAL_SOURCE,
+        sub_source=None,
+        asserted_by=AuthorityLevel.SYSTEM,
+        conditions=None,
+        user_id=user_id,
+        creation_date=valid_from,
+        revocation_date=None,
+    )
 
 
 def is_valid_claim(claim: Claim, now: Callable[[], DateTimeUTC] = now_as_utc) -> bool:

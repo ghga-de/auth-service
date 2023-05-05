@@ -50,7 +50,6 @@ def test_is_valid_claim():
         valid_from=datetime_utc(2022, 11, 15),
         valid_until=datetime_utc(2022, 11, 20),
         creation_date=datetime_utc(2022, 11, 1),
-        creation_by="user-id",
     )  # pyright: ignore
     assert is_valid_claim(claim, now=lambda: datetime_utc(2022, 11, 17))
     assert not is_valid_claim(claim, now=lambda: datetime_utc(2020, 1, 1))
@@ -76,7 +75,6 @@ def test_is_internal_claim():
         valid_from=datetime_utc(2022, 11, 15),
         valid_until=datetime_utc(2022, 11, 20),
         creation_date=datetime_utc(2022, 11, 1),
-        creation_by="user-id",
     )  # pyright: ignore
     assert is_internal_claim(good_claim, VisaType.GHGA_ROLE)
     assert not is_internal_claim(good_claim, VisaType.RESEARCHER_STATUS)
@@ -103,7 +101,6 @@ def test_is_data_steward_claim():
         valid_from=datetime_utc(2022, 11, 15),
         valid_until=datetime_utc(2022, 11, 20),
         creation_date=datetime_utc(2022, 11, 1),
-        creation_by="user-id",
     )  # pyright: ignore
     assert is_data_steward_claim(good_claim)
 
@@ -141,7 +138,6 @@ def test_has_download_access_for_dataset():
         valid_from=datetime_utc(2022, 11, 15),
         valid_until=datetime_utc(2022, 11, 20),
         creation_date=datetime_utc(2022, 11, 1),
-        creation_by="user-id",
     )  # pyright: ignore
     assert has_download_access_for_dataset(good_claim, "some-dataset-id")
     assert not has_download_access_for_dataset(good_claim, "another-dataset-id")
@@ -175,7 +171,6 @@ def test_dateset_id_when_download_access():
         valid_from=datetime_utc(2022, 11, 15),
         valid_until=datetime_utc(2022, 11, 20),
         creation_date=datetime_utc(2022, 11, 1),
-        creation_by="user-id",
     )  # pyright: ignore
     assert dataset_id_for_download_access(good_claim) == "some-dataset-id"
 

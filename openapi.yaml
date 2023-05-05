@@ -40,10 +40,6 @@ components:
             type: array
           title: Conditions
           type: array
-        creation_by:
-          description: Who created this claim (user ID)
-          title: Creation By
-          type: string
         creation_date:
           description: Date of creation of this claim
           format: date-time
@@ -52,10 +48,6 @@ components:
         id:
           description: Internally used ID of the claim
           title: Id
-          type: string
-        revocation_by:
-          description: Who revoked this claim (user ID)
-          title: Revocation By
           type: string
         revocation_date:
           description: If revoked, date of revocation
@@ -121,7 +113,6 @@ components:
       - source
       - user_id
       - creation_date
-      - creation_by
       - id
       title: Claim
       type: object

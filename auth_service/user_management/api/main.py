@@ -14,15 +14,18 @@
 # limitations under the License.
 
 """
-Module containing the main FastAPI router and (optionally) top-level API enpoints.
+Module containing the main FastAPI router and (optionally) top-level API endpoints.
 Additional endpoints might be structured in dedicated modules
 (each of them having a sub-router).
 """
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, status
 from ghga_service_commons.api import configure_app
 
-from auth_service.config import CONFIG, configure_logging
+from auth_service.config import configure_logging
+from auth_service.deps import get_config
 from auth_service.user_management import (
     CONTACT,
     DESCRIPTION,
@@ -31,12 +34,22 @@ from auth_service.user_management import (
     TITLE,
     VERSION,
 )
+from auth_service.user_management.claims_repository.core.seed import seed_claims
 from auth_service.user_management.claims_repository.router import (
     router as claims_router,
 )
 from auth_service.user_management.user_registry.router import router as users_router
 
 configure_logging()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):  # pylint: disable=redefined-outer-name
+    """Setup the FastAPI application."""
+    config = app.dependency_overrides.get(get_config, get_config)()
+    await seed_claims(config)
+    yield
+
 
 app = FastAPI(
     title=TITLE,
@@ -45,8 +58,10 @@ app = FastAPI(
     contact=CONTACT,
     license_info=LICENSE_INFO,
     openapi_tags=TAGS_METADATA,
+    lifespan=lifespan,
 )
-configure_app(app, config=CONFIG)
+
+configure_app(app, config=get_config())
 
 app.include_router(users_router)
 app.include_router(claims_router)

@@ -86,9 +86,7 @@ def test_post_claim(client_with_db, steward_headers):
     assert claim.pop("sub_source") is None
     assert claim.pop("conditions") is None
     assert claim.pop("revocation_date") is None
-    assert claim.pop("revocation_by") is None
     assert claim.pop("creation_date") is not None
-    assert claim.pop("creation_by") is not None
 
     assert claim == ROLE_CLAIM_DATA
 
@@ -210,7 +208,6 @@ def test_patch_claim(client_with_db, steward_headers):
     claim_id = posted_claim["id"]
     assert claim_id is not None
     assert posted_claim.pop("revocation_date") is None
-    assert posted_claim.pop("revocation_by") is None
 
     # revoke test claim
     revocation_date = "2022-10-15T12:00:00+00:00"
@@ -227,7 +224,6 @@ def test_patch_claim(client_with_db, steward_headers):
     assert len(claims) == 1
     claim = claims[0]
     assert claim.pop("revocation_date") == revocation_date
-    assert claim.pop("revocation_by") == "someone"  # needs to be changed
     assert claim == posted_claim
 
     # test without revocation date
@@ -260,7 +256,6 @@ def test_patch_claim(client_with_db, steward_headers):
     assert len(claims) == 1
     claim = claims[0]
     assert claim.pop("revocation_date") == revocation_date
-    assert claim.pop("revocation_by") == "someone"  # needs to be changed
     assert claim == posted_claim
 
     # test with non-existing user
@@ -562,3 +557,31 @@ def test_get_datasets_with_download_access(client_with_db, steward_headers):
 
     assert isinstance(dataset_ids, list)
     assert sorted(dataset_ids) == ["another-dataset-id", "some-dataset-id"]
+
+
+def test_get_claims_for_seeded_data_steward(client_with_db, steward_headers):
+    """Test that the database is seeded with the configured data steward."""
+
+    response = client_with_db.get(
+        "/users/the-id-of-rod-steward/claims", headers=steward_headers
+    )
+    assert response.status_code == status.HTTP_200_OK
+    claims = response.json()
+    assert len(claims) == 1
+    claim = claims[0]
+
+    assert claim.pop("id")
+    assertion_date = claim.pop("assertion_date")
+    assert claim.pop("creation_date") == assertion_date
+    assert claim.pop("valid_from") == assertion_date
+    assert claim.pop("valid_until") > assertion_date
+    assert claim == {
+        "asserted_by": "system",
+        "conditions": None,
+        "revocation_date": None,
+        "user_id": "the-id-of-rod-steward",
+        "source": "https://ghga.de",
+        "sub_source": None,
+        "visa_type": "https://www.ghga.de/GA4GH/VisaTypes/Role/v1.0",
+        "visa_value": "data_steward@ghga.de",
+    }

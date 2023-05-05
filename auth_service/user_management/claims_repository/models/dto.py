@@ -169,12 +169,8 @@ class ClaimFullCreation(ClaimCreation):
     creation_date: DateTimeUTC = Field(
         ..., description="Date of creation of this claim"
     )
-    creation_by: str = Field(..., description="Who created this claim (user ID)")
     revocation_date: Optional[DateTimeUTC] = Field(
         None, description="If revoked, date of revocation"
-    )
-    revocation_by: Optional[str] = Field(
-        None, description="Who revoked this claim (user ID)"
     )
 
 
