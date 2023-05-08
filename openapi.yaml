@@ -105,11 +105,11 @@ components:
           example: faculty@home.org
           title: Visa Value
       required:
+      - valid_from
+      - valid_until
       - visa_type
       - visa_value
       - assertion_date
-      - valid_from
-      - valid_until
       - source
       - user_id
       - creation_date
@@ -186,11 +186,11 @@ components:
           example: faculty@home.org
           title: Visa Value
       required:
+      - valid_from
+      - valid_until
       - visa_type
       - visa_value
       - assertion_date
-      - valid_from
-      - valid_until
       - source
       title: ClaimCreation
       type: object
@@ -223,6 +223,27 @@ components:
       required:
       - revocation_date
       title: ClaimUpdate
+      type: object
+    ClaimValidity:
+      additionalProperties: false
+      description: Start and end dates for validating claims.
+      properties:
+        valid_from:
+          description: Start date of validity
+          example: '2023-01-01T00:00:00Z'
+          format: date-time
+          title: Valid From
+          type: string
+        valid_until:
+          description: End date of validity
+          example: '2023-12-31T23:59:59Z'
+          format: date-time
+          title: Valid Until
+          type: string
+      required:
+      - valid_from
+      - valid_until
+      title: ClaimValidity
       type: object
     Condition:
       additionalProperties: false
@@ -538,6 +559,48 @@ paths:
         '422':
           description: Validation error in submitted user IDs.
       summary: Check download access permission for a dataset
+      tags:
+      - datasets
+    post:
+      description: Endpoint to add a controlled access grant for a given dataset so
+        that it can be downloaded by the given user. For internal use only.
+      operationId: grant_download_access
+      parameters:
+      - description: Internal ID of the user
+        in: path
+        name: user_id
+        required: true
+        schema:
+          description: Internal ID of the user
+          title: User Id
+          type: string
+      - description: Internal ID of the dataset
+        in: path
+        name: dataset_id
+        required: true
+        schema:
+          description: Internal ID of the dataset
+          title: Dataset Id
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimValidity'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '204':
+          description: Download access has been granted.
+        '404':
+          description: The user or the dataset was not found.
+        '422':
+          description: Validation error in submitted user IDs.
+      summary: Grant download access permission for a dataset
       tags:
       - datasets
   /health:

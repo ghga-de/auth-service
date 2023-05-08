@@ -15,6 +15,7 @@
 
 """Test the REST API"""
 
+from datetime import datetime
 from operator import itemgetter
 from typing import Any
 
@@ -32,9 +33,9 @@ from ..fixtures import (  # noqa: F401; pylint: disable=unused-import
 ROLE_CLAIM_DATA = {
     "visa_type": "https://www.ghga.de/GA4GH/VisaTypes/Role/v1.0",
     "visa_value": "data-steward@ghga.de",
-    "assertion_date": "2022-09-01T12:00:00+00:00",
     "valid_from": "2022-10-01T12:00:00+00:00",
     "valid_until": "2022-10-31T12:00:00+00:00",
+    "assertion_date": "2022-09-01T12:00:00+00:00",
     "source": "https://ghga.de",
     "asserted_by": "system",
 }
@@ -276,6 +277,57 @@ def test_delete_claim(client_with_db):
     # delete again
     response = client_with_db.delete(f"/users/{user_id}/claims/{claim_id}")
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_grant_download_access(client_with_db):
+    """Test that granting access to a dataset works."""
+
+    user_dao = DummyUserDao()
+    client_with_db.app.dependency_overrides[get_user_dao] = lambda: user_dao
+
+    current_date = now_as_utc()
+    current_year = current_date.year
+    validity = {
+        "valid_from": f"{current_year - 1}-01-01T00:00:00+00:00",
+        "valid_until": f"{current_year + 1}-12-31T23:59:59+00:00",
+    }
+
+    response = client_with_db.post(
+        "/download-access/users/john@ghga.de/datasets/some-dataset-id",
+        json=validity,
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    response = client_with_db.get("/users/john@ghga.de/claims")
+    assert response.status_code == status.HTTP_200_OK
+    requested_claims = response.json()
+
+    assert len(requested_claims) == 1
+
+    claim_data = requested_claims[0]
+    assert claim_data.pop("id")
+    creation_date = claim_data.pop("creation_date")
+    assert creation_date
+    assert claim_data.pop("assertion_date") == creation_date
+    assert 0 <= (datetime.fromisoformat(creation_date) - current_date).seconds < 5
+
+    assert claim_data == {
+        "asserted_by": "dac",
+        "conditions": None,
+        "revocation_date": None,
+        "source": DATASET_CLAIM_DATA["source"],
+        "sub_source": None,
+        "user_id": "john@ghga.de",
+        "valid_from": validity["valid_from"],
+        "valid_until": validity["valid_until"],
+        "visa_type": DATASET_CLAIM_DATA["visa_type"],
+        "visa_value": DATASET_CLAIM_DATA["visa_value"],
+    }
+
+    response = client_with_db.get("/download-access/users/john@ghga.de/datasets")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == ["some-dataset-id"]
 
 
 def test_check_download_access(client_with_db):

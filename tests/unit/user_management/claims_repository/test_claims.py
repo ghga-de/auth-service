@@ -18,10 +18,12 @@
 
 from datetime import datetime
 
-from ghga_service_commons.utils.utc_dates import DateTimeUTC
+from ghga_service_commons.utils.utc_dates import DateTimeUTC, now_as_utc
 
 from auth_service.config import CONFIG
 from auth_service.user_management.claims_repository.core.claims import (
+    create_controlled_access_claim,
+    create_data_steward_claim,
     dataset_id_for_download_access,
     get_dataset_for_value,
     has_download_access_for_dataset,
@@ -88,6 +90,16 @@ def test_is_internal_claim():
     assert check_tampered_claim(asserted_by=AuthorityLevel.SELF)
 
 
+def test_create_data_steward_claim():
+    """Test that a data steward claim can be created."""
+    created_claim = create_data_steward_claim(user_id="some-user-id")
+    assert created_claim.user_id == "some-user-id"
+    full_claim = Claim(id="some-claim-id", **created_claim.dict())
+    assert is_valid_claim(full_claim)
+    assert is_data_steward_claim(full_claim)
+    assert not has_download_access_for_dataset(full_claim, "some-dataset-id")
+
+
 def test_is_data_steward_claim():
     """Test that the data steward role can be derived from a claim."""
     good_claim = Claim(
@@ -114,6 +126,24 @@ def test_is_data_steward_claim():
     assert check_tampered_claim(asserted_by=AuthorityLevel.SELF)
     assert check_tampered_claim(visa_value="data_inspector")
     assert check_tampered_claim(visa_value=["data_steward@some.org"])
+
+
+def test_create_controlled_access_claim():
+    """Test that a controlled access claim can be created."""
+    current_year = now_as_utc().year
+    created_claim = create_controlled_access_claim(
+        user_id="some-user-id",
+        dataset_id="some-dataset-id",
+        valid_from=datetime_utc(current_year - 1, 7, 1),
+        valid_until=datetime_utc(current_year + 1, 6, 30),
+    )
+    assert created_claim.user_id == "some-user-id"
+    assert get_dataset_for_value(str(created_claim.visa_value)) == "some-dataset-id"
+    full_claim = Claim(id="some-claim-id", **created_claim.dict())
+    assert is_valid_claim(full_claim)
+    assert not is_data_steward_claim(full_claim)
+    assert has_download_access_for_dataset(full_claim, "some-dataset-id")
+    assert dataset_id_for_download_access(full_claim) == "some-dataset-id"
 
 
 def test_get_dataset_for_value():
