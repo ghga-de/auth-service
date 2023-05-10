@@ -44,8 +44,8 @@ __all__ = ["seed_claims"]
 log = logging.getLogger(__name__)
 
 
-async def seed_claims(config: Config) -> None:
-    """Seed the claims repository with claims specified in the config."""
+async def seed_data_steward_claims(config: Config) -> None:
+    """Seed the claims repository with claims for the data steward role specified in the config."""
     data_stewards = config.add_as_data_stewards
     if not data_stewards:
         return
