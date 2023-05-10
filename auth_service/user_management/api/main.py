@@ -34,7 +34,9 @@ from auth_service.user_management import (
     TITLE,
     VERSION,
 )
-from auth_service.user_management.claims_repository.core.seed import seed_claims
+from auth_service.user_management.claims_repository.core.seed import (
+    seed_data_steward_claims,
+)
 from auth_service.user_management.claims_repository.router import (
     router as claims_router,
 )
@@ -45,9 +47,13 @@ configure_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # pylint: disable=redefined-outer-name
-    """Setup the FastAPI application."""
+    """Setup the FastAPI application.
+
+    This function runs on startup and shutdown of the application.
+    We currently use it to seed the database with the data steward claims.
+    """
     config = app.dependency_overrides.get(get_config, get_config)()
-    await seed_claims(config)
+    await seed_data_steward_claims(config)
     yield
 
 

@@ -39,7 +39,7 @@ from auth_service.user_management.user_registry.deps import (
     get_user_dao_factory_config,
 )
 
-__all__ = ["seed_claims"]
+__all__ = ["seed_data_steward_claims"]
 
 log = logging.getLogger(__name__)
 
