@@ -89,7 +89,7 @@ class Config(ApiConfigBase, AuthConfig):
     basic_auth_realm: str = "GHGA Data Portal"
 
     # a list of external IDs of data stewards to seed the claims repository with
-    add_as_data_stewards: Optional[list[str]] = None
+    add_as_data_stewards: list[str] = []
 
     # expected external token content for validation in auth adapter
     oidc_authority_url: HttpUrl = "https://proxy.aai.lifescience-ri.eu"  # type: ignore

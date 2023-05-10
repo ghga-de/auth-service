@@ -248,6 +248,7 @@
     },
     "add_as_data_stewards": {
       "title": "Add As Data Stewards",
+      "default": [],
       "env_names": [
         "auth_service_add_as_data_stewards"
       ],
