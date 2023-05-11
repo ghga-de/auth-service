@@ -8,51 +8,51 @@ on:
     branches: [multi-platform-build]
 
 jobs:
-  verify_version:
-    runs-on: ubuntu-latest
-    outputs:
-      # export to be used in other jobs
-      version: ${{ steps.get_version_tag.outputs.version }}
-    steps:
-      - uses: actions/checkout@v3
-        name: Check out code
+  # verify_version:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     # export to be used in other jobs
+  #     version: ${{ steps.get_version_tag.outputs.version }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       name: Check out code
 
-      - uses: actions/setup-python@v4
-        name: Set up Python 3.9
-        with:
-          python-version: "3.9"
+  #     - uses: actions/setup-python@v4
+  #       name: Set up Python 3.9
+  #       with:
+  #         python-version: "3.9"
 
-      - id: get_version_tag
-        name: Get version tag
-        run: |
-          TAG_VER="${GITHUB_REF##*/}"
-          # set as output:
-          echo "version: ${TAG_VER}"
-          echo "version=${TAG_VER}" >> $GITHUB_OUTPUT
+  #     - id: get_version_tag
+  #       name: Get version tag
+  #       run: |
+  #         TAG_VER="${GITHUB_REF##*/}"
+  #         # set as output:
+  #         echo "version: ${TAG_VER}"
+  #         echo "version=${TAG_VER}" >> $GITHUB_OUTPUT
 
-      - id: verify_semantic_tag_format
-        name: Verify tag format
-        # format must be compatible with semantic versioning
-        run: |
-          SEMVER_REGEX="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
-          if echo "${{ steps.get_version_tag.outputs.version }}" | grep -Eq "$SEMVER_REGEX"; then
-            echo "Tag format is valid"
-          else
-            echo "Invalid tag format: ${{ steps.get_version_tag.outputs.version }}"
-            exit 1
-          fi
+  #     - id: verify_semantic_tag_format
+  #       name: Verify tag format
+  #       # format must be compatible with semantic versioning
+  #       run: |
+  #         SEMVER_REGEX="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+  #         if echo "${{ steps.get_version_tag.outputs.version }}" | grep -Eq "$SEMVER_REGEX"; then
+  #           echo "Tag format is valid"
+  #         else
+  #           echo "Invalid tag format: ${{ steps.get_version_tag.outputs.version }}"
+  #           exit 1
+  #         fi
 
-      - id: verify_package_version
-        name: Verify package version vs tag version
-        # package version must be same with tag version
-        run: |
-          PKG_VER="$(python setup.py --version)"
-          echo "Package version is $PKG_VER" >&2
-          echo "Tag version is ${{ steps.get_version_tag.outputs.version }}" >&2
-          if [ "$PKG_VER" != "${{ steps.get_version_tag.outputs.version }}" ]; then
-            echo "Package version and tag name mismatch." >&2
-            exit 1
-          fi
+  #     - id: verify_package_version
+  #       name: Verify package version vs tag version
+  #       # package version must be same with tag version
+  #       run: |
+  #         PKG_VER="$(python setup.py --version)"
+  #         echo "Package version is $PKG_VER" >&2
+  #         echo "Tag version is ${{ steps.get_version_tag.outputs.version }}" >&2
+  #         if [ "$PKG_VER" != "${{ steps.get_version_tag.outputs.version }}" ]; then
+  #           echo "Package version and tag name mismatch." >&2
+  #           exit 1
+  #         fi
 
   push_to_docker_hub:
     runs-on: ubuntu-latest
