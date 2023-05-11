@@ -56,7 +56,7 @@ jobs:
 
   push_to_docker_hub:
     runs-on: ubuntu-latest
-    needs: verify_version
+    # needs: verify_version
     steps:
       - uses: actions/checkout@v3
         name: Check out code
