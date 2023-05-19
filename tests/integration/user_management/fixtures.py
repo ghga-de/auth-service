@@ -34,6 +34,10 @@ from auth_service.user_management.user_registry.models.dto import User, UserStat
 @fixture(name="client")
 def fixture_client() -> TestClient:
     """Get test client for the user manager"""
+    config = Config(
+        include_apis=["users", "claims"],
+    )  # pyright: ignore
+    app.dependency_overrides[get_config] = lambda: config
     return TestClient(app)
 
 
@@ -71,6 +75,7 @@ def fixture_client_with_db() -> Generator[TestClient, None, None]:
         config = Config(
             db_url=connection_url,
             db_name="test-user-management",
+            include_apis=["users", "claims"],
             add_as_data_stewards=add_as_data_stewards,
         )  # pyright: ignore
         asyncio.run(seed_database(config))
