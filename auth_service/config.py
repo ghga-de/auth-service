@@ -86,7 +86,7 @@ class Config(ApiConfigBase, AuthConfig):
     auth_ext_keys: Optional[str] = None
     # allowed algorithms for signing external tokens
     auth_ext_algs: list[str] = ["RS256", "ES256"]
-    # user(s) and password(s) for basic authentication, separated by a colon
+    # credentials for basic authentication, separated by whitespace
     basic_auth_credentials: Optional[str] = None
     # realm for basic authentication
     basic_auth_realm: str = "GHGA Data Portal"
