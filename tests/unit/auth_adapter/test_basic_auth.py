@@ -31,9 +31,7 @@ def test_default_no_allowed_credentials():
 
 def test_set_credentials():
     """Test that three user names and passwords can be set."""
-    config = Config(
-        basic_auth_credentials=["foo:oof", "bar:rab", "baz:zab"]
-    )  # pyright: ignore
+    config = Config(basic_auth_credentials="foo:oof bar:rab baz:zab")  # pyright: ignore
     assert get_allowed_credentials(config) == [
         HTTPBasicCredentials(username="foo", password="oof"),
         HTTPBasicCredentials(username="bar", password="rab"),
@@ -41,26 +39,16 @@ def test_set_credentials():
     ]
 
 
-def test_whitespace_is_trimmed():
-    """Test that whitespace around usernames and passwords is ignored."""
-    config = Config(basic_auth_credentials=["  foo  :  bar  "])  # pyright: ignore
-    assert get_allowed_credentials(config) == [
-        HTTPBasicCredentials(username="foo", password="bar")
-    ]
-
-
 def test_invalid_credentials():
     """Test that invalid credentials are detected."""
-    config = Config(
-        basic_auth_credentials=["foo:oof", "rhubarb", "baz:zab"]
-    )  # pyright: ignore
+    config = Config(basic_auth_credentials="foo:oof rhubarb baz:zab")  # pyright: ignore
     with raises(ValueError, match="must be passed as username:password"):
         get_allowed_credentials(config)
 
 
 def test_password_contains_a_colon():
     """Test that passwords with a colon are treated properly."""
-    config = Config(basic_auth_credentials=["foo:bar:baz"])  # pyright: ignore
+    config = Config(basic_auth_credentials="foo:bar:baz")  # pyright: ignore
     assert get_allowed_credentials(config) == [
         HTTPBasicCredentials(username="foo", password="bar:baz"),
     ]

@@ -31,20 +31,18 @@ __all__ = ["basic_auth"]
 def get_allowed_credentials(config: Config) -> list[HTTPBasicCredentials]:
     """Get list of allowed credentials from the config.
 
-    Multiple users and passwords can be specified separated with commas.
-    Passwords can be specified in the user setting separated with colons.
+    User names and passwords must be separated with colons.
+    Multiple credentials must be separated by whitespace.
     """
-    credentials = config.basic_auth_credentials
+    credentials = config.basic_auth_credentials or ""
     allowed_credentials: list[HTTPBasicCredentials] = []
-    for user_and_password in credentials:
+    for user_and_password in credentials.split():
         try:
             username, password = user_and_password.split(":", 1)
         except ValueError as error:
             raise ValueError(
                 "Basic auth credentials must be passed as username:password"
             ) from error
-        username = username.strip()
-        password = password.strip()
         allowed_credentials.append(
             HTTPBasicCredentials(username=username, password=password)
         )

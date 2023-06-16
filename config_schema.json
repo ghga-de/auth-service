@@ -226,14 +226,10 @@
     },
     "basic_auth_credentials": {
       "title": "Basic Auth Credentials",
-      "default": [],
       "env_names": [
         "auth_service_basic_auth_credentials"
       ],
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "type": "string"
     },
     "basic_auth_realm": {
       "title": "Basic Auth Realm",

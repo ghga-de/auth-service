@@ -15,7 +15,7 @@ auth_ext_keys: null
 auth_key: null
 auth_map_claims: {}
 auto_reload: true
-basic_auth_credentials: []
+basic_auth_credentials: null
 basic_auth_realm: GHGA Data Portal
 claims_collection: claims
 cors_allow_credentials: null

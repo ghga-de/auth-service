@@ -114,9 +114,7 @@ The service requires the following configuration parameters:
 
   - **Items** *(string)*
 
-- **`basic_auth_credentials`** *(array)*: Default: `[]`.
-
-  - **Items** *(string)*
+- **`basic_auth_credentials`** *(string)*
 
 - **`basic_auth_realm`** *(string)*: Default: `GHGA Data Portal`.
 

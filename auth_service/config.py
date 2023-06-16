@@ -87,7 +87,7 @@ class Config(ApiConfigBase, AuthConfig):
     # allowed algorithms for signing external tokens
     auth_ext_algs: list[str] = ["RS256", "ES256"]
     # user(s) and password(s) for basic authentication, separated by a colon
-    basic_auth_credentials: list[str] = []
+    basic_auth_credentials: Optional[str] = None
     # realm for basic authentication
     basic_auth_realm: str = "GHGA Data Portal"
     # paths that are always publicly visible without authentication
