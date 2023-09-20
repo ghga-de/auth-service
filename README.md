@@ -62,31 +62,31 @@ auth_service --help
 The service requires the following configuration parameters:
 - **`auth_key`** *(string)*
 
-- **`auth_algs`** *(array)*: Default: `["ES256"]`.
+- **`auth_algs`** *(array)*: Default: `['ES256']`.
 
   - **Items** *(string)*
 
-- **`auth_check_claims`** *(object)*: Default: `{"name": null, "email": null, "iat": null, "exp": null}`.
+- **`auth_check_claims`** *(object)*: Default: `{'name': None, 'email': None, 'iat': None, 'exp': None}`.
 
 - **`auth_map_claims`** *(object)*: Can contain additional properties. Default: `{}`.
 
   - **Additional Properties** *(string)*
 
-- **`host`** *(string)*: IP of the host. Default: `"127.0.0.1"`.
+- **`host`** *(string)*: IP of the host. Default: `127.0.0.1`.
 
 - **`port`** *(integer)*: Port to expose the server on the specified host. Default: `8080`.
 
-- **`log_level`** *(string)*: Must be one of: `["critical", "error", "warning", "info", "debug", "trace"]`. Default: `"debug"`.
+- **`log_level`** *(string)*: Must be one of: `['critical', 'error', 'warning', 'info', 'debug', 'trace']`. Default: `debug`.
 
-- **`auto_reload`** *(boolean)*: A development feature. Set to `True` to automatically reload the server upon code changes. Default: `false`.
+- **`auto_reload`** *(boolean)*: A development feature. Set to `True` to automatically reload the server upon code changes. Default: `False`.
 
 - **`workers`** *(integer)*: Number of workers processes to run. Default: `1`.
 
-- **`api_root_path`** *(string)*: Root path at which the API is reachable. This is relative to the specified host and port. Default: `"/"`.
+- **`api_root_path`** *(string)*: Root path at which the API is reachable. This is relative to the specified host and port. Default: `/`.
 
-- **`openapi_url`** *(string)*: Path to get the openapi specification in JSON format. This is relative to the specified host and port. Default: `"/openapi.json"`.
+- **`openapi_url`** *(string)*: Path to get the openapi specification in JSON format. This is relative to the specified host and port. Default: `/openapi.json`.
 
-- **`docs_url`** *(string)*: Path to host the swagger documentation. This is relative to the specified host and port. Default: `"/docs"`.
+- **`docs_url`** *(string)*: Path to host the swagger documentation. This is relative to the specified host and port. Default: `/docs`.
 
 - **`cors_allowed_origins`** *(array)*: A list of origins that should be permitted to make cross-origin requests. By default, cross-origin requests are not allowed. You can use ['*'] to allow any origin.
 
@@ -102,55 +102,49 @@ The service requires the following configuration parameters:
 
   - **Items** *(string)*
 
-- **`service_name`** *(string)*: Default: `"auth_service"`.
+- **`service_name`** *(string)*: Default: `auth_service`.
 
-- **`run_auth_adapter`** *(boolean)*: Default: `false`.
+- **`run_auth_adapter`** *(boolean)*: Default: `False`.
 
-- **`api_ext_path`** *(string)*: Default: `"/api/auth"`.
+- **`api_ext_path`** *(string)*: Default: `/api/auth`.
 
 - **`auth_ext_keys`** *(string)*
 
-- **`auth_ext_algs`** *(array)*: Default: `["RS256", "ES256"]`.
+- **`auth_ext_algs`** *(array)*: Default: `['RS256', 'ES256']`.
 
   - **Items** *(string)*
 
 - **`basic_auth_credentials`** *(string)*
 
-- **`basic_auth_realm`** *(string)*: Default: `"GHGA Data Portal"`.
+- **`basic_auth_realm`** *(string)*: Default: `GHGA Data Portal`.
 
-- **`public_paths`** *(array)*: Default: `["/.well-known/*", "/service-logo.png"]`.
+- **`public_paths`** *(array)*: Default: `['/.well-known/*', '/service-logo.png']`.
 
   - **Items** *(string)*
 
-- **`include_apis`** *(array)*: Default: `["users"]`.
+- **`include_apis`** *(array)*: Default: `['users']`.
 
-  - **Items** *(string)*: Must be one of: `["users", "claims"]`.
+  - **Items** *(string)*: Must be one of: `['users', 'claims']`.
 
 - **`add_as_data_stewards`** *(array)*: Default: `[]`.
 
   - **Items**
 
-    - **Any of**
+- **`oidc_authority_url`** *(string)*: Default: `https://proxy.aai.lifescience-ri.eu`.
 
-      - *string*
+- **`oidc_userinfo_endpoint`** *(string)*: Default: `https://proxy.aai.lifescience-ri.eu/OIDC/userinfo`.
 
-      - *object*
+- **`oidc_client_id`** *(string)*: Default: `ghga-data-portal`.
 
-- **`oidc_authority_url`** *(string, format: uri)*: Default: `"https://proxy.aai.lifescience-ri.eu"`.
+- **`organization_url`** *(string)*: Default: `https://ghga.de`.
 
-- **`oidc_userinfo_endpoint`** *(string, format: uri)*: Default: `"https://proxy.aai.lifescience-ri.eu/OIDC/userinfo"`.
+- **`db_url`** *(string)*: Default: `mongodb://mongodb:27017`.
 
-- **`oidc_client_id`** *(string)*: Default: `"ghga-data-portal"`.
+- **`db_name`** *(string)*: Default: `user-management`.
 
-- **`organization_url`** *(string, format: uri)*: Default: `"https://ghga.de"`.
+- **`users_collection`** *(string)*: Default: `users`.
 
-- **`db_url`** *(string, format: password)*: Default: `"mongodb://mongodb:27017"`.
-
-- **`db_name`** *(string)*: Default: `"user-management"`.
-
-- **`users_collection`** *(string)*: Default: `"users"`.
-
-- **`claims_collection`** *(string)*: Default: `"claims"`.
+- **`claims_collection`** *(string)*: Default: `claims`.
 
 
 ### Usage:
