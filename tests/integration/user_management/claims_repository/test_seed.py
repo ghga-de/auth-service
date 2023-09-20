@@ -17,13 +17,13 @@
 """Test seeding the database with data stewards."""
 
 import asyncio
-
-from testcontainers.mongodb import MongoDbContainer
+import logging
 
 from auth_service.config import Config
 from auth_service.user_management.claims_repository.core.seed import (
     seed_data_steward_claims,
 )
+from testcontainers.mongodb import MongoDbContainer
 
 
 def test_add_non_existing_data_steward(caplog):
@@ -44,6 +44,7 @@ def test_add_non_existing_data_steward(caplog):
             ],
         )  # pyright: ignore
 
+        caplog.set_level(logging.INFO)
         caplog.clear()
         asyncio.run(seed_data_steward_claims(config))
         log_messages = [record.message for record in caplog.records]
@@ -61,6 +62,7 @@ def test_add_non_existing_data_steward(caplog):
         assert user["status"] == "active"
 
     assert log_messages == [
+        "Removed 0 existing data steward claim(s).",
         "Added missing data steward with external ID 'id-of-john-doe@ls.org'.",
         "Could not add new user with external ID 'id-of-jane-roe@ls.org':"
         " User data (name and email) is missing.",
