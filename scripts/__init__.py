@@ -12,11 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
-"""Auth Service
-
-The GHGA auth service contains all services needed for the management,
-authentication and authorization of users.
-"""
-
-__version__ = "0.5.2"
+"""Scripts and utils used during development or in CI pipelines."""
