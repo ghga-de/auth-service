@@ -24,13 +24,13 @@ from pathlib import Path
 from string import Template
 
 import jsonschema2md
-import tomli
 from pydantic import BaseModel, Field
 from script_utils.cli import echo_failure, echo_success, run
+from setuptools.config.setupcfg import read_configuration
 from stringcase import spinalcase, titlecase
 
 ROOT_DIR = Path(__file__).parent.parent.resolve()
-PYPROJECT_TOML_PATH = ROOT_DIR / "pyproject.toml"
+SETUP_CFG_PATH = ROOT_DIR / "setup.cfg"
 DESCRIPTION_PATH = ROOT_DIR / ".description.md"
 DESIGN_PATH = ROOT_DIR / ".design.md"
 README_TEMPLATE_PATH = ROOT_DIR / ".readme_template.md"
@@ -89,17 +89,16 @@ class PackageDetails(PackageHeader, PackageName):
     )
 
 
-def read_toml_package_header() -> PackageHeader:
-    """Read basic information about the package from the pyproject.toml"""
+def read_package_header() -> PackageHeader:
+    """Read basic information about the package from the setup.cfg."""
 
-    with open(PYPROJECT_TOML_PATH, "rb") as pyproject_toml:
-        pyproject = tomli.load(pyproject_toml)
-        pyproject_project = pyproject["project"]
-        return PackageHeader(
-            shortname=pyproject_project["name"],
-            version=pyproject_project["version"],
-            summary=pyproject_project["description"],
-        )
+    setup_config = read_configuration(SETUP_CFG_PATH)
+    setup_metadata = setup_config["metadata"]
+    return PackageHeader(
+        shortname=setup_metadata["name"],
+        version=setup_metadata["version"],
+        summary=setup_metadata["description"],
+    )
 
 
 def read_package_name() -> PackageName:
@@ -147,7 +146,7 @@ def generate_config_docs() -> str:
 
     md_lines = parser.parse_schema(config_schema)
 
-    # ignore everything before the properties header:
+    # ignore everything before the properites header:
     properties_index = md_lines.index("## Properties\n\n")
     md_lines = md_lines[properties_index + 1 :]
 
@@ -174,7 +173,7 @@ def generate_openapi_docs() -> str:
 def get_package_details() -> PackageDetails:
     """Get details required to build documentation for the package."""
 
-    header = read_toml_package_header()
+    header = read_package_header()
     name = read_package_name()
     description = read_package_description()
     config_description = generate_config_docs()
