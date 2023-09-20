@@ -48,23 +48,28 @@ def test_add_non_existing_data_steward(caplog):
         caplog.set_level(logging.INFO)
         caplog.clear()
         asyncio.run(seed_data_steward_claims(config))
-        log_messages = [record.message for record in caplog.records]
+        records = caplog.records
+        log_messages = [record.message for record in records]
+        num_warnings = sum(record.levelno >= logging.WARNING for record in records)
 
         client = mongodb.get_connection_client()
         db = client.get_database(config.db_name)
         users_collection = db.get_collection(config.users_collection)
         users = list(users_collection.find())
-        assert len(users) == 1
-        user = users[0]
-        assert user["name"] == "John Doe"
-        assert user["email"] == "doe@home.org"
-        assert user["title"] is None
-        assert user["ext_id"] == "id-of-john-doe@ls.org"
-        assert user["status"] == "active"
 
+    assert num_warnings == 2
     assert log_messages == [
         "Removed 0 existing data steward claim(s).",
         "Added missing data steward with external ID 'id-of-john-doe@ls.org'.",
+        "Added data steward role for 'id-of-john-doe@ls.org' to the claims repository.",
         "Could not add new user with external ID 'id-of-jane-roe@ls.org':"
         " User data (name and email) is missing.",
     ]
+
+    assert len(users) == 1
+    user = users[0]
+    assert user["name"] == "John Doe"
+    assert user["email"] == "doe@home.org"
+    assert user["title"] is None
+    assert user["ext_id"] == "id-of-john-doe@ls.org"
+    assert user["status"] == "active"
