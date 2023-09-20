@@ -19,11 +19,12 @@
 import asyncio
 import logging
 
+from testcontainers.mongodb import MongoDbContainer
+
 from auth_service.config import Config
 from auth_service.user_management.claims_repository.core.seed import (
     seed_data_steward_claims,
 )
-from testcontainers.mongodb import MongoDbContainer
 
 
 def test_add_non_existing_data_steward(caplog):
