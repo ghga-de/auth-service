@@ -45,8 +45,7 @@ example_data/README.md
 pytest.ini
 
 LICENSE
-requirements.txt
-requirements-dev-common.txt
+requirements-dev-common.in
 setup.py
 
 .readme_template.md

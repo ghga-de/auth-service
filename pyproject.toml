@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=67.7.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "auth_service"
+version = "0.5.2"
+description = "Authentication service for the GHGA data portal used by the API gateway via the ExtAuth protocol"
+readme = "README.md"
+authors = [
+    { name = "German Human Genome Phenome Archive (GHGA)", email = "contact@ghga.de" },
+]
+requires-python = ">=3.9"
+license = { text = "Apache 2.0" }
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Software Development :: Libraries",
+    "Intended Audience :: Developers",
+]
+dependencies = [
+    "ghga-service-commons[api,auth] == 0.6.0",
+    "hexkit[mongodb] == 0.10.0",
+    "httpx ~= 0.23.3",
+    "typer ~= 0.7.0",
+]
+
+[project.urls]
+Repository = "https://github.com/ghga-de/auth-service"
+
+[tool.setuptools.packages.find]
+where = ["src"]
