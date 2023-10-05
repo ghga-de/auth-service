@@ -18,6 +18,11 @@
 
 # pylint: skip-file
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 from tests.fixtures.auth_keys import reload_auth_key_config
 
 __all__ = ["app"]
