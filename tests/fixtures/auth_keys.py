@@ -95,9 +95,9 @@ def reload_auth_key_config(auth_adapter: bool) -> None:
     reload(config)
 
     if auth_adapter:
-        from auth_service.auth_adapter.core import auth
+        from auth_service.auth_adapter.core import auth  # type: ignore
     else:
-        from auth_service.user_management import auth  # type: ignore[no-redef]
+        from auth_service.user_management import auth  # type: ignore
 
     reload(auth)
 

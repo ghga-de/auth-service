@@ -26,6 +26,7 @@ from ....fixtures.utils import get_headers_for
 from .fixtures import (  # noqa: F401; pylint: disable=unused-import
     fixture_client,
     fixture_client_with_db,
+    fixture_mongodb,
 )
 
 MIN_USER_DATA = {
