@@ -15,6 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: skip-file
+
 """This script checks that the license and license headers
 exists and that they are up to date.
 """
