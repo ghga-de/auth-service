@@ -2,7 +2,8 @@ name: CD
 
 on:
   release:
-    types: [published]
+    types:
+      [published]
       # trigger only on new release
 
 jobs:
@@ -44,7 +45,7 @@ jobs:
         name: Verify package version vs tag version
         # package version must be same with tag version
         run: |
-          PKG_VER="$(python setup.py --version)"
+          PKG_VER="$(grep -oP 'version = "\K[^"]+' pyproject.toml)"
           echo "Package version is $PKG_VER" >&2
           echo "Tag version is ${{ steps.get_version_tag.outputs.version }}" >&2
           if [ "$PKG_VER" != "${{ steps.get_version_tag.outputs.version }}" ]; then
