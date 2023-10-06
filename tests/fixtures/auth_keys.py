@@ -84,7 +84,6 @@ def print_auth_keys_env() -> None:
             print(f"{key}={value!r}")
 
 
-# pylint: disable=import-outside-toplevel
 def reload_auth_key_config(auth_adapter: bool) -> None:
     """Reload the configuration for the signing keys."""
     environ["AUTH_SERVICE_RUN_AUTH_ADAPTER"] = "true" if auth_adapter else "false"
@@ -95,9 +94,9 @@ def reload_auth_key_config(auth_adapter: bool) -> None:
     reload(config)
 
     if auth_adapter:
-        from auth_service.auth_adapter.core import auth  # type: ignore
+        from auth_service.auth_adapter.core import auth
     else:
-        from auth_service.user_management import auth  # type: ignore
+        from auth_service.user_management import auth  # type: ignore[no-redef]
 
     reload(auth)
 

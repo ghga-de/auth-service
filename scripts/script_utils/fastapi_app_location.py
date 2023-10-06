@@ -16,8 +16,6 @@
 
 """Used to define the location of the main FastAPI app object."""
 
-# pylint: skip-file
-
 import sys
 from pathlib import Path
 
