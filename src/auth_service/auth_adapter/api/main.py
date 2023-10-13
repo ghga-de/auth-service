@@ -56,7 +56,7 @@ if API_EXT_PATH:
 
 
 def add_allowed_route(route: str, write: bool = False):
-    """Add a router that should be passed through."""
+    """Add a route that shall be passed through."""
     methods = WRITE_METHODS if write else READ_METHODS
     if route.endswith("/*"):
         route = route[:-1] + "{path:path}"
@@ -64,7 +64,7 @@ def add_allowed_route(route: str, write: bool = False):
         route = route.replace("*", "{variable}")
 
     @app.api_route(route, methods=methods)
-    async def public_route(
+    async def allowed_route(
         response: Response, authorization: Optional[str] = Header(default=None)
     ) -> dict:
         """Unprotected route."""
@@ -73,15 +73,15 @@ def add_allowed_route(route: str, write: bool = False):
         return {}
 
 
-def add_public_routes():
-    """Add all public (unprotected) routes."""
+def add_allowed_routes():
+    """Add all routes that shall be passed through."""
     for route in CONFIG.allow_read_paths:
         add_allowed_route(route, write=False)
     for route in CONFIG.allow_write_paths:
         add_allowed_route(route, write=True)
 
 
-add_public_routes()
+add_allowed_routes()
 
 
 @app.api_route("/{path:path}", methods=ALL_METHODS)
