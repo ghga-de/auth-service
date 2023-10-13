@@ -138,8 +138,10 @@ def test_allowed_paths(with_basic_auth, client):
     response = client.get(
         "/allowed/read/some/thing", headers={"Authorization": "Bearer foo"}
     )
+    # access should be allowed without basic authentication
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {}
+    # and authorization headers should be passed through
     assert response.headers["Authorization"] == "Bearer foo"
 
     response = client.head("/allowed/read/some/thing")
