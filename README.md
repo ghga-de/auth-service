@@ -118,7 +118,11 @@ The service requires the following configuration parameters:
 
 - **`basic_auth_realm`** *(string)*: Default: `"GHGA Data Portal"`.
 
-- **`public_paths`** *(array)*: Default: `["/.well-known/*", "/service-logo.png"]`.
+- **`allow_read_paths`** *(array)*: Default: `["/.well-known/*", "/service-logo.png"]`.
+
+  - **Items** *(string)*
+
+- **`allow_write_paths`** *(array)*: Default: `[]`.
 
   - **Items** *(string)*
 
