@@ -163,12 +163,15 @@ def test_has_download_access_for_dataset():
         user_id="user-id",
         visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
         visa_value=f"{ORG_URL}/datasets/some-dataset-id",  # pyright: ignore
-        source=ORG_URL,
+        source=ORG_URL,  # type: ignore[arg-type]
+        sub_source=None,
         assertion_date=datetime_utc(2022, 11, 1),
         asserted_by=AuthorityLevel.SYSTEM,
         valid_from=datetime_utc(2022, 11, 15),
         valid_until=datetime_utc(2022, 11, 20),
         creation_date=datetime_utc(2022, 11, 1),
+        revocation_date=None,
+        conditions=None,
     )
     assert has_download_access_for_dataset(good_claim, "some-dataset-id")
     assert not has_download_access_for_dataset(good_claim, "another-dataset-id")
@@ -195,12 +198,15 @@ def test_dateset_id_when_download_access():
         user_id="user-id",
         visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
         visa_value=f"{ORG_URL}/datasets/some-dataset-id",  # pyright: ignore
-        source=ORG_URL,
+        source=ORG_URL,  # type: ignore[arg-type]
+        sub_source=None,
         assertion_date=datetime_utc(2022, 11, 1),
         asserted_by=AuthorityLevel.SYSTEM,
         valid_from=datetime_utc(2022, 11, 15),
         valid_until=datetime_utc(2022, 11, 20),
         creation_date=datetime_utc(2022, 11, 1),
+        revocation_date=None,
+        conditions=None,
     )
     assert dataset_id_for_download_access(good_claim) == "some-dataset-id"
 
