@@ -162,7 +162,7 @@ def test_has_download_access_for_dataset():
         id="claim-id",
         user_id="user-id",
         visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
-        visa_value=f"{ORG_URL}/datasets/some-dataset-id",  # type: ignore
+        visa_value=f"{ORG_URL}/datasets/some-dataset-id",  # pyright: ignore
         source=ORG_URL,
         assertion_date=datetime_utc(2022, 11, 1),
         asserted_by=AuthorityLevel.SYSTEM,
@@ -194,7 +194,7 @@ def test_dateset_id_when_download_access():
         id="claim-id",
         user_id="user-id",
         visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
-        visa_value=f"{ORG_URL}/datasets/some-dataset-id",  # type: ignore
+        visa_value=f"{ORG_URL}/datasets/some-dataset-id",  # pyright: ignore
         source=ORG_URL,
         assertion_date=datetime_utc(2022, 11, 1),
         asserted_by=AuthorityLevel.SYSTEM,
