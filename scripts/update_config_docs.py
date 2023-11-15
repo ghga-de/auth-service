@@ -28,7 +28,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import BaseSettings
 
 from script_utils.cli import echo_failure, echo_success, run
 
@@ -44,7 +43,7 @@ class ValidationError(RuntimeError):
     """Raised when validation of config documentation fails."""
 
 
-def get_config_class() -> type[BaseSettings]:
+def get_config_class():
     """
     Dynamically imports and returns the Config class from the current service.
     This makes the script service repo agnostic.
@@ -77,14 +76,16 @@ def get_schema() -> str:
     """Returns a JSON schema generated from a Config class."""
 
     config = get_dev_config()
-    return config.schema_json(indent=2)
+    return config.schema_json(indent=2)  # change eventually to .model_json_schema(...)
 
 
 def get_example() -> str:
     """Returns an example config YAML."""
 
     config = get_dev_config()
-    normalized_config_dict = json.loads(config.json())
+    normalized_config_dict = json.loads(
+        config.json()  # change eventually to .model_dump_json()
+    )
     return yaml.dump(normalized_config_dict)  # pyright: ignore
 
 
