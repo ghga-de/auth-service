@@ -37,7 +37,7 @@ __all__ = [
 
 
 INTERNAL_SOURCE = CONFIG.organization_url
-INTERNAL_DOMAIN = str(INTERNAL_SOURCE).split("://", 1)[-1].rstrip("/")
+INTERNAL_DOMAIN = INTERNAL_SOURCE.host
 DATA_STEWARD_ROLE = "data_steward"
 DATASET_PREFIX = str(INTERNAL_SOURCE).rstrip("/") + "/datasets/"
 
