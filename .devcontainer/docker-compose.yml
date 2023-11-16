@@ -34,17 +34,59 @@ services:
       AUTH_SERVICE_CONFIG_YAML: /workspace/.devcontainer/.dev_config.yaml
 
   mongodb:
-    image: mongo:6.0.3
+    image: mongo:7.0.3
     restart: unless-stopped
     volumes:
       - mongo_fs:/data/db
+
   mongo-express:
-    image: mongo-express
+    image: mongo-express:1.0.0
     restart: unless-stopped
     ports:
       - 8088:8081
     environment:
       ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: dev
+      ME_CONFIG_BASICAUTH_PASSWORD: dev
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.1
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-server:7.5.1
+    restart: always
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    restart: always
+    depends_on:
+      - kafka
+      - zookeeper
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    ports:
+      - 8089:8080
 
 volumes:
   mongo_fs: {}
