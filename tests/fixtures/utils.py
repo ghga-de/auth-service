@@ -235,32 +235,50 @@ class DummyClaimDao:
         """Initialize the dummy ClaimDao"""
         self.valid_date = valid_date
         self.invalid_date = valid_date + timedelta(14)
-        self.claim = Claim(
-            id="dummy-claim-id",
-            user_id="james@ghga.de",
-            visa_type=VisaType.GHGA_ROLE,
-            visa_value="data_steward@some.org",  # type: ignore
-            source=CONFIG.organization_url,
-            assertion_date=valid_date - timedelta(14),
-            asserted_by=AuthorityLevel.SYSTEM,
-            valid_from=valid_date - timedelta(7),
-            valid_until=valid_date + timedelta(7),
-            creation_date=valid_date - timedelta(10),
-        )
+        self.claims = [
+            Claim(
+                id="data-steward-claim-id",
+                user_id="james@ghga.de",
+                visa_type=VisaType.GHGA_ROLE,
+                visa_value="data_steward@some.org",  # type: ignore
+                source="https://ghga.de",
+                assertion_date=valid_date - timedelta(14),
+                asserted_by=AuthorityLevel.SYSTEM,
+                valid_from=valid_date - timedelta(7),
+                valid_until=valid_date + timedelta(7),
+                creation_date=valid_date - timedelta(10),
+            ),
+            Claim(
+                id="data-access-claim-id",
+                user_id="john@ghga.de",
+                visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
+                visa_value="https://ghga.de/datasets/some-dataset-id",  # type: ignore
+                source="https://ghga.de",
+                assertion_date=valid_date - timedelta(14),
+                asserted_by=AuthorityLevel.DAC,
+                valid_from=valid_date - timedelta(7),
+                valid_until=valid_date + timedelta(7),
+                creation_date=valid_date - timedelta(10),
+            ),
+        ]
 
     async def get_by_id(self, id_: str) -> Claim:
-        """Get the dummy user claim via its ID."""
-        if id_ == self.claim.id:
-            return self.claim
+        """Get a dummy user claim via its ID."""
+        for claim in self.claims:
+            if claim.id == id_:
+                return claim
         raise ResourceNotFoundError(id_=id_)
 
     async def find_all(self, *, mapping: Mapping[str, Any]) -> AsyncIterator[Claim]:
         """Find all dummy user claims."""
-        claim = self.claim
-        claim_id, user_id, visa_type = claim.id, claim.user_id, claim.visa_type
-        if (
-            mapping.get("id", claim_id) == claim_id
-            and mapping.get("user_id", user_id) == user_id
-            and mapping.get("visa_type", visa_type) == visa_type
-        ):
-            yield claim
+        for claim in self.claims:
+            for key in mapping:
+                if str(mapping[key]) != str(getattr(claim, key)):
+                    break
+            else:
+                yield claim
+
+    async def delete(self, *, id_: str) -> None:
+        """Delete a dummy user claim."""
+        claim = await self.get_by_id(id_)
+        self.claims.remove(claim)

@@ -121,9 +121,9 @@ def create_controlled_access_claim(
 def create_controlled_access_filter(dataset_id: str) -> dict[str, str]:
     """Create a mapping for filtering controlled access grants for a given dataset."""
     return {
-        "visa_type": VisaType.CONTROLLED_ACCESS_GRANTS,
+        "visa_type": VisaType.CONTROLLED_ACCESS_GRANTS.value,
         "visa_value": DATASET_PREFIX + dataset_id,
-        "source": str(INTERNAL_SOURCE),
+        "source": str(INTERNAL_SOURCE).rstrip("/"),
     }
 
 

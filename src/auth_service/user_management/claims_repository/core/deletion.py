@@ -35,7 +35,7 @@ class DatasetDeletionHandler(DatasetDeletionPort):
         """Initialize the handler with the DAO for claims."""
         self.claim_dao = claim_dao
 
-    async def handle_dataset_deletion(self, *, dataset_id: str):
+    async def handle_dataset_deletion(self, *, dataset_id: str) -> None:
         """Delete all access rights for datasets with the given id."""
         claims_filter = create_controlled_access_filter(dataset_id)
         count_deleted = 0
