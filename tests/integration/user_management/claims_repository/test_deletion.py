@@ -36,7 +36,12 @@ async def test_deletion_handler(
     caplog: LogCaptureFixture,
 ):
     """Test the dataset deletion handler"""
-    config = CONFIG.model_copy(update={"kafka_servers": kafka_fixture.kafka_servers})
+    config = CONFIG.model_copy(
+        update={
+            "db_url": mongodb.get_connection_url(),
+            "kafka_servers": kafka_fixture.kafka_servers,
+        }
+    )
 
     caplog.set_level(logging.INFO)
     records = caplog.records
@@ -44,20 +49,20 @@ async def test_deletion_handler(
     db = mongodb.get_connection_client()[config.db_name]
     collection = db.get_collection(config.claims_collection)
 
-    creation_date = now_as_utc()
+    now = now_as_utc()
+    creation_date = str(now)
+    expiration_date = str(now + timedelta(1))
     claim = {
+        "_id": "some-claim-id",
         "visa_type": "ControlledAccessGrants",
         "visa_value": "https://ghga.de/datasets/some-dataset-id",
         "assertion_date": creation_date,
         "valid_from": creation_date,
-        "valid_until": creation_date + timedelta(1),
+        "valid_until": expiration_date,
         "source": "https://ghga.de",
-        "sub_source": None,
         "asserted_by": "dac",
-        "conditions": None,
         "user_id": "some-user-id",
         "creation_date": creation_date,
-        "revocation_date": None,
     }
     collection.insert_one(claim)
     assert collection.find_one({"user_id": "some-user-id"})

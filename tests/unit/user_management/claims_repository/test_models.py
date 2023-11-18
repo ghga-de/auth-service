@@ -91,8 +91,7 @@ def test_good_visa_values(value):
 def test_bad_visa_values(value):
     """Test creating an invalid visa value"""
     with raises(ValueError):
-        print("VALUE=", value)
-        c = ClaimCreation(
+        ClaimCreation(
             visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,  # type: ignore
             visa_value=value,
             assertion_date=utc_datetime(2022, 9, 1, 12, 0),
@@ -100,9 +99,6 @@ def test_bad_visa_values(value):
             valid_until=utc_datetime(2022, 10, 31, 23, 59),
             source="https://foo-bar.org",  # type: ignore
         )
-        print(c.visa_value)
-        print(type(c.visa_value))
-        print(getattr(c.visa_value, "host", None))
 
 
 def test_conditions():
