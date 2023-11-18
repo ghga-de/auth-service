@@ -29,6 +29,7 @@ from auth_service.user_management.claims_repository.core.deletion import (
     DatasetDeletionPort,
 )
 from auth_service.user_management.claims_repository.deps import (
+    ClaimDao,
     get_claim_dao_factory,
     get_claim_dao_factory_config,
 )
@@ -39,10 +40,9 @@ from auth_service.user_management.claims_repository.translators.akafka import (
 from .config import CONFIG, Config
 
 
-@asynccontextmanager
-async def prepare_event_handler(
+async def get_claim_dao(
     config: Config,
-) -> AsyncGenerator[DatasetDeletionPort, None]:
+) -> ClaimDao:
     """Get an event handler for dataset deletion events."""
     claim_dao_factory_config = get_claim_dao_factory_config(config=config)
     db_config = get_mongodb_config(config=config)
@@ -50,7 +50,15 @@ async def prepare_event_handler(
     claim_dao_factory = get_claim_dao_factory(
         config=claim_dao_factory_config, dao_factory=dao_factory
     )
-    claim_dao = await claim_dao_factory.get_claim_dao()
+    return await claim_dao_factory.get_claim_dao()
+
+
+@asynccontextmanager
+async def prepare_event_handler(
+    config: Config,
+) -> AsyncGenerator[DatasetDeletionPort, None]:
+    """Get an event handler for dataset deletion events."""
+    claim_dao = await get_claim_dao(config)
     yield DatasetDeletionHandler(claim_dao=claim_dao)
 
 

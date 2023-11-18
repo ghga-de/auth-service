@@ -241,7 +241,7 @@ class DummyClaimDao:
                 user_id="james@ghga.de",
                 visa_type=VisaType.GHGA_ROLE,
                 visa_value="data_steward@some.org",  # type: ignore
-                source="https://ghga.de",
+                source="https://ghga.de",  # type: ignore
                 assertion_date=valid_date - timedelta(14),
                 asserted_by=AuthorityLevel.SYSTEM,
                 valid_from=valid_date - timedelta(7),
@@ -253,7 +253,7 @@ class DummyClaimDao:
                 user_id="john@ghga.de",
                 visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
                 visa_value="https://ghga.de/datasets/some-dataset-id",  # type: ignore
-                source="https://ghga.de",
+                source="https://ghga.de",  # type: ignore
                 assertion_date=valid_date - timedelta(14),
                 asserted_by=AuthorityLevel.DAC,
                 valid_from=valid_date - timedelta(7),
@@ -271,9 +271,12 @@ class DummyClaimDao:
 
     async def find_all(self, *, mapping: Mapping[str, Any]) -> AsyncIterator[Claim]:
         """Find all dummy user claims."""
+        mapping = json.loads(json.dumps(mapping))
         for claim in self.claims:
+            data = claim.model_dump()
+            data["id_"] = data.pop("id")
             for key in mapping:
-                if str(mapping[key]) != str(getattr(claim, key)):
+                if mapping[key] != data[key]:
                     break
             else:
                 yield claim
