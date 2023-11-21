@@ -116,7 +116,7 @@ class Config(ApiConfigBase, AuthConfig, EventSubTranslatorConfig, KafkaConfig):
     users_collection: str = "users"
     claims_collection: str = "claims"
 
-    service_instance_id: str = f"{service_name}_1"
+    service_instance_id: str = "1"
     kafka_servers: list[str] = ["kafka:9092"]
 
     # the topic and type of the event announcing dataset deletions
