@@ -18,11 +18,8 @@
 
 import logging
 
-from auth_service.user_management.claims_repository.ports.deletion import (
-    DatasetDeletionPort,
-)
-
 from ..deps import ClaimDao
+from ..ports.deletion import DatasetDeletionPort
 from .claims import create_controlled_access_filter
 
 log = logging.getLogger(__name__)
