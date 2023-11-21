@@ -64,7 +64,7 @@ auth_service --help
 The service requires the following configuration parameters:
 - **`service_name`** *(string)*: Default: `"auth_service"`.
 
-- **`service_instance_id`** *(string)*: Default: `"auth_service_1"`.
+- **`service_instance_id`** *(string)*: Default: `"1"`.
 
 - **`kafka_servers`** *(array)*: Default: `["kafka:9092"]`.
 

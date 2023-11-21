@@ -8,7 +8,7 @@
       "type": "string"
     },
     "service_instance_id": {
-      "default": "auth_service_1",
+      "default": "1",
       "title": "Service Instance Id",
       "type": "string"
     },
