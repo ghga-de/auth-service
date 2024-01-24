@@ -6,5 +6,7 @@ host: 0.0.0.0
 
 db_url: mongodb://mongodb:27017/
 
-service_instance_id: '1'
+log_level: DEBUG
+
+service_instance_id: "1"
 kafka_servers: ["kafka:9092"]

@@ -27,7 +27,7 @@ from typing import Optional
 from fastapi import FastAPI, Header, HTTPException, Request, Response, status
 from ghga_service_commons.api import configure_app
 
-from auth_service.config import CONFIG, configure_logging
+from auth_service.config import CONFIG
 from auth_service.user_management.claims_repository.deps import ClaimDao, get_claim_dao
 from auth_service.user_management.user_registry.deps import (
     Depends,
@@ -39,8 +39,6 @@ from .. import DESCRIPTION, TITLE, VERSION
 from ..core.auth import TokenValidationError, UserInfoError, exchange_token
 from .basic import basic_auth
 from .headers import get_bearer_token
-
-configure_logging()
 
 app = FastAPI(title=TITLE, description=DESCRIPTION, version=VERSION)
 configure_app(app, config=CONFIG)
