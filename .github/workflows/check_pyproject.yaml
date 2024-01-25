@@ -1,4 +1,4 @@
-name: Check if the readme is up to date.
+name: Check if the config schema and the example are up to date.
 
 on: push
 
@@ -11,6 +11,6 @@ jobs:
       - id: common
         uses: ghga-de/gh-action-common@v4
 
-      - name: Check readme
+      - name: Check pyproject.toml
         run: |
-          ./scripts/update_readme.py --check
+          ./scripts/update_pyproject.py --check

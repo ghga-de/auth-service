@@ -32,9 +32,11 @@ from script_utils.cli import echo_failure, echo_success, run
 
 ROOT_DIR = Path(__file__).parent.parent.resolve()
 PYPROJECT_TOML_PATH = ROOT_DIR / "pyproject.toml"
-DESCRIPTION_PATH = ROOT_DIR / ".description.md"
-DESIGN_PATH = ROOT_DIR / ".design.md"
-README_TEMPLATE_PATH = ROOT_DIR / ".readme_template.md"
+README_GENERATION_DIR = ROOT_DIR / ".readme_generation"
+TEMPLATE_OVERVIEW_PATH = README_GENERATION_DIR / "template_overview.md"
+DESCRIPTION_PATH = README_GENERATION_DIR / "description.md"
+DESIGN_PATH = README_GENERATION_DIR / "design.md"
+README_TEMPLATE_PATH = README_GENERATION_DIR / "readme_template.md"
 CONFIG_SCHEMA_PATH = ROOT_DIR / "config_schema.json"
 OPENAPI_YAML_REL_PATH = "./openapi.yaml"
 README_PATH = ROOT_DIR / "README.md"
@@ -58,6 +60,7 @@ class PackageHeader(BaseModel):
 class PackageName(BaseModel):
     """The name of a package and it's different representations."""
 
+    repo_name: str = Field(..., description="The name of the repo")
     name: str = Field(..., description="The full name of the package in spinal case.")
     title: str = Field(..., description="The name of the package formatted as title.")
 
@@ -118,9 +121,21 @@ def read_package_name() -> PackageName:
         raise RuntimeError("The name of the git origin could not be resolved.")
     git_origin_name = stdout.decode("utf-8").strip()
 
-    return PackageName(
-        name=spinalcase(git_origin_name), title=titlecase(git_origin_name)
+    repo_name = spinalcase(git_origin_name)
+    name = (
+        "my-microservice"
+        if repo_name == "microservice-repository-template"
+        else repo_name
     )
+    title = titlecase(name)
+
+    return PackageName(repo_name=repo_name, name=name, title=title)
+
+
+def read_template_overview() -> str:
+    """Read the template_overview."""
+
+    return TEMPLATE_OVERVIEW_PATH.read_text()
 
 
 def read_package_description() -> str:
@@ -203,6 +218,10 @@ def main(check: bool = False) -> None:
 
     details = get_package_details()
     readme_content = generate_single_readme(details=details)
+
+    if details.repo_name == "microservice-repository-template":
+        template_overview = read_template_overview()
+        readme_content = template_overview + readme_content
 
     if check:
         if README_PATH.read_text() != readme_content:

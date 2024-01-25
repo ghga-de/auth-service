@@ -1,3 +1,5 @@
+<!-- Please provide a short overview of the features of this service. -->
+
 This repository contains two services for the management, authentication and authorization of users of the GHGA data portal.
 
 These two services are described in the following sections. The setting `run_auth_adapter` can be used to determine which of the two services will be started.
