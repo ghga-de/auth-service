@@ -46,7 +46,6 @@ async def get_session(
     ghga_data_portal_sid: Annotated[Optional[str], Cookie()] = None,
 ) -> Optional[Session]:
     """Get the current session."""
-    print("GET SESSION CALLED")
     return (
         await store.get_session(ghga_data_portal_sid) if ghga_data_portal_sid else None
     )

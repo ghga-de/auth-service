@@ -119,19 +119,19 @@
     "session_id_bytes": {
       "default": 24,
       "description": "Number of bytes to be used for the session ID.",
-      "title": "Session Id Bytes",
+      "title": "Session ID size",
       "type": "integer"
     },
     "timeout_seconds": {
       "default": 3600,
       "description": "Session timeout in seconds",
-      "title": "Timeout Seconds",
+      "title": "Session timeout",
       "type": "integer"
     },
     "max_lifetime_seconds": {
       "default": 43200,
       "description": "Maximum lifetime of a session in seconds",
-      "title": "Max Lifetime Seconds",
+      "title": "Max. session duration",
       "type": "integer"
     },
     "auth_key": {

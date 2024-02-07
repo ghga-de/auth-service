@@ -51,7 +51,7 @@ class MemorySessionStore(SessionStore):
                     self.store[session.session_id] = session
                     return session
             await asyncio.sleep(0)
-        # this should never happen with a good session creator
+        # should never happen with a large session ID size
         raise RuntimeError("Could not create a new session.")
 
     async def save_session(self, session: Session) -> None:

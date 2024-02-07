@@ -56,13 +56,19 @@ class SessionConfig(BaseSettings):
     """Configuration parameters for the sessions."""
 
     session_id_bytes: int = Field(
-        default=24, description="Number of bytes to be used for the session ID."
+        default=24,
+        title="Session ID size",
+        description="Number of bytes to be used for the session ID.",
     )
     timeout_seconds: int = Field(
-        default=1 * 60 * 60, description="Session timeout in seconds"
+        default=1 * 60 * 60,
+        title="Session timeout",
+        description="Session timeout in seconds",
     )
     max_lifetime_seconds: int = Field(
-        default=12 * 60 * 60, description="Maximum lifetime of a session in seconds"
+        default=12 * 60 * 60,
+        title="Max. session duration",
+        description="Maximum lifetime of a session in seconds",
     )
 
 
