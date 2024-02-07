@@ -16,17 +16,42 @@
 
 """FastAPI dependencies for the auth adapter"""
 
+from typing import Annotated, Optional
+
+from fastapi import Cookie
+
 from auth_service.deps import Depends, get_config
 
 from .adapters.memory_session_store import MemorySessionStore
 from .core.session_store import Session, SessionConfig
 from .ports.session_store import SessionStorePort
 
-__all__ = ["get_session_store"]
+__all__ = ["get_session_store", "get_session", "UserSessionStore", "UserSession"]
+
+_session_store = None
 
 
-def get_session_store(
-    config: SessionConfig = Depends(get_config),
+async def get_session_store(
+    config: Annotated[SessionConfig, Depends(get_config)],
 ) -> SessionStorePort[Session]:
     """Get the session store."""
-    return MemorySessionStore(config=config)
+    global _session_store
+    if not _session_store:
+        _session_store = MemorySessionStore(config=config)
+    return _session_store
+
+
+async def get_session(
+    store: Annotated[SessionStorePort[Session], Depends(get_session_store)],
+    ghga_data_portal_sid: Annotated[Optional[str], Cookie()] = None,
+) -> Optional[Session]:
+    """Get the current session."""
+    print("GET SESSION CALLED")
+    return (
+        await store.get_session(ghga_data_portal_sid) if ghga_data_portal_sid else None
+    )
+
+
+UserSessionStore = Annotated[SessionStorePort[Session], Depends(get_session_store)]
+
+UserSession = Annotated[Optional[Session], Depends(get_session)]
