@@ -141,6 +141,12 @@ The service requires the following configuration parameters:
   ```
 
 
+- **`session_id_bytes`** *(integer)*: Number of bytes to be used for the session ID. Default: `24`.
+
+- **`timeout_seconds`** *(integer)*: Session timeout in seconds. Default: `3600`.
+
+- **`max_lifetime_seconds`** *(integer)*: Maximum lifetime of a session in seconds. Default: `43200`.
+
 - **`auth_key`**: internal public key for user management (key pair for auth adapter). Default: `null`.
 
   - **Any of**
