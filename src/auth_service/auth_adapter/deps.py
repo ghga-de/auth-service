@@ -14,13 +14,19 @@
 # limitations under the License.
 #
 
-"""Managing user sessions that keep track of authentication state."""
+"""FastAPI dependencies for the auth adapter"""
 
-import secrets
+from auth_service.deps import Depends, get_config
 
-SESSION_ID_BYTES = 24
+from .adapters.memory_session_store import MemorySessionStore
+from .core.session_store import Session, SessionConfig
+from .ports.session_store import SessionStorePort
+
+__all__ = ["get_session_store"]
 
 
-def generate_session_id() -> str:
-    """Generate a random session ID."""
-    return secrets.token_urlsafe(SESSION_ID_BYTES)
+def get_session_store(
+    config: SessionConfig = Depends(get_config),
+) -> SessionStorePort[Session]:
+    """Get the session store."""
+    return MemorySessionStore(config=config)

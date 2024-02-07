@@ -19,30 +19,33 @@
 
 import asyncio
 from contextlib import suppress
-from typing import Callable, Generic, Optional, TypeVar
+from typing import Optional
 
-from auth_service.auth_adapter.ports.session_store import BaseSession, SessionStorePort
+from auth_service.auth_adapter.core.session_store import (
+    Session,
+    SessionConfig,
+    SessionStore,
+)
 
-T = TypeVar("T", bound=BaseSession)
 
-
-class MemorySessionStore(SessionStorePort, Generic[T]):
+class MemorySessionStore(SessionStore):
     """Memory based store for user sessions."""
 
-    def __init__(self, *, creator: Callable[[], T], validator: Callable[[T], bool]):
-        """Create a session store.
-
-        Functions for creating and validating sessions must be provided.
-        """
-        super().__init__(creator=creator, validator=validator)
+    def __init__(
+        self,
+        *,
+        config: SessionConfig,
+    ):
+        """Initialize the memory based session store."""
+        super().__init__(config=config)
         self.lock = asyncio.Lock()
-        self.store: dict[str, T] = {}
+        self.store: dict[str, Session] = {}
 
-    async def create_session(self) -> T:
+    async def create_session(self) -> Session:
         """Create a new user session in the store and return it."""
         for _ in range(100):
             async with self.lock:
-                session = self.creator()
+                session = self._create_session()
                 # avoid overwrite an existing session
                 if session.session_id not in self.store:
                     self.store[session.session_id] = session
@@ -51,11 +54,15 @@ class MemorySessionStore(SessionStorePort, Generic[T]):
         # this should never happen with a good session creator
         raise RuntimeError("Could not create a new session.")
 
-    async def save_session(self, session: T) -> None:
-        """Save an existing user session back to the store."""
+    async def save_session(self, session: Session) -> None:
+        """Save an existing user session back to the store.
+
+        This also sets the last used time to the current time.
+        """
+        session.last_used = self._now()
         self.store[session.session_id] = session
 
-    async def get_session(self, user_id: str) -> Optional[T]:
+    async def get_session(self, user_id: str) -> Optional[Session]:
         """Get a valid user session with a given ID.
 
         If no such user session exists, return None.
@@ -63,7 +70,7 @@ class MemorySessionStore(SessionStorePort, Generic[T]):
         """
         async with self.lock:
             session = self.store.get(user_id)
-            if session and not self.validator(session):
+            if session and not self._validate_session(session):
                 await self.delete_session(session.session_id)
                 session = None
         return session
@@ -83,11 +90,11 @@ class MemorySessionStore(SessionStorePort, Generic[T]):
     async def sweep(self) -> None:
         """Remove all invalid sessions from the store."""
         session_ids = list(self.store)
-        validator = self.validator
+        validate = self._validate_session
         get_session = self.get_session
         sleep = asyncio.sleep
         for session_id in session_ids:
             session = await get_session(session_id)
-            if session and not validator(session):
+            if session and not validate(session):
                 await self.delete_session(session_id)
             await sleep(0)

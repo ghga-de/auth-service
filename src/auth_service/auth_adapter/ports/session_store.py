@@ -17,15 +17,15 @@
 """Managing user sessions that keep track of authentication state."""
 
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Optional, TypeVar
+from typing import Generic, Optional, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class BaseSession(BaseModel, ABC):
     """Base class for user sessions."""
 
-    session_id: str
+    session_id: str = Field(default=..., description="Unique session ID")
 
 
 T = TypeVar("T", bound=BaseSession)
@@ -33,17 +33,6 @@ T = TypeVar("T", bound=BaseSession)
 
 class SessionStorePort(ABC, Generic[T]):
     """Port providing a store for user sessions."""
-
-    session_creator: Callable[[], T]
-    session_validator: Callable[[T], bool]
-
-    def __init__(self, *, creator: Callable[[], T], validator: Callable[[T], bool]):
-        """Create a session store.
-
-        Functions for creating and validating sessions must be provided.
-        """
-        self.creator = creator
-        self.validator = validator
 
     @abstractmethod
     async def create_session(self) -> T:
