@@ -46,7 +46,7 @@ class MemorySessionStore(SessionStore):
         for _ in range(100):
             async with self.lock:
                 session = self._create_session()
-                # avoid overwrite an existing session
+                # avoid overwriting an existing session
                 if session.session_id not in self.store:
                     self.store[session.session_id] = session
                     return session
