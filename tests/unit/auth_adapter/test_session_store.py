@@ -43,7 +43,7 @@ class CoreSessionStore(SessionStore):
         """Save an existing user session back to the store."""
         raise NotImplementedError
 
-    async def get_session(self, user_id: str) -> Optional[Session]:
+    async def get_session(self, session_id: str) -> Optional[Session]:
         """Get a valid user session with a given ID."""
         raise NotImplementedError
 
