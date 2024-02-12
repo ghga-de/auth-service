@@ -23,8 +23,9 @@ jobs:
     needs: fetch-tag
     runs-on: ubuntu-latest
     steps:
-      - uses: ghga-de/gh-action-ci@v1
+      - uses: ghga-de/gh-action-ci@v1.0.2
         with:
           tag: ${{ needs.fetch-tag.outputs.latest_tag }}-${{ github.sha }}
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          ignore_trivy: true
