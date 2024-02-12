@@ -38,6 +38,8 @@ RUN rm requirements.txt
 COPY --from=builder /service/dist/ /service
 RUN pip install --no-deps *.whl
 RUN rm *.whl
+# install debugpy
+RUN pip install debugpy
 # create new user and execute as that user
 RUN useradd --create-home appuser
 WORKDIR /home/appuser
