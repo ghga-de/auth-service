@@ -17,7 +17,7 @@
 """Managing user sessions that keep track of authentication state."""
 
 from abc import ABC, abstractmethod
-from typing import Generic, Optional, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -27,6 +27,8 @@ class BaseSession(BaseModel, ABC):
 
     session_id: str = Field(default=..., description="Unique session ID")
 
+    model_config = {"extra": "forbid"}
+
 
 T = TypeVar("T", bound=BaseSession)
 
@@ -35,8 +37,11 @@ class SessionStorePort(ABC, Generic[T]):
     """Port providing a store for user sessions."""
 
     @abstractmethod
-    async def create_session(self) -> T:
-        """Create a new user session in the store and return it."""
+    async def create_session(self, **kwargs: Any) -> T:
+        """Create a new user session in the store and return it.
+
+        Non-default fields of the session must be passed as keyword arguments.
+        """
         ...
 
     @abstractmethod

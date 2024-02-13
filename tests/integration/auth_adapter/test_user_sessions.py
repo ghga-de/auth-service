@@ -32,7 +32,9 @@ from .fixtures import (  # noqa: F401
 async def test_logout(client: AsyncTestClient):
     """Test that a logout request removes the user session."""
     store = await get_session_store(config=CONFIG)
-    session = await store.create_session()
+    session = await store.create_session(
+        user_id="test-user", user_name="John Doe", user_email="doe@home.org"
+    )
     assert await store.get_session(session.session_id)
     # logout without cookie
     response = await client.post("/rpc/logout")

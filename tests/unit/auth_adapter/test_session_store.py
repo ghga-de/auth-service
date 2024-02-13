@@ -17,15 +17,18 @@
 """Test the core user session store functionality."""
 
 from datetime import timedelta
-from typing import Optional
+from typing import Any, Optional
 
 from ghga_service_commons.utils.utc_dates import UTCDatetime, utc_datetime
+from pytest import mark
 
 from auth_service.auth_adapter.core.session_store import (
     Session,
     SessionConfig,
+    SessionState,
     SessionStore,
 )
+from auth_service.user_management.user_registry.models.dto import User, UserStatus
 
 
 class CoreSessionStore(SessionStore):
@@ -35,13 +38,13 @@ class CoreSessionStore(SessionStore):
         """Get a fixed for testing."""
         return utc_datetime(2024, 12, 24, 12, 24, 48)
 
-    async def create_session(self) -> Session:
+    async def create_session(self, **kwargs: Any) -> Session:
         """Create a new user session in the store and return it."""
         raise NotImplementedError
 
     async def save_session(self, session: Session) -> None:
         """Save an existing user session back to the store."""
-        raise NotImplementedError
+        self.saved_session = session
 
     async def get_session(self, session_id: str) -> Optional[Session]:
         """Get a valid user session with a given ID."""
@@ -74,7 +77,9 @@ def test_create_session():
     create_session = store._create_session
     session_ids = []
     for _ in range(100):
-        session = create_session()
+        session = create_session(
+            user_id="some-user-id", user_name="John Doe", user_email="doe@home.org"
+        )
         assert isinstance(session, Session)
         session_id = session.session_id
         assert isinstance(session_id, str)
@@ -82,6 +87,9 @@ def test_create_session():
         # check that the session ID contains only URL safe characters
         assert session_id.replace("-", "").replace("_", "").isalnum()
         session_ids.append(session_id)
+        assert session.user_id == "some-user-id"
+        assert session.user_name == "John Doe"
+        assert session.user_email == "doe@home.org"
         assert session.created == now
         assert session.last_used == now
     # make sure that no duplicates are created
@@ -96,7 +104,9 @@ def test_validate_session():
     store = CoreSessionStore(config=config)
     validate = store._validate_session
     create_session = store._create_session
-    session = create_session()
+    session = create_session(
+        user_id="some-user-id", user_name="John Doe", user_email="doe@home.org"
+    )
 
     now = store._now()
     assert validate(session)
@@ -112,3 +122,148 @@ def test_validate_session():
     assert validate(session)
     session.created = session.last_used = now + timedelta(seconds=1)
     assert not validate(session)
+
+
+@mark.asyncio
+@mark.parametrize(
+    "original_state",
+    [
+        SessionState.NEEDS_REGISTRATION,
+        SessionState.NEEDS_RE_REGISTRATION,
+        SessionState.REGISTERED,
+        SessionState.HAS_TOTP_TOKEN,
+    ],
+)
+async def test_update_session_last_used_without_user(original_state: SessionState):
+    """Test updating a session without user object, should not update state."""
+    config = SessionConfig()
+    store = CoreSessionStore(config=config)
+    now = store._now()
+    before = now - timedelta(seconds=10)
+    session = Session(
+        session_id="test",
+        state=original_state,
+        user_id="some-user-id",
+        user_name="John Doe",
+        user_email="doe@home.org",
+        created=before,
+        last_used=before,
+    )
+    await store.update_session(session)
+    assert store.saved_session is session
+    assert session.state == original_state
+    assert session.created == before
+    assert session.last_used == now
+
+
+@mark.asyncio
+@mark.parametrize("changed_field", ["name", "email"])
+async def test_update_session_with_user_to_needs_re_registration(changed_field: str):
+    """Test updating a session to the needs-re-registration state."""
+    config = SessionConfig()
+    store = CoreSessionStore(config=config)
+    now = store._now()
+    before = now - timedelta(seconds=10)
+    session = Session(
+        session_id="test",
+        user_id="some-user-id",
+        user_name="John Doe",
+        user_email="doe@home.org",
+        created=before,
+        last_used=before,
+    )
+    assert session.state is SessionState.NEEDS_REGISTRATION
+    user = User(
+        id="some-user-id",
+        ext_id="some-ext-id@home.org",
+        name="John Doe",
+        email="doe@home.org",
+        status=UserStatus.ACTIVE,
+        registration_date=before,
+    )
+    changed_value = getattr(user, changed_field).replace("oe", "o")
+    user = user.model_copy(update={changed_field: changed_value})
+    await store.update_session(session, user)
+    assert store.saved_session is session
+    assert session.created == before
+    assert session.last_used == now
+    assert session.state is SessionState.NEEDS_RE_REGISTRATION
+
+
+@mark.asyncio
+@mark.parametrize(
+    "original_state",
+    [
+        SessionState.NEEDS_REGISTRATION,
+        SessionState.NEEDS_RE_REGISTRATION,
+        SessionState.REGISTERED,
+    ],
+)
+async def test_update_session_with_user_to_registered(original_state: SessionState):
+    """Test updating a session to the registered state."""
+    config = SessionConfig()
+    store = CoreSessionStore(config=config)
+    now = store._now()
+    before = now - timedelta(seconds=10)
+    session = Session(
+        session_id="test",
+        state=original_state,
+        user_id="some-user-id",
+        user_name="John Doe",
+        user_email="doe@home.org",
+        created=before,
+        last_used=before,
+    )
+    user = User(
+        id="some-user-id",
+        ext_id="some-ext-id@home.org",
+        name="John Doe",
+        email="doe@home.org",
+        status=UserStatus.ACTIVE,
+        registration_date=before,
+    )
+    await store.update_session(session, user)
+    assert store.saved_session is session
+    assert session.created == before
+    assert session.last_used == now
+    assert session.state is SessionState.REGISTERED
+
+
+@mark.asyncio
+@mark.parametrize(
+    "original_state",
+    [
+        SessionState.NEEDS_REGISTRATION,
+        SessionState.NEEDS_RE_REGISTRATION,
+        SessionState.REGISTERED,
+        SessionState.HAS_TOTP_TOKEN,
+    ],
+)
+async def test_update_session_with_user_to_has_totp_token(original_state: SessionState):
+    """Test updating a session to the has-totp-state."""
+    config = SessionConfig()
+    store = CoreSessionStore(config=config)
+    now = store._now()
+    before = now - timedelta(seconds=10)
+    session = Session(
+        session_id="test",
+        state=original_state,
+        user_id="some-user-id",
+        user_name="John Doe 2nd",  # TODO: replace dummy indicator
+        user_email="doe@home.org",
+        created=before,
+        last_used=before,
+    )
+    user = User(
+        id="some-user-id",
+        ext_id="some-ext-id@home.org",
+        name="John Doe 2nd",  # TODO: replace dummy indicator
+        email="doe@home.org",
+        status=UserStatus.ACTIVE,
+        registration_date=before,
+    )
+    await store.update_session(session, user)
+    assert store.saved_session is session
+    assert session.created == before
+    assert session.last_used == now
+    assert session.state is SessionState.HAS_TOTP_TOKEN

@@ -19,7 +19,7 @@
 
 import asyncio
 from contextlib import suppress
-from typing import Optional
+from typing import Any, Optional
 
 from auth_service.auth_adapter.core.session_store import (
     Session,
@@ -41,10 +41,12 @@ class MemorySessionStore(SessionStore):
         self.store: dict[str, Session] = {}
         self._lock = asyncio.Lock()
 
-    async def create_session(self) -> Session:
+    async def create_session(self, **kwargs: Any) -> Session:
         """Create a new user session in the store and return it."""
+        if "session_id" in kwargs:
+            raise ValueError("The session ID must not be set manually.")
         for _ in range(100):
-            session = self._create_session()
+            session = self._create_session(**kwargs)
             # avoid overwriting an existing session
             if session.session_id not in self.store:
                 self.store[session.session_id] = session
@@ -53,11 +55,7 @@ class MemorySessionStore(SessionStore):
         raise RuntimeError("Could not create a new session.")
 
     async def save_session(self, session: Session) -> None:
-        """Save an existing user session back to the store.
-
-        This also sets the last used time to the current time.
-        """
-        session.last_used = self._now()
+        """Save an existing user session back to the store."""
         self.store[session.session_id] = session
 
     async def get_session(self, session_id: str) -> Optional[Session]:
