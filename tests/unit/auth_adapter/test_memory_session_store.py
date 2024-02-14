@@ -25,7 +25,7 @@ from auth_service.auth_adapter.adapters.memory_session_store import MemorySessio
 from auth_service.auth_adapter.core.session_store import Session, SessionConfig
 
 USER_KWARGS = dict(
-    user_id="some-user-id", user_name="John Doe", user_email="doe@home.org"
+    user_id="some-user-id", user_name="John Doe", user_email="john@home.org"
 )
 USER2_KWARGS = dict(
     user_id="another-user-id", user_name="Jane Roe", user_email="jane@home.org"
@@ -193,7 +193,7 @@ async def test_get_size(store):
     assert await store.get_size() == 0
     for i in range(10):
         await store.create_session(
-            user_id="some-user-id", user_name="John Doe", user_email="doe@home.org"
+            user_id="some-user-id", user_name="John Doe", user_email="john@home.org"
         )
         assert await store.get_size() == i + 1
 
@@ -203,7 +203,7 @@ async def test_session_sweeper(store):
     """Test sweeping the session store."""
     sessions = [
         await store.create_session(
-            user_id="some-user-id", user_name="John Doe", user_email="doe@home.org"
+            user_id="some-user-id", user_name="John Doe", user_email="john@home.org"
         )
         for _ in range(10)
     ]

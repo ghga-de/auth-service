@@ -42,8 +42,9 @@ class CoreSessionStore(SessionStore):
         """Create a new user session in the store and return it."""
         raise NotImplementedError
 
-    async def save_session(self, session: Session) -> None:
+    async def save_session(self, session: Session, **kwargs: Any) -> None:
         """Save an existing user session back to the store."""
+        await self._update_session(session, **kwargs)
         self.saved_session = session
 
     async def get_session(self, session_id: str) -> Optional[Session]:
@@ -71,29 +72,44 @@ def test_create_session():
     config = SessionConfig()
     session_id_bytes = config.session_id_bytes
     assert session_id_bytes >= 16
-    expected_length = session_id_bytes * 4 // 3  # because of base64 encoding
+    session_id_length = session_id_bytes * 4 // 3  # because of base64 encoding
+    csrf_token_bytes = config.csrf_token_bytes
+    assert csrf_token_bytes >= 16
+    csrf_token_length = csrf_token_bytes * 4 // 3
     store = CoreSessionStore(config=config)
     now = store._now()
     create_session = store._create_session
     session_ids = []
+    csrf_tokens = []
     for _ in range(100):
         session = create_session(
-            user_id="some-user-id", user_name="John Doe", user_email="doe@home.org"
+            user_id="some-user-id", user_name="John Doe", user_email="john@home.org"
         )
         assert isinstance(session, Session)
         session_id = session.session_id
         assert isinstance(session_id, str)
-        assert len(session_id) == expected_length
-        # check that the session ID contains only URL safe characters
+        assert len(session_id) == session_id_length
         assert session_id.replace("-", "").replace("_", "").isalnum()
+        csrf_token = session.csrf_token
+        assert isinstance(csrf_token, str)
+        assert len(csrf_token) == csrf_token_length
+        # check that the session ID contains only URL safe characters
+        assert csrf_token.replace("-", "").replace("_", "").isalnum()
         session_ids.append(session_id)
+        csrf_tokens.append(csrf_token)
         assert session.user_id == "some-user-id"
         assert session.user_name == "John Doe"
-        assert session.user_email == "doe@home.org"
+        assert session.user_email == "john@home.org"
         assert session.created == now
         assert session.last_used == now
-    # make sure that no duplicates are created
-    assert len(session_ids) == len(set(session_ids))
+    # make sure that no duplicate session IDs are created
+    session_id_set = set(session_ids)
+    assert len(session_id_set) == len(session_ids)
+    # make sure that different CSRF tokens are created
+    csrf_token_set = set(csrf_tokens)
+    assert len(csrf_token_set) >= len(csrf_tokens) * 0.75
+    # make sure that they are different from the session IDs
+    assert len(session_id_set & csrf_token_set) < len(session_ids) * 0.25
 
 
 def test_validate_session():
@@ -105,7 +121,7 @@ def test_validate_session():
     validate = store._validate_session
     create_session = store._create_session
     session = create_session(
-        user_id="some-user-id", user_name="John Doe", user_email="doe@home.org"
+        user_id="some-user-id", user_name="John Doe", user_email="john@home.org"
     )
 
     now = store._now()
@@ -145,11 +161,12 @@ async def test_update_session_last_used_without_user(original_state: SessionStat
         state=original_state,
         user_id="some-user-id",
         user_name="John Doe",
-        user_email="doe@home.org",
+        user_email="john@home.org",
+        csrf_token="some-csrf-token",
         created=before,
         last_used=before,
     )
-    await store.update_session(session)
+    await store.save_session(session)
     assert store.saved_session is session
     assert session.state == original_state
     assert session.created == before
@@ -168,7 +185,8 @@ async def test_update_session_with_user_to_needs_re_registration(changed_field: 
         session_id="test",
         user_id="some-user-id",
         user_name="John Doe",
-        user_email="doe@home.org",
+        user_email="john@home.org",
+        csrf_token="some-csrf-token",
         created=before,
         last_used=before,
     )
@@ -177,13 +195,13 @@ async def test_update_session_with_user_to_needs_re_registration(changed_field: 
         id="some-user-id",
         ext_id="some-ext-id@home.org",
         name="John Doe",
-        email="doe@home.org",
+        email="john@home.org",
         status=UserStatus.ACTIVE,
         registration_date=before,
     )
     changed_value = getattr(user, changed_field).replace("oe", "o")
     user = user.model_copy(update={changed_field: changed_value})
-    await store.update_session(session, user)
+    await store.save_session(session, user=user)
     assert store.saved_session is session
     assert session.created == before
     assert session.last_used == now
@@ -210,7 +228,8 @@ async def test_update_session_with_user_to_registered(original_state: SessionSta
         state=original_state,
         user_id="some-user-id",
         user_name="John Doe",
-        user_email="doe@home.org",
+        user_email="john@home.org",
+        csrf_token="some-csrf-token",
         created=before,
         last_used=before,
     )
@@ -218,11 +237,11 @@ async def test_update_session_with_user_to_registered(original_state: SessionSta
         id="some-user-id",
         ext_id="some-ext-id@home.org",
         name="John Doe",
-        email="doe@home.org",
+        email="john@home.org",
         status=UserStatus.ACTIVE,
         registration_date=before,
     )
-    await store.update_session(session, user)
+    await store.save_session(session, user=user)
     assert store.saved_session is session
     assert session.created == before
     assert session.last_used == now
@@ -250,7 +269,8 @@ async def test_update_session_with_user_to_has_totp_token(original_state: Sessio
         state=original_state,
         user_id="some-user-id",
         user_name="John Doe 2nd",  # TODO: replace dummy indicator
-        user_email="doe@home.org",
+        user_email="john@home.org",
+        csrf_token="some-csrf-token",
         created=before,
         last_used=before,
     )
@@ -258,11 +278,11 @@ async def test_update_session_with_user_to_has_totp_token(original_state: Sessio
         id="some-user-id",
         ext_id="some-ext-id@home.org",
         name="John Doe 2nd",  # TODO: replace dummy indicator
-        email="doe@home.org",
+        email="john@home.org",
         status=UserStatus.ACTIVE,
         registration_date=before,
     )
-    await store.update_session(session, user)
+    await store.save_session(session, user=user)
     assert store.saved_session is session
     assert session.created == before
     assert session.last_used == now

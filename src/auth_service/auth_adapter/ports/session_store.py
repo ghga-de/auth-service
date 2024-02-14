@@ -45,8 +45,11 @@ class SessionStorePort(ABC, Generic[T]):
         ...
 
     @abstractmethod
-    async def save_session(self, session: T) -> None:
-        """Save an existing user session back to the store."""
+    async def save_session(self, session: T, **kwargs: Any) -> None:
+        """Save an existing user session back to the store.
+
+        Pass additional data used for updating the session as keyword arguments.
+        """
         ...
 
     @abstractmethod

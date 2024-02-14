@@ -54,8 +54,9 @@ class MemorySessionStore(SessionStore):
         # should never happen with a large session ID size
         raise RuntimeError("Could not create a new session.")
 
-    async def save_session(self, session: Session) -> None:
+    async def save_session(self, session: Session, **kwargs: Any) -> None:
         """Save an existing user session back to the store."""
+        await self._update_session(session, **kwargs)
         self.store[session.session_id] = session
 
     async def get_session(self, session_id: str) -> Optional[Session]:
