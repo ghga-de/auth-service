@@ -199,7 +199,7 @@ async def test_update_session_with_user_to_needs_re_registration(changed_field: 
         status=UserStatus.ACTIVE,
         registration_date=before,
     )
-    changed_value = getattr(user, changed_field).replace("oe", "o")
+    changed_value = getattr(user, changed_field).replace("ohn", "oe")
     user = user.model_copy(update={changed_field: changed_value})
     await store.save_session(session, user=user)
     assert store.saved_session is session
