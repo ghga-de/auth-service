@@ -141,7 +141,9 @@ The service requires the following configuration parameters:
   ```
 
 
-- **`session_id_bytes`** *(integer)*: Number of bytes to be used for the session ID. Default: `24`.
+- **`session_id_bytes`** *(integer)*: Number of bytes to be used for a session ID. Default: `24`.
+
+- **`csrf_token_bytes`** *(integer)*: Number of bytes to be used for a CSRF token. Default: `24`.
 
 - **`timeout_seconds`** *(integer)*: Session timeout in seconds. Default: `3600`.
 

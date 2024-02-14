@@ -26,6 +26,7 @@ cors_allow_credentials: null
 cors_allowed_headers: null
 cors_allowed_methods: null
 cors_allowed_origins: null
+csrf_token_bytes: 24
 dataset_deletion_event_topic: metadata_datasets
 dataset_deletion_event_type: dataset_deleted
 db_name: user-management

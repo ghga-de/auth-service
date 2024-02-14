@@ -118,8 +118,14 @@
     },
     "session_id_bytes": {
       "default": 24,
-      "description": "Number of bytes to be used for the session ID.",
+      "description": "Number of bytes to be used for a session ID.",
       "title": "Session ID size",
+      "type": "integer"
+    },
+    "csrf_token_bytes": {
+      "default": 24,
+      "description": "Number of bytes to be used for a CSRF token.",
+      "title": "CSRF token size",
       "type": "integer"
     },
     "timeout_seconds": {
