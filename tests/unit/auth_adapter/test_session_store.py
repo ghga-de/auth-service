@@ -115,8 +115,8 @@ def test_create_session():
 def test_validate_session():
     """Test validation of sessions."""
     config = SessionConfig()
-    timeout_seconds = config.timeout_seconds
-    max_lifetime_seconds = config.max_lifetime_seconds
+    timeout_seconds = config.session_timeout_seconds
+    max_lifetime_seconds = config.session_max_lifetime_seconds
     store = CoreSessionStore(config=config)
     validate = store._validate_session
     create_session = store._create_session

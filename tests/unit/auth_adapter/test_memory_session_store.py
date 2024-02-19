@@ -145,7 +145,9 @@ async def test_get_invalid_session(store):
     session = await store.create_session(**USER_KWARGS)
     assert await store.get_size() == 1
     assert await store.get_session(session.session_id) is session
-    session.created -= timedelta(seconds=1.5 * store.config.max_lifetime_seconds)
+    session.created -= timedelta(
+        seconds=1.5 * store.config.session_max_lifetime_seconds
+    )
     assert await store.get_session(session.session_id) is None
     assert await store.get_size() == 0
 
@@ -210,7 +212,7 @@ async def test_session_sweeper(store):
     assert await store.get_size() == 10
     await store.sweep()
     assert await store.get_size() == 10
-    long_time = timedelta(seconds=1.5 * store.config.max_lifetime_seconds)
+    long_time = timedelta(seconds=1.5 * store.config.session_max_lifetime_seconds)
     for i, session in enumerate(sessions):
         if i % 2:
             session.created -= long_time

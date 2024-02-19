@@ -93,12 +93,12 @@ class SessionConfig(BaseSettings):
         title="CSRF token size",
         description="Number of bytes to be used for a CSRF token.",
     )
-    timeout_seconds: int = Field(
+    session_timeout_seconds: int = Field(
         default=1 * 60 * 60,
         title="Session timeout",
         description="Session timeout in seconds",
     )
-    max_lifetime_seconds: int = Field(
+    session_max_lifetime_seconds: int = Field(
         default=12 * 60 * 60,
         title="Max. session duration",
         description="Maximum lifetime of a session in seconds",
@@ -158,8 +158,8 @@ class SessionStore(SessionStorePort[Session]):
         config = self.config
         now = self._now()
         return (
-            0 <= (now - session.created).seconds < config.max_lifetime_seconds
-            and 0 <= (now - session.last_used).seconds < config.timeout_seconds
+            0 <= (now - session.created).seconds < config.session_max_lifetime_seconds
+            and 0 <= (now - session.last_used).seconds < config.session_timeout_seconds
         )
 
     @staticmethod

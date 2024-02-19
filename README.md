@@ -145,9 +145,9 @@ The service requires the following configuration parameters:
 
 - **`csrf_token_bytes`** *(integer)*: Number of bytes to be used for a CSRF token. Default: `24`.
 
-- **`timeout_seconds`** *(integer)*: Session timeout in seconds. Default: `3600`.
+- **`session_timeout_seconds`** *(integer)*: Session timeout in seconds. Default: `3600`.
 
-- **`max_lifetime_seconds`** *(integer)*: Maximum lifetime of a session in seconds. Default: `43200`.
+- **`session_max_lifetime_seconds`** *(integer)*: Maximum lifetime of a session in seconds. Default: `43200`.
 
 - **`auth_key`**: internal public key for user management (key pair for auth adapter). Default: `null`.
 
@@ -175,7 +175,7 @@ The service requires the following configuration parameters:
 
 - **`workers`** *(integer)*: Number of workers processes to run. Default: `1`.
 
-- **`api_root_path`** *(string)*: Root path at which the API is reachable. This is relative to the specified host and port. Default: `""`.
+- **`api_root_path`** *(string)*: Root path at which the API is reachable. This is relative to the specified host and port. Default: `"/"`.
 
 - **`openapi_url`** *(string)*: Path to get the openapi specification in JSON format. This is relative to the specified host and port. Default: `"/openapi.json"`.
 
