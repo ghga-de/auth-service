@@ -4,7 +4,7 @@ allow_read_paths:
 - /service-logo.png
 allow_write_paths: []
 api_ext_path: /api/auth
-api_root_path: /
+api_root_path: ''
 auth_algs:
 - ES256
 auth_check_claims:
