@@ -95,7 +95,7 @@ add_allowed_routes()
     "/rpc/login",
     operation_id="login",
     tags=["users"],
-    summary="Create or gt user session",
+    summary="Create or get user session",
     description="Endpoint used when a user wants to log in.",
     status_code=204,
 )
