@@ -44,6 +44,7 @@ def session_to_header(session: Session) -> str:
         "name": session.user_name,
         "email": session.user_email,
         "state": session.state.value,
+        "csrf": session.csrf_token,
     }
     if session.user_title:
         session_dict["title"] = session.user_title

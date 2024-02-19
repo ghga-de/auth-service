@@ -21,6 +21,7 @@ import re
 
 from fastapi import status
 from ghga_service_commons.api.testing import AsyncTestClient
+from httpx import Response
 from pytest import mark
 from pytest_httpx import HTTPXMock
 
@@ -57,6 +58,18 @@ def headers_for_session(session: Session) -> dict[str, str]:
 def expected_set_cookie(session_id: str) -> str:
     """Get the expected Set-Cookie header for the auth session cookie."""
     return f"session={session_id}; HttpOnly; Path=/; SameSite=lax; Secure"
+
+
+def assert_session_header(response: Response, expected: dict[str, str]) -> None:
+    """Assert that the response session header is as expected."""
+    session_header = response.headers.get("X-Session")
+    assert session_header
+    session = json.loads(session_header)
+    assert isinstance(session, dict)
+    csrf_token = session.pop("csrf", None)
+    assert len(csrf_token) == 32
+    assert csrf_token.replace("-", "").replace("_", "").isalnum()
+    assert session == expected
 
 
 @mark.asyncio
@@ -122,18 +135,19 @@ async def test_login_with_unregistered_user(
     session_id = response.cookies.get("session")
     assert session_id
     store = await get_session_store(config=CONFIG)
-    session = await store.get_session(session_id)
-    assert session
+    session_dict = await store.get_session(session_id)
+    assert session_dict
     assert response.cookies.get("session") == session_id
     assert response.headers.get("set-cookie") == expected_set_cookie(session_id)
-    session_header = response.headers.get("X-Session")
-    assert session_header
-    assert json.loads(session_header) == {
-        "userId": "john@aai.org",
-        "name": "John Doe",
-        "email": "john@home.org",
-        "state": "NeedsRegistration",
-    }
+    assert_session_header(
+        response,
+        {
+            "userId": "john@aai.org",
+            "name": "John Doe",
+            "email": "john@home.org",
+            "state": "NeedsRegistration",
+        },
+    )
 
 
 @mark.asyncio
@@ -174,18 +188,19 @@ async def test_login_with_registered_user(
     session_id = response.cookies.get("session")
     assert session_id
     store = await get_session_store(config=CONFIG)
-    session = await store.get_session(session_id)
-    assert session
+    session_dict = await store.get_session(session_id)
+    assert session_dict
     assert response.cookies.get("session") == session_id
     assert response.headers.get("set-cookie") == expected_set_cookie(session_id)
-    session_header = response.headers.get("X-Session")
-    assert session_header
-    assert json.loads(session_header) == {
-        "userId": "john@ghga.de",
-        "name": "John Doe",
-        "email": "john@home.org",
-        "state": "Registered",
-    }
+    assert_session_header(
+        response,
+        {
+            "userId": "john@ghga.de",
+            "name": "John Doe",
+            "email": "john@home.org",
+            "state": "Registered",
+        },
+    )
 
 
 @mark.asyncio
@@ -205,18 +220,19 @@ async def test_login_with_registered_user_and_name_change(
     session_id = response.cookies.get("session")
     assert session_id
     store = await get_session_store(config=CONFIG)
-    session = await store.get_session(session_id)
-    assert session
+    session_dict = await store.get_session(session_id)
+    assert session_dict
     assert response.cookies.get("session") == session_id
     assert response.headers.get("set-cookie") == expected_set_cookie(session_id)
-    session_header = response.headers.get("X-Session")
-    assert session_header
-    assert json.loads(session_header) == {
-        "userId": "john@ghga.de",
-        "name": "John Doe Jr.",
-        "email": "john@home.org",
-        "state": "NeedsReRegistration",
-    }
+    assert_session_header(
+        response,
+        {
+            "userId": "john@ghga.de",
+            "name": "John Doe Jr.",
+            "email": "john@home.org",
+            "state": "NeedsReRegistration",
+        },
+    )
 
 
 @mark.asyncio
@@ -235,19 +251,20 @@ async def test_login_with_registered_user_with_title(
     session_id = response.cookies.get("session")
     assert session_id
     store = await get_session_store(config=CONFIG)
-    session = await store.get_session(session_id)
-    assert session
+    session_dict = await store.get_session(session_id)
+    assert session_dict
     assert response.cookies.get("session") == session_id
     assert response.headers.get("set-cookie") == expected_set_cookie(session_id)
-    session_header = response.headers.get("X-Session")
-    assert session_header
-    assert json.loads(session_header) == {
-        "userId": "john@ghga.de",
-        "name": "John Doe",
-        "email": "john@home.org",
-        "title": "Dr.",
-        "state": "Registered",
-    }
+    assert_session_header(
+        response,
+        {
+            "userId": "john@ghga.de",
+            "name": "John Doe",
+            "email": "john@home.org",
+            "title": "Dr.",
+            "state": "Registered",
+        },
+    )
 
 
 @mark.asyncio
@@ -291,14 +308,15 @@ async def test_login_with_cookie_and_unregistered_user(client: AsyncTestClient):
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     assert "session" not in response.cookies
-    session_header = response.headers.get("X-Session")
-    assert session_header
-    assert json.loads(session_header) == {
-        "userId": "john@aai.org",
-        "name": "John Doe",
-        "email": "john@home.org",
-        "state": "NeedsRegistration",
-    }
+    assert_session_header(
+        response,
+        {
+            "userId": "john@aai.org",
+            "name": "John Doe",
+            "email": "john@home.org",
+            "state": "NeedsRegistration",
+        },
+    )
 
 
 @mark.asyncio
@@ -308,23 +326,24 @@ async def test_login_with_cookie_and_registered_user(client: AsyncTestClient):
     main.app.dependency_overrides[get_user_dao] = lambda: user_dao
 
     store = await get_session_store(config=CONFIG)
-    session = await store.create_session(
+    session_dict = await store.create_session(
         user_id="john@aai.org", user_name="John Doe", user_email="john@home.org"
     )
-    assert await store.get_session(session.session_id)
-    headers = headers_for_session(session)
+    assert await store.get_session(session_dict.session_id)
+    headers = headers_for_session(session_dict)
     response = await client.post("/rpc/login", headers=headers)
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     assert "session" not in response.cookies
-    session_header = response.headers.get("X-Session")
-    assert session_header
-    assert json.loads(session_header) == {
-        "userId": "john@ghga.de",
-        "name": "John Doe",
-        "email": "john@home.org",
-        "state": "Registered",
-    }
+    assert_session_header(
+        response,
+        {
+            "userId": "john@ghga.de",
+            "name": "John Doe",
+            "email": "john@home.org",
+            "state": "Registered",
+        },
+    )
 
 
 @mark.asyncio
