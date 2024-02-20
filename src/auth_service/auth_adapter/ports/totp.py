@@ -40,6 +40,11 @@ class TOTPHandlerPort(ABC, Generic[T]):
         ...
 
     @abstractmethod
+    def get_provisioning_uri(self, token: T, name: Optional[str]) -> str:
+        """Get the provisioning URI for a TOTP token and the given user name."""
+        ...
+
+    @abstractmethod
     def generate_token(self) -> T:
         """Generate a TOTP token."""
         ...

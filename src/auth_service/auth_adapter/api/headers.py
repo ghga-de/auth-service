@@ -16,7 +16,7 @@
 """Manage request and response headers"""
 
 import json
-from typing import Optional
+from typing import Callable, Optional, Union
 
 from ..core.session_store import Session
 
@@ -37,9 +37,11 @@ def get_bearer_token(*header_values: Optional[str]) -> Optional[str]:
     return None
 
 
-def session_to_header(session: Session) -> str:
+def session_to_header(
+    session: Session, expires: Optional[Callable[[Session], int]]
+) -> str:
     """Serialize a session to a response header value to be used by the frontend."""
-    session_dict = {
+    session_dict: dict[str, Union[str, int]] = {
         "userId": session.user_id,
         "name": session.user_name,
         "email": session.user_email,
@@ -48,4 +50,6 @@ def session_to_header(session: Session) -> str:
     }
     if session.user_title:
         session_dict["title"] = session.user_title
+    if expires:
+        session_dict["expires"] = expires(session)
     return json.dumps(session_dict, ensure_ascii=False, separators=(",", ":"))

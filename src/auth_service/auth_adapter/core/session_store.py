@@ -43,6 +43,7 @@ from pydantic_settings import BaseSettings
 from auth_service.user_management.user_registry.models.dto import User
 
 from ..ports.session_store import BaseSession, SessionStorePort
+from .totp import TOTPToken
 
 
 class SessionState(str, Enum):
@@ -76,6 +77,9 @@ class Session(BaseSession):
         description="the authentication state of the user session",
     )
     csrf_token: str = Field(default=..., description="the CSRF token for the session")
+    totp_token: Optional[TOTPToken] = Field(
+        default=None, description="the TOTP token of the user if available"
+    )
     created: UTCDatetime = Field(description="time when the session was created")
     last_used: UTCDatetime = Field(description="time when the session was last used")
 
@@ -198,3 +202,18 @@ class SessionStore(SessionStorePort[Session]):
             ):
                 session.state = SessionState.HAS_TOTP_TOKEN
         session.last_used = self._now()
+
+    def expires(self, session: Session) -> int:
+        """Get the expiration time of the given session in seconds."""
+        return max(
+            0,
+            int(
+                min(
+                    session.created.timestamp()
+                    + self.config.session_max_lifetime_seconds,
+                    session.last_used.timestamp() + self.config.session_timeout_seconds,
+                )
+                - self._now().timestamp()
+                + 0.5
+            ),
+        )

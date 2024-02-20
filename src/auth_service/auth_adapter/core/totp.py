@@ -30,7 +30,7 @@ import nacl.utils
 # this library is very simple and could also implemented directly if necessary
 import pyotp
 from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings
 
 from ..ports.totp import TOTPHandlerPort
@@ -52,6 +52,14 @@ class TOTPConfig(BaseSettings):
     The default settings are those used by Google Authenticator.
     """
 
+    totp_issuer: str = Field(
+        default="GHGA", description="Issuer name for TOTP provisioning URIs"
+    )
+    totp_image: Optional[AnyHttpUrl] = Field(
+        default=None,
+        description="URL of the PNG image provided in the TOTP provisioning URIs",
+        examples=["https://www.ghga.de/logo.png"],
+    )
     totp_algorithm: TOTPAlgorithm = Field(
         default=TOTPAlgorithm.SHA1,
         description="Hash algorithm used for TOTP code generation",
@@ -73,8 +81,9 @@ class TOTPConfig(BaseSettings):
     totp_secret_size: int = Field(
         default=32, description="Size of the Base32 encoded TOTP secrets"
     )
-    totp_encryption_key: SecretStr = Field(
-        default=..., description="Base64 encoded key used to encrypt TOTP secrets"
+    # the encryption key is optional since it is only needed by the auth adapter
+    totp_encryption_key: Optional[SecretStr] = Field(
+        default=None, description="Base64 encoded key used to encrypt TOTP secrets"
     )
 
 
@@ -103,6 +112,8 @@ class TOTPHandler(TOTPHandlerPort[TOTPToken]):
 
     def __init__(self, config: TOTPConfig):
         self.config = config
+        self.issuer = config.totp_issuer
+        self.image = config.totp_image
         algorithm = config.totp_algorithm
         if algorithm == TOTPAlgorithm.SHA1:
             self.digest = hashlib.sha1
@@ -117,8 +128,11 @@ class TOTPHandler(TOTPHandlerPort[TOTPToken]):
         self.tolerance = config.totp_tolerance
         self.max_attempts = config.totp_attempts
         self.secret_size = config.totp_secret_size
+        encryption_key = config.totp_encryption_key
+        if not encryption_key:
+            raise ValueError("TOTP encryption key is missing")
         self._secret_box = nacl.secret.SecretBox(
-            base64.b64decode(config.totp_encryption_key.get_secret_value())
+            base64.b64decode(encryption_key.get_secret_value())
         )
 
     @classmethod
@@ -131,6 +145,18 @@ class TOTPHandler(TOTPHandlerPort[TOTPToken]):
         """Get the decrypted Base32 encoded secret from a TOTP token."""
         encrypted_secret = base64.b64decode(token.secret.get_secret_value())
         return self._secret_box.decrypt(encrypted_secret).decode("ascii")
+
+    def get_provisioning_uri(self, token: TOTPToken, name: Optional[str]) -> str:
+        """Get the provisioning URI for a TOTP token and the given user name."""
+        totp = pyotp.TOTP(
+            self.get_secret(token),
+            digest=self.digest,
+            digits=self.digits,
+            interval=self.interval,
+            issuer=self.issuer,
+            name=name,
+        )
+        return totp.provisioning_uri(image=str(self.image) if self.image else None)
 
     def generate_token(self) -> TOTPToken:
         """Generate a TOTP token."""
@@ -149,8 +175,8 @@ class TOTPHandler(TOTPHandlerPort[TOTPToken]):
         """Generate a TOTP code for testing purposes."""
         totp = pyotp.TOTP(
             self.get_secret(token),
-            digits=self.digits,
             digest=self.digest,
+            digits=self.digits,
             interval=self.interval,
         )
         if for_time is None:
@@ -175,8 +201,8 @@ class TOTPHandler(TOTPHandlerPort[TOTPToken]):
             return None
         totp = pyotp.TOTP(
             self.get_secret(token),
-            digits=self.digits,
             digest=self.digest,
+            digits=self.digits,
             interval=self.interval,
         )
         # get the current TOTP counter

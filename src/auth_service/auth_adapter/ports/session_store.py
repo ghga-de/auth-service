@@ -78,3 +78,8 @@ class SessionStorePort(ABC, Generic[T]):
     async def sweep(self) -> None:
         """Remove all invalid sessions from the store."""
         ...
+
+    @abstractmethod
+    def expires(self, session: T) -> int:
+        """Get the expiration time of the given session in seconds."""
+        ...

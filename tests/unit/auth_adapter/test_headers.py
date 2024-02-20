@@ -64,9 +64,9 @@ def test_session_to_header_ascii():
         created=NOW,
         last_used=NOW,
     )
-    assert session_to_header(session) == (
+    assert session_to_header(session, lambda _session: 42) == (
         '{"userId":"some-user-id","name":"John Doe","email":"john@home.org",'
-        '"state":"NeedsRegistration","csrf":"some-csrf-token"}'
+        '"state":"NeedsRegistration","csrf":"some-csrf-token","expires":42}'
     )
 
 
@@ -81,7 +81,7 @@ def test_session_to_header_non_ascii():
         created=NOW,
         last_used=NOW,
     )
-    assert session_to_header(session) == (
+    assert session_to_header(session, lambda _session: 42) == (
         '{"userId":"a-user-id","name":"Svante Pääbo","email":"svante@home.se",'
-        '"state":"NeedsRegistration","csrf":"a-csrf-token"}'
+        '"state":"NeedsRegistration","csrf":"a-csrf-token","expires":42}'
     )

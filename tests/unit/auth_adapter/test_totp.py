@@ -21,17 +21,25 @@ import hashlib
 from datetime import timedelta
 
 from ghga_service_commons.utils.utc_dates import now_as_utc
-from pydantic import SecretStr
+from pydantic import AnyUrl, SecretStr
 from pytest import fixture, mark
 
-from auth_service.auth_adapter.core.totp import TOTPAlgorithm, TOTPConfig, TOTPHandler
+from auth_service.auth_adapter.core.totp import (
+    TOTPAlgorithm,
+    TOTPConfig,
+    TOTPHandler,
+)
 
 
 @fixture(name="totp_handler")
 def create_totp_handler() -> TOTPHandler:
     """Create a default TOTP handler."""
     encryption_key = TOTPHandler.random_encryption_key()
-    config = TOTPConfig(totp_encryption_key=SecretStr(encryption_key))
+    config = TOTPConfig(
+        totp_issuer="Test Issuer",
+        totp_image=AnyUrl("https://www.test.dev/logo.png"),
+        totp_encryption_key=SecretStr(encryption_key),
+    )
     return TOTPHandler(config)
 
 
@@ -40,6 +48,7 @@ def create_custom_totp_handler() -> TOTPHandler:
     """Create a non-default TOTP handler."""
     encryption_key = TOTPHandler.random_encryption_key()
     config = TOTPConfig(
+        totp_issuer="Custom Issuer",
         totp_algorithm=TOTPAlgorithm.SHA512,
         totp_digits=8,
         totp_interval=20,
@@ -61,6 +70,8 @@ def test_random_encryption_keys():
 
 def test_default_parameters(totp_handler: TOTPHandler):
     """Check that the default TOTP handler has the expected parameters."""
+    assert totp_handler.issuer == "Test Issuer"
+    assert str(totp_handler.image) == "https://www.test.dev/logo.png"
     assert totp_handler.digest is hashlib.sha1
     assert totp_handler.digits == 6
     assert totp_handler.interval == 30
@@ -86,6 +97,18 @@ def test_get_secret(totp_handler: TOTPHandler):
     assert isinstance(secret, str)
     assert len(secret) == 32
     assert secret.isalnum()
+
+
+def test_get_provisioning_uri(totp_handler: TOTPHandler):
+    """Test generating a TOTP provisioning URI."""
+    token = totp_handler.generate_token()
+    secret = totp_handler.get_secret(token)
+    uri = totp_handler.get_provisioning_uri(token, name="John Doe")
+    assert isinstance(uri, str)
+    assert (
+        uri == f"otpauth://totp/Test%20Issuer:John%20Doe?secret={secret}"
+        "&issuer=Test%20Issuer&image=https%3A%2F%2Fwww.test.dev%2Flogo.png"
+    )
 
 
 def test_generate_code(totp_handler: TOTPHandler):
@@ -243,6 +266,8 @@ def test_verification_inside_tolerance_interval(totp_handler: TOTPHandler):
 def test_custom_parameters(custom_totp_handler: TOTPHandler):
     """Check that the custom TOTP handler has the expected parameters."""
     handler = custom_totp_handler
+    assert handler.issuer == "Custom Issuer"
+    assert handler.image is None
     assert handler.digest is hashlib.sha512
     assert handler.digits == 8
     assert handler.interval == 20
@@ -258,6 +283,19 @@ def test_get_custom_secret(custom_totp_handler: TOTPHandler):
     assert isinstance(secret, str)
     assert len(secret) == 64
     assert secret.isalnum()
+
+
+def test_get_custom_provisioning_uri(custom_totp_handler: TOTPHandler):
+    """Test generating a custom TOTP provisioning URI."""
+    handler = custom_totp_handler
+    token = handler.generate_token()
+    secret = handler.get_secret(token)
+    uri = handler.get_provisioning_uri(token, name="Dr. Jane Roe")
+    assert isinstance(uri, str)
+    assert (
+        uri == f"otpauth://totp/Custom%20Issuer:Dr.%20Jane%20Roe?secret={secret}"
+        "&issuer=Custom%20Issuer&algorithm=SHA512&digits=8&period=20"
+    )
 
 
 def test_verify_with_custom_handler(custom_totp_handler: TOTPHandler):
