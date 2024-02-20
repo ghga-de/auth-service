@@ -25,6 +25,7 @@ from typing import NamedTuple
 from fastapi import status
 from ghga_service_commons.api.testing import AsyncTestClient
 from ghga_service_commons.utils.utc_dates import now_as_utc
+from pydantic import SecretStr
 from pytest import fixture
 from pytest_asyncio import fixture as async_fixture
 from pytest_httpx import HTTPXMock
@@ -52,7 +53,7 @@ async def fixture_client() -> AsyncGenerator[AsyncTestClient, None]:
     reload(main)
 
     config_with_totp_encryption_key = Config(
-        totp_encryption_key=totp_encryption_key,
+        totp_encryption_key=SecretStr(totp_encryption_key),
     )  # pyright: ignore
     main.app.dependency_overrides[get_config] = lambda: config_with_totp_encryption_key
 
