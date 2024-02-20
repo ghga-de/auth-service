@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-"""Managing user sessions that keep track of authentication state."""
+"""Port for managing user sessions that keep track of authentication state."""
 
 from abc import ABC, abstractmethod
 from typing import Any, Generic, Optional, TypeVar
