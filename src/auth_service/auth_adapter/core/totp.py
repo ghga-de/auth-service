@@ -21,7 +21,7 @@ import hashlib
 from enum import Enum
 from typing import Optional
 
-# nacl is used for encrypted of TOTP secrets
+# nacl is used for encryption of TOTP secrets
 # this library is used anyway by the service commons, so no additional dependency
 import nacl.secret
 import nacl.utils
