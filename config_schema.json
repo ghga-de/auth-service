@@ -97,6 +97,24 @@
       "title": "Dataset Deletion Event Type",
       "type": "string"
     },
+    "claims_collection": {
+      "default": "claims",
+      "description": "Name of the collection for user claims",
+      "title": "Claims Collection",
+      "type": "string"
+    },
+    "users_collection": {
+      "default": "users",
+      "description": "Name of the collection for users",
+      "title": "Users Collection",
+      "type": "string"
+    },
+    "user_tokens_collection": {
+      "default": "user_tokens",
+      "description": "Name of the collection for user tokens",
+      "title": "User Tokens Collection",
+      "type": "string"
+    },
     "log_level": {
       "default": "INFO",
       "description": "The minimum log level to capture.",
@@ -564,21 +582,9 @@
       "writeOnly": true
     },
     "db_name": {
-      "default": "user-management",
+      "default": "auth-db",
       "description": "Name of the MongoDB database",
       "title": "Db Name",
-      "type": "string"
-    },
-    "users_collection": {
-      "default": "users",
-      "description": "Name of the MongoDB collection for users",
-      "title": "Users Collection",
-      "type": "string"
-    },
-    "claims_collection": {
-      "default": "claims",
-      "description": "Name of the MongoDB collection for claims",
-      "title": "Claims Collection",
       "type": "string"
     }
   },

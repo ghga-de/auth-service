@@ -118,6 +118,12 @@ The service requires the following configuration parameters:
 
 - **`dataset_deletion_event_type`** *(string)*: the type of the event announcing dataset deletions. Default: `"dataset_deleted"`.
 
+- **`claims_collection`** *(string)*: Name of the collection for user claims. Default: `"claims"`.
+
+- **`users_collection`** *(string)*: Name of the collection for users. Default: `"users"`.
+
+- **`user_tokens_collection`** *(string)*: Name of the collection for user tokens. Default: `"user_tokens"`.
+
 - **`log_level`** *(string)*: The minimum log level to capture. Must be one of: `["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"]`. Default: `"INFO"`.
 
 - **`log_format`**: If set, will replace JSON formatting with the specified string format. If not set, has no effect. In addition to the standard attributes, the following can also be specified: timestamp, service, instance, level, correlation_id, and details. Default: `null`.
@@ -365,11 +371,7 @@ The service requires the following configuration parameters:
 
 - **`db_url`** *(string, format: password)*: MongoDB connection string. Default: `"mongodb://mongodb:27017"`.
 
-- **`db_name`** *(string)*: Name of the MongoDB database. Default: `"user-management"`.
-
-- **`users_collection`** *(string)*: Name of the MongoDB collection for users. Default: `"users"`.
-
-- **`claims_collection`** *(string)*: Name of the MongoDB collection for claims. Default: `"claims"`.
+- **`db_name`** *(string)*: Name of the MongoDB database. Default: `"auth-db"`.
 
 ## Definitions
 
