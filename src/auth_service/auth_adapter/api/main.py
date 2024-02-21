@@ -176,7 +176,7 @@ async def logout(
     operation_id="create_new_totp_token",
     tags=["totp"],
     summary="Create a new TOTP token",
-    description="Endpoint used to create or replace a TOTP token..",
+    description="Endpoint used to create or replace a TOTP token.",
     status_code=201,
 )
 async def create_new_totp_token(
