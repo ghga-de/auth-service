@@ -22,7 +22,8 @@ from ghga_service_commons.auth.ghga import AuthConfig
 from hexkit.config import config_from_yaml
 from hexkit.log import LoggingConfig
 from hexkit.providers.akafka import KafkaConfig
-from pydantic import Field, HttpUrl, SecretStr
+from hexkit.providers.mongodb import MongoDbConfig
+from pydantic import Field, HttpUrl
 
 from auth_service.auth_adapter.core.session_store import SessionConfig
 from auth_service.auth_adapter.core.totp import TOTPConfig
@@ -44,10 +45,11 @@ class Config(
     SessionConfig,
     TOTPConfig,
     LoggingConfig,
+    MongoDbConfig,
     UserDaoConfig,
     ClaimDaoConfig,
-    EventSubTranslatorConfig,
     KafkaConfig,
+    EventSubTranslatorConfig,
 ):
     """Config parameters and their defaults."""
 
@@ -125,10 +127,11 @@ class Config(
         description="the URL used as source for internal claims",
     )
 
-    db_url: SecretStr = Field(
-        default="mongodb://mongodb:27017", description="MongoDB connection string"
+    db_name: str = Field(
+        default="auth-db",
+        examples=["auth-db", "user-management", "users-and-claims"],
+        description="the name of the database located on the MongoDB server",
     )
-    db_name: str = Field(default="auth-db", description="Name of the MongoDB database")
 
     dataset_deletion_event_topic: str = Field(
         default="metadata_datasets",

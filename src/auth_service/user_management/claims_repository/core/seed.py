@@ -23,7 +23,7 @@ from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.protocols.dao import MultipleHitsFoundError, NoHitsFoundError
 
 from auth_service.config import Config
-from auth_service.deps import get_mongodb_config, get_mongodb_dao_factory
+from auth_service.deps import get_mongodb_dao_factory
 from auth_service.user_management.claims_repository.core.claims import (
     create_data_steward_claim,
 )
@@ -125,13 +125,13 @@ async def seed_data_steward_claims(config: Config) -> None:
     user_dao = await get_user_dao(
         dao_factory=get_user_dao_factory(
             config=config,
-            dao_factory=get_mongodb_dao_factory(config=get_mongodb_config(config)),
+            dao_factory=get_mongodb_dao_factory(config=config),
         )
     )
     claim_dao = await get_claim_dao(
         dao_factory=get_claim_dao_factory(
             config=config,
-            dao_factory=get_mongodb_dao_factory(config=get_mongodb_config(config)),
+            dao_factory=get_mongodb_dao_factory(config=config),
         )
     )
     await _remove_existing_data_steward_claims(claim_dao=claim_dao)
