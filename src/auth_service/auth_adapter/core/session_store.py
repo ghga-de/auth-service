@@ -179,7 +179,9 @@ class SessionStore(SessionStorePort[Session]):
     @staticmethod
     def _check_has_totp_token(user: User) -> bool:
         """Check if the user has a TOTP token."""
-        return "2nd" in user.name  # TODO: dummy-code, change for real implementation!
+        # TODO: dummy-code, change for real implementation
+        # currently we do not yet store the TOTP token in the user object
+        return "with TOTP" in user.name
 
     async def _update_session(
         self, session: Session, user: Optional[User] = None

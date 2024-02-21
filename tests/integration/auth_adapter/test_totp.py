@@ -16,12 +16,8 @@
 
 """Test handling TOTP in the auth adapter."""
 
-import json
-from typing import Union
-
 from fastapi import status
 from ghga_service_commons.api.testing import AsyncTestClient
-from httpx import Response
 from pytest import mark
 
 from auth_service.auth_adapter.core.session_store import SessionState
@@ -39,25 +35,6 @@ from .fixtures import (  # noqa: F401
     fixture_client_with_session,
     query_new_session,
 )
-
-
-def expected_set_cookie(session_id: str) -> str:  # TODO: needed???
-    """Get the expected Set-Cookie header for the auth session cookie."""
-    return f"session={session_id}; HttpOnly; Path=/; SameSite=lax; Secure"
-
-
-def assert_session_header(
-    response: Response, expected: dict[str, Union[str, int]]
-) -> None:  # TODO: needed???
-    """Assert that the response session header is as expected."""
-    session_header = response.headers.get("X-Session")
-    assert session_header
-    session = json.loads(session_header)
-    assert isinstance(session, dict)
-    csrf_token = session.pop("csrf", None)
-    assert len(csrf_token) == 32
-    assert csrf_token.replace("-", "").replace("_", "").isalnum()
-    assert session == expected
 
 
 @mark.asyncio
