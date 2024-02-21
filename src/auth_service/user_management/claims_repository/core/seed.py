@@ -34,14 +34,12 @@ from auth_service.user_management.claims_repository.deps import (
     ClaimDao,
     get_claim_dao,
     get_claim_dao_factory,
-    get_claim_dao_factory_config,
 )
 from auth_service.user_management.claims_repository.models.dto import VisaType
 from auth_service.user_management.user_registry.deps import (
     UserDao,
     get_user_dao,
     get_user_dao_factory,
-    get_user_dao_factory_config,
 )
 from auth_service.user_management.user_registry.models.dto import (
     User,
@@ -126,13 +124,13 @@ async def seed_data_steward_claims(config: Config) -> None:
         return
     user_dao = await get_user_dao(
         dao_factory=get_user_dao_factory(
-            config=get_user_dao_factory_config(config),
+            config=config,
             dao_factory=get_mongodb_dao_factory(config=get_mongodb_config(config)),
         )
     )
     claim_dao = await get_claim_dao(
         dao_factory=get_claim_dao_factory(
-            config=get_claim_dao_factory_config(config),
+            config=config,
             dao_factory=get_mongodb_dao_factory(config=get_mongodb_config(config)),
         )
     )

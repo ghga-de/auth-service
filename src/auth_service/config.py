@@ -29,6 +29,10 @@ from auth_service.auth_adapter.core.totp import TOTPConfig
 from auth_service.user_management.claims_repository.translators.akafka import (
     EventSubTranslatorConfig,
 )
+from auth_service.user_management.claims_repository.translators.dao import (
+    ClaimDaoConfig,
+)
+from auth_service.user_management.user_registry.translators.dao import UserDaoConfig
 
 SERVICE_NAME = "auth_service"
 
@@ -40,6 +44,8 @@ class Config(
     SessionConfig,
     TOTPConfig,
     LoggingConfig,
+    UserDaoConfig,
+    ClaimDaoConfig,
     EventSubTranslatorConfig,
     KafkaConfig,
 ):
@@ -122,15 +128,7 @@ class Config(
     db_url: SecretStr = Field(
         default="mongodb://mongodb:27017", description="MongoDB connection string"
     )
-    db_name: str = Field(
-        default="user-management", description="Name of the MongoDB database"
-    )
-    users_collection: str = Field(
-        default="users", description="Name of the MongoDB collection for users"
-    )
-    claims_collection: str = Field(
-        default="claims", description="Name of the MongoDB collection for claims"
-    )
+    db_name: str = Field(default="auth-db", description="Name of the MongoDB database")
 
     dataset_deletion_event_topic: str = Field(
         default="metadata_datasets",
