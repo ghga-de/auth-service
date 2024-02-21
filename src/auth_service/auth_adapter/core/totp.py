@@ -67,48 +67,43 @@ class TOTPConfig(BaseSettings):
     totp_digits: Annotated[
         int,
         Field(
-            default=6,
             ge=6,
             le=12,
             description="Number of digits used for the TOTP code",
         ),
-    ]
+    ] = 6
     totp_interval: Annotated[
         int,
         Field(
-            default=30,
             ge=10,
             le=300,
             description="Time interval in seconds for generating TOTP codes",
         ),
-    ]
+    ] = 30
     totp_tolerance: Annotated[
         int,
         Field(
-            default=1,
             ge=0,
             le=10,
             description="Number of intervals to check before and after the current time",
         ),
-    ]
+    ] = 1
     totp_attempts: Annotated[
         int,
         Field(
-            default=3,
             ge=1,
             le=10,
             description="Maximum number of attempts to verify a TOTP code",
         ),
-    ]
+    ] = 3
     totp_secret_size: Annotated[
         int,
         Field(
-            default=32,
             ge=24,
             le=256,
             description="Size of the Base32 encoded TOTP secrets",
         ),
-    ]
+    ] = 32
     # the encryption key is optional since it is only needed by the auth adapter
     totp_encryption_key: Optional[SecretStr] = Field(
         default=None, description="Base64 encoded key used to encrypt TOTP secrets"
