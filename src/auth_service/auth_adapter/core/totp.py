@@ -19,7 +19,7 @@
 import base64
 import hashlib
 from enum import Enum
-from typing import Optional
+from typing import Annotated, Optional
 
 # nacl is used for encryption of TOTP secrets
 # this library is used anyway by the service commons, so no additional dependency
@@ -64,23 +64,51 @@ class TOTPConfig(BaseSettings):
         default=TOTPAlgorithm.SHA1,
         description="Hash algorithm used for TOTP code generation",
     )
-    totp_digits: int = Field(
-        default=6, description="Number of digits used for the TOTP code"
-    )
-    totp_interval: int = Field(
-        default=30, description="Time interval in seconds for generating TOTP codes"
-    )
-    totp_tolerance: int = Field(
-        default=1,
-        description="Number of intervals to check before and after the current time",
-    )
-    totp_attempts: int = Field(
-        default=3,
-        description="Maximum number of attempts to verify a TOTP code",
-    )
-    totp_secret_size: int = Field(
-        default=32, description="Size of the Base32 encoded TOTP secrets"
-    )
+    totp_digits: Annotated[
+        int,
+        Field(
+            default=6,
+            ge=6,
+            le=12,
+            description="Number of digits used for the TOTP code",
+        ),
+    ]
+    totp_interval: Annotated[
+        int,
+        Field(
+            default=30,
+            ge=10,
+            le=300,
+            description="Time interval in seconds for generating TOTP codes",
+        ),
+    ]
+    totp_tolerance: Annotated[
+        int,
+        Field(
+            default=1,
+            ge=0,
+            le=10,
+            description="Number of intervals to check before and after the current time",
+        ),
+    ]
+    totp_attempts: Annotated[
+        int,
+        Field(
+            default=3,
+            ge=1,
+            le=10,
+            description="Maximum number of attempts to verify a TOTP code",
+        ),
+    ]
+    totp_secret_size: Annotated[
+        int,
+        Field(
+            default=32,
+            ge=24,
+            le=256,
+            description="Size of the Base32 encoded TOTP secrets",
+        ),
+    ]
     # the encryption key is optional since it is only needed by the auth adapter
     totp_encryption_key: Optional[SecretStr] = Field(
         default=None, description="Base64 encoded key used to encrypt TOTP secrets"
