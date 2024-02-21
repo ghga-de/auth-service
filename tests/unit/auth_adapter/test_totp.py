@@ -20,7 +20,7 @@ import base64
 import hashlib
 from datetime import timedelta
 
-from ghga_service_commons.utils.utc_dates import now_as_utc
+from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc
 from pydantic import AnyUrl, SecretStr
 from pytest import fixture, mark
 
@@ -28,6 +28,7 @@ from auth_service.auth_adapter.core.totp import (
     TOTPAlgorithm,
     TOTPConfig,
     TOTPHandler,
+    TOTPToken,
 )
 
 
@@ -58,6 +59,22 @@ def create_custom_totp_handler() -> TOTPHandler:
         totp_encryption_key=SecretStr(encryption_key),
     )
     return TOTPHandler(config)
+
+
+def generate_invalid_codes(
+    totp_handler: TOTPHandler, token: TOTPToken, for_time: UTCDatetime, offset: int = 0
+):
+    """Generate a TOTP code that is invalid in the whole tolerance interval."""
+    code = totp_handler.generate_code(token, for_time, offset)
+    code_before = totp_handler.generate_code(token, for_time, offset - 1)
+    code_after = totp_handler.generate_code(token, for_time, offset + 1)
+
+    last_digits = {int(code[-1]), int(code_before[-1]), int(code_after[-1])}
+    invalid_last_digits = set(range(10)) - last_digits
+    return [
+        code[:-1] + str(invalid_last_digit)
+        for invalid_last_digit in invalid_last_digits
+    ]
 
 
 def test_random_encryption_keys():
@@ -145,23 +162,11 @@ def test_token_object_is_modified(totp_handler: TOTPHandler):
 
 
 def test_verify_code_with_slightly_invalid_code(totp_handler: TOTPHandler):
-    """Test verification of a slightly invalid TOTP code.
-
-    Allows one false positive caused by hash collisions with limited code range.
-    """
+    """Test verification of a slightly invalid TOTP code."""
     token = totp_handler.generate_token()
     for_time = now_as_utc()
-    code = totp_handler.generate_code(token, for_time)
-    false_positives = 0
-    for i in range(6):
-        for j in range(10):
-            changed_digit = str((int(code[i]) + j) % 10)
-            code = code[:i] + changed_digit + code[i + 1 :]
-            verified = totp_handler.verify_code(token, code, for_time)
-            assert verified is None or verified is False or verified is True
-            if verified:
-                false_positives += 1
-    assert false_positives < 2
+    code = generate_invalid_codes(totp_handler, token, for_time)[0]
+    assert totp_handler.verify_code(token, code, for_time) is False
 
 
 @mark.parametrize(
@@ -220,47 +225,50 @@ def test_replay_attack(totp_handler: TOTPHandler):
 
 
 def test_brute_force_attack(totp_handler: TOTPHandler):
-    """Test that brute force attacks are rejected.
-
-    Allows one false positive caused by hash collisions with limited code range.
-    """
+    """Test that brute force attacks are rejected."""
     for_time = now_as_utc()
-    for runs in range(2):
-        token = totp_handler.generate_token()
-        code = totp_handler.generate_code(token, for_time)
+    token = totp_handler.generate_token()
+    invalid_codes = generate_invalid_codes(totp_handler, token, for_time)
+    invalid_codes = invalid_codes[: totp_handler.max_attempts]
+    assert len(invalid_codes) == totp_handler.max_attempts
+    for code in invalid_codes:
+        assert totp_handler.verify_code(token, code, for_time) is False
 
-        for j in range(totp_handler.max_attempts):
-            invalid_code = code[:-1] + str((int(code[-1]) + j + 1) % 10)
-            verified = totp_handler.verify_code(token, invalid_code, for_time)
-            if verified is True:
-                if runs > 1:
-                    assert False, "Too many false positives"
-            else:
-                assert verified is False, "Brute force attack detected too early"
-
-        verified = totp_handler.verify_code(token, code, for_time)
-        assert verified is None, "Brute force attack not detected"
+    code = totp_handler.generate_code(token, for_time)
+    assert totp_handler.verify_code(token, code, for_time) is None
 
 
 def test_verification_inside_tolerance_interval(totp_handler: TOTPHandler):
-    """Test verification of a valid code inside the tolerance interval.
-
-    Allows some false positives caused by hash collisions with limited code range.
-    """
+    """Test verification of a valid code inside the tolerance interval."""
     tolerance = totp_handler.tolerance
     for_time = now_as_utc()
-    overrun = 100
-    false_positives = 0
-    for offset in range(-tolerance - overrun, tolerance + overrun + 1):
+    for offset in range(-tolerance, tolerance + 1):
         token = totp_handler.generate_token()
         code = totp_handler.generate_code(token, for_time, offset)
-        verified = totp_handler.verify_code(token, code, for_time)
-        assert verified is False or verified is True
-        if abs(offset) <= tolerance:
-            assert verified
-        elif verified:
-            false_positives += 1
-    assert false_positives < overrun / 1000
+        assert totp_handler.verify_code(token, code, for_time) is True
+
+
+def test_verification_outside_tolerance_interval(totp_handler: TOTPHandler):
+    """Test verification of a valid code outside the tolerance interval."""
+    tolerance = totp_handler.tolerance
+    for_time = now_as_utc()
+    # test both before and after the tolerance interval
+    for direction in (-1, 1):
+        token = totp_handler.generate_token()
+        # determine valid codes inside the tolerance interval
+        codes_inside = {
+            totp_handler.generate_code(token, for_time, offset)
+            for offset in range(-tolerance, tolerance + 1)
+        }
+        # determine valid codes outside the tolerance interval
+        codes_outside = {
+            totp_handler.generate_code(token, for_time, offset * direction)
+            for offset in range(tolerance + 1, tolerance + 12)
+        }
+        codes = codes_outside - codes_inside
+        assert codes
+        code = next(iter(codes))
+        assert totp_handler.verify_code(token, code, for_time) is False
 
 
 def test_custom_parameters(custom_totp_handler: TOTPHandler):
