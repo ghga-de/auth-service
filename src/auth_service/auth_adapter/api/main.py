@@ -138,7 +138,7 @@ async def login(  # noqa: PLR0913
     await session_store.save_session(session, user=user)
     response = Response(status_code=204)
     response.headers["X-Session"] = session_to_header(
-        session, expires=session_store.expires
+        session, timeouts=session_store.timeouts
     )
     if session_created:
         response.set_cookie(
@@ -199,7 +199,10 @@ async def create_new_totp_token(
     state = session.state
     if not (
         state in (SessionState.REGISTERED, SessionState.NEW_TOTP_TOKEN)
-        or (state == SessionState.HAS_TOTP_TOKEN and creation_info.force)
+        or (
+            state in (SessionState.HAS_TOTP_TOKEN, SessionState.AUTHENTICATED)
+            and creation_info.force
+        )
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

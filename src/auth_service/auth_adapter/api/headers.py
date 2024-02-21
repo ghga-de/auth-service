@@ -38,7 +38,7 @@ def get_bearer_token(*header_values: Optional[str]) -> Optional[str]:
 
 
 def session_to_header(
-    session: Session, expires: Optional[Callable[[Session], int]]
+    session: Session, timeouts: Optional[Callable[[Session], tuple[int, int]]] = None
 ) -> str:
     """Serialize a session to a response header value to be used by the frontend."""
     session_dict: dict[str, Union[str, int]] = {
@@ -50,6 +50,8 @@ def session_to_header(
     }
     if session.user_title:
         session_dict["title"] = session.user_title
-    if expires:
-        session_dict["expires"] = expires(session)
+    if timeouts:
+        timeout_soft, timeout_hard = timeouts(session)
+        session_dict["timeout"] = timeout_soft
+        session_dict["extends"] = timeout_hard
     return json.dumps(session_dict, ensure_ascii=False, separators=(",", ":"))

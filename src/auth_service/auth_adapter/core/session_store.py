@@ -203,17 +203,15 @@ class SessionStore(SessionStorePort[Session]):
                 session.state = SessionState.HAS_TOTP_TOKEN
         session.last_used = self._now()
 
-    def expires(self, session: Session) -> int:
-        """Get the expiration time of the given session in seconds."""
-        return max(
-            0,
-            int(
-                min(
-                    session.created.timestamp()
-                    + self.config.session_max_lifetime_seconds,
-                    session.last_used.timestamp() + self.config.session_timeout_seconds,
-                )
-                - self._now().timestamp()
-                + 0.5
-            ),
-        )
+    def timeouts(self, session: Session) -> tuple[int, int]:
+        """Get the soft and hard timeouts of the given session in seconds."""
+        now = self._now().timestamp()
+        timeout_soft = self.config.session_timeout_seconds
+        timeout_hard = self.config.session_max_lifetime_seconds
+        last_used = session.last_used.timestamp()
+        created = session.created.timestamp()
+        timeout_soft = max(0, int(last_used + timeout_soft - now + 0.5))
+        timeout_hard = max(0, int(created + timeout_hard - now + 0.5))
+        if timeout_soft > timeout_hard:
+            timeout_soft = timeout_hard
+        return (timeout_soft, timeout_hard)

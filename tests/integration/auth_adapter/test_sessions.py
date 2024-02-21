@@ -56,9 +56,13 @@ def assert_session_header(
     csrf_token = session.pop("csrf", None)
     assert len(csrf_token) == 32
     assert csrf_token.replace("-", "").replace("_", "").isalnum()
-    expires = session.pop("expires", None)
-    assert isinstance(expires, int)
-    assert expires == 60 * 60
+    timeout = session.pop("timeout", None)
+    assert isinstance(timeout, int)
+    assert timeout == 60 * 60
+    extends = session.pop("extends", None)
+    assert isinstance(extends, int)
+    assert extends == 12 * 60 * 60
+    assert session == expected
 
 
 @mark.asyncio
@@ -101,6 +105,7 @@ async def test_logout_with_invalid_csrf_token(client: AsyncTestClient):
     assert await store.get_session(session.session_id)
     response = await client.post("/rpc/logout", headers=headers)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert "X-CSRF-Token" not in response.headers
     assert response.json() == {"detail": "Invalid or missing CSRF token"}
     assert await store.get_session(session.session_id) == original_session
 
@@ -348,6 +353,7 @@ async def test_login_with_cookie_and_invalid_csrf_token(client: AsyncTestClient)
     headers["X-CSRF-Token"] += "-invalidated"
     response = await client.post("/rpc/login", headers=headers)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert "X-CSRF-Token" not in response.headers
     assert response.json() == {"detail": "Invalid or missing CSRF token"}
 
     assert await store.get_session(session.session_id) == original_session

@@ -80,6 +80,6 @@ class SessionStorePort(ABC, Generic[T]):
         ...
 
     @abstractmethod
-    def expires(self, session: T) -> int:
-        """Get the expiration time of the given session in seconds."""
+    def timeouts(self, session: T) -> tuple[int, int]:
+        """Get the soft and hard expiration times of the given session in seconds."""
         ...

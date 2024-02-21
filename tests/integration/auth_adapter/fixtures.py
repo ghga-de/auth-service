@@ -20,7 +20,7 @@ from collections.abc import AsyncGenerator, Generator
 from datetime import timedelta
 from importlib import reload
 from os import environ
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 from fastapi import status
 from ghga_service_commons.api.testing import AsyncTestClient
@@ -40,6 +40,7 @@ from ...fixtures.utils import (
     USER_INFO,
     DummyUserDao,
     create_access_token,
+    headers_for_session,
 )
 
 totp_encryption_key = TOTPHandler.random_encryption_key()
@@ -76,6 +77,36 @@ _map_session_dict_to_object = {
 }
 
 
+async def query_new_session(
+    client: AsyncTestClient, session: Optional[Session] = None
+) -> Session:
+    """Query the current backend session."""
+    if session:
+        headers = headers_for_session(session)
+    else:
+        auth = f"Bearer {create_access_token()}"
+        headers = {"Authorization": auth}
+    response = await client.post("/rpc/login", headers=headers)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert "X-CSRF-Token" not in response.headers
+    if session:
+        assert "session" not in response.cookies
+        session_id = session.session_id
+    else:
+        session_id = response.cookies.get("session")
+        assert session_id
+    session_header = response.headers.get("X-Session")
+    assert session_header
+    session_dict = json.loads(session_header)
+    for key, attr in _map_session_dict_to_object.items():
+        session_dict[attr] = session_dict.pop(key, None)
+    now = now_as_utc()
+    last_used = now - timedelta(seconds=session_dict.pop("timeout", 0))
+    created = last_used - timedelta(seconds=session_dict.pop("extends", 0))
+    session_dict.update(last_used=last_used, created=created)
+    return Session(session_id=session_id, **session_dict)
+
+
 @async_fixture(name="client_with_session")
 async def fixture_client_with_session(
     client: AsyncTestClient, httpx_mock: HTTPXMock
@@ -92,21 +123,7 @@ async def fixture_client_with_session(
     response = await client.post("/rpc/login", headers={"Authorization": auth})
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    auth = f"Bearer {create_access_token()}"
-    response = await client.post("/rpc/login", headers={"Authorization": auth})
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-    session_id = response.cookies.get("session")
-    assert session_id
-    session_header = response.headers.get("X-Session")
-    assert session_header
-    session_dict = json.loads(session_header)
-    for key, attr in _map_session_dict_to_object.items():
-        session_dict[attr] = session_dict.pop(key, None)
-    expires = session_dict.pop("expires", 0)
-    last_used = now_as_utc()
-    created = last_used - timedelta(seconds=expires)
-    session_dict.update(last_used=last_used, created=created)
-    session = Session(session_id=session_id, **session_dict)
+    session = await query_new_session(client)
     yield ClientWithSession(client, session)
 
 
