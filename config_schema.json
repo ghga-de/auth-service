@@ -1,7 +1,7 @@
 {
   "$defs": {
     "TOTPAlgorithm": {
-      "description": "The state of a user session.",
+      "description": "Hash algorithm used for TOTP code generation",
       "enum": [
         "sha1",
         "sha256",
@@ -164,30 +164,40 @@
     "totp_digits": {
       "default": 6,
       "description": "Number of digits used for the TOTP code",
+      "maximum": 12,
+      "minimum": 6,
       "title": "Totp Digits",
       "type": "integer"
     },
     "totp_interval": {
       "default": 30,
       "description": "Time interval in seconds for generating TOTP codes",
+      "maximum": 300,
+      "minimum": 10,
       "title": "Totp Interval",
       "type": "integer"
     },
     "totp_tolerance": {
       "default": 1,
       "description": "Number of intervals to check before and after the current time",
+      "maximum": 10,
+      "minimum": 0,
       "title": "Totp Tolerance",
       "type": "integer"
     },
     "totp_attempts": {
       "default": 3,
       "description": "Maximum number of attempts to verify a TOTP code",
+      "maximum": 10,
+      "minimum": 1,
       "title": "Totp Attempts",
       "type": "integer"
     },
     "totp_secret_size": {
       "default": 32,
       "description": "Size of the Base32 encoded TOTP secrets",
+      "maximum": 256,
+      "minimum": 24,
       "title": "Totp Secret Size",
       "type": "integer"
     },

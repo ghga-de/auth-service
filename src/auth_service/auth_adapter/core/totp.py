@@ -39,7 +39,7 @@ __all__ = ["TOTPAlgorithm", "TOTPConfig", "TOTPHandler", "TOTPToken"]
 
 
 class TOTPAlgorithm(str, Enum):
-    """Hash algorithm used for TOTP code generation."""
+    """Hash algorithm used for TOTP code generation"""
 
     SHA1 = "sha1"
     SHA256 = "sha256"

@@ -165,15 +165,15 @@ The service requires the following configuration parameters:
 
     - : Refer to *[#/$defs/TOTPAlgorithm](#%24defs/TOTPAlgorithm)*.
 
-- **`totp_digits`** *(integer)*: Number of digits used for the TOTP code. Default: `6`.
+- **`totp_digits`** *(integer)*: Number of digits used for the TOTP code. Minimum: `6`. Maximum: `12`. Default: `6`.
 
-- **`totp_interval`** *(integer)*: Time interval in seconds for generating TOTP codes. Default: `30`.
+- **`totp_interval`** *(integer)*: Time interval in seconds for generating TOTP codes. Minimum: `10`. Maximum: `300`. Default: `30`.
 
-- **`totp_tolerance`** *(integer)*: Number of intervals to check before and after the current time. Default: `1`.
+- **`totp_tolerance`** *(integer)*: Number of intervals to check before and after the current time. Minimum: `0`. Maximum: `10`. Default: `1`.
 
-- **`totp_attempts`** *(integer)*: Maximum number of attempts to verify a TOTP code. Default: `3`.
+- **`totp_attempts`** *(integer)*: Maximum number of attempts to verify a TOTP code. Minimum: `1`. Maximum: `10`. Default: `3`.
 
-- **`totp_secret_size`** *(integer)*: Size of the Base32 encoded TOTP secrets. Default: `32`.
+- **`totp_secret_size`** *(integer)*: Size of the Base32 encoded TOTP secrets. Minimum: `24`. Maximum: `256`. Default: `32`.
 
 - **`totp_encryption_key`**: Base64 encoded key used to encrypt TOTP secrets. Default: `null`.
 
@@ -374,7 +374,7 @@ The service requires the following configuration parameters:
 ## Definitions
 
 
-- <a id="%24defs/TOTPAlgorithm"></a>**`TOTPAlgorithm`** *(string)*: The state of a user session. Must be one of: `["sha1", "sha256", "sha512"]`.
+- <a id="%24defs/TOTPAlgorithm"></a>**`TOTPAlgorithm`** *(string)*: Hash algorithm used for TOTP code generation. Must be one of: `["sha1", "sha256", "sha512"]`.
 
 
 ### Usage:
