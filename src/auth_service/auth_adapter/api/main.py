@@ -266,8 +266,9 @@ async def verify_totp(  # noqa: PLR0913
         # TODO: this operation must also delete all IVAs of the user
         # store token in the database
         user_token = UserToken(user_id=session.user_id, totp_token=totp_token)
-        await token_dao.insert(user_token)
+        await token_dao.upsert(user_token)
     session.state = SessionState.AUTHENTICATED
+    session.totp_token = None  # remove verified TOTP token from the session
     return Response(status_code=204)
 
 

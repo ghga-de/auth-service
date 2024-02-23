@@ -16,6 +16,9 @@
 
 """Test handling TOTP in the auth adapter."""
 
+from urllib.parse import parse_qs, urlparse
+
+import pyotp
 from fastapi import status
 from ghga_service_commons.api.testing import AsyncTestClient
 from pytest import mark
@@ -114,6 +117,100 @@ async def test_create_totp_token_with_registered_user(
 
     session = await query_new_session(client, session)
     assert session.state is SessionState.NEW_TOTP_TOKEN
+
+
+@mark.asyncio
+async def test_verify_totp_without_session(client: AsyncTestClient):
+    """Test that TOTP verification without a session fails."""
+    response = await client.post(
+        "rpc/verify-totp", json={"user_id": "some-user-id", "totp": "123456"}
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json() == {"detail": "Not logged in"}
+
+
+@mark.asyncio
+async def test_verify_totp_without_body(
+    client_with_session: ClientWithSession,
+):
+    """Test that TOTP verification without request body fails."""
+    client, session = client_with_session
+    response = await client.post(
+        "/rpc/verify-totp",
+        headers=headers_for_session(session),
+    )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+@mark.asyncio
+async def test_verify_totp_with_unregistered_user(
+    client_with_session: ClientWithSession,
+):
+    """Test that TOTP token creation with an unregistered user fails."""
+    client, session = client_with_session
+    response = await client.post(
+        "/rpc/verify-totp",
+        json={"user_id": "unknown-user-id", "totp": "123456"},
+        headers=headers_for_session(session),
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json() == {"detail": "Not registered"}
+
+
+@mark.asyncio
+async def test_verify_totp_without_csrf_token(
+    client_with_session: ClientWithSession,
+):
+    """Test that TOTP token creation without CSRF token fails."""
+    client, session = client_with_session
+    headers = headers_for_session(session)
+    del headers["X-CSRF-Token"]
+    response = await client.post(
+        "/rpc/verify-totp",
+        json={"user_id": "john@ghga.de", "totp": "123456"},
+        headers=headers,
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json() == {"detail": "Invalid or missing CSRF token"}
+
+
+@mark.asyncio
+async def test_verify_totp_with_new_totp_token(
+    client_with_session: ClientWithSession,
+):
+    """Test that TOTP verification of a newly created token registers the token."""
+    client, session = client_with_session
+    assert session.state is SessionState.REGISTERED
+    # create a new TOTP token on the backend
+    response = await client.post(
+        "/totp-token",
+        json={"user_id": "john@ghga.de", "force": False},
+        headers=headers_for_session(session),
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    uri = response.json()["uri"]
+    secret = parse_qs(urlparse(uri).query)["secret"][0]
+    assert len(secret) == 32
+    assert secret.isalnum()
+    # make sure the backend state is now as expected
+    session = await query_new_session(client, session)
+    assert session.state is SessionState.NEW_TOTP_TOKEN
+    # assert session.totp_token is not None
+    # create a valid code and verify it
+    totp = pyotp.TOTP(secret).now()
+    response = await client.post(
+        "/rpc/verify-totp",
+        json={"user_id": "john@ghga.de", "totp": totp},
+        headers=headers_for_session(session),
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not response.text
+    # make sure the backend state is now as expected
+    session = await query_new_session(client, session)
+    assert session.state is SessionState.AUTHENTICATED
+    assert session.totp_token is None
+
+    # TODO: Check that this is stored in the database
 
 
 # TODO: add test for other states,
