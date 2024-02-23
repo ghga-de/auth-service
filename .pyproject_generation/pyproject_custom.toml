@@ -16,3 +16,10 @@ Repository = "https://github.com/ghga-de/auth-service"
 
 [project.scripts]
 auth-service = "auth_service.__main__:run"
+
+[tool.pytest.ini_options]
+# the unit tests should always run before the integration tests
+testpaths = [
+    "tests/unit",
+    "tests/integration"
+]
