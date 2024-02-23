@@ -36,6 +36,7 @@ from auth_service.user_management.user_registry.deps import (
     UserDao,
     get_user_dao,
 )
+from auth_service.user_management.user_registry.models.dto import User
 
 from .. import DESCRIPTION, TITLE, VERSION
 from ..core.auth import (
@@ -112,6 +113,7 @@ async def login(  # noqa: PLR0913
     session_store: SessionStoreDependency,
     session: SessionDependency,
     user_dao: Annotated[UserDao, Depends(get_user_dao)],
+    token_dao: Annotated[UserTokenDao, Depends(get_user_token_dao)],
     authorization: Annotated[Optional[str], Header()] = None,
     x_authorization: Annotated[Optional[str], Header()] = None,
     x_csrf_token: Annotated[Optional[str], Header()] = None,
@@ -142,7 +144,16 @@ async def login(  # noqa: PLR0913
             user = await user_dao.get_by_id(session.user_id)
         except ResourceNotFoundError:
             user = None  # user has been deleted
-    await session_store.save_session(session, user=user)
+
+    async def has_totp_token(user: User) -> bool:
+        try:
+            _ = await token_dao.get_by_id(user.id)
+        except ResourceNotFoundError:
+            return False
+        return True
+
+    await session_store.save_session(session, user=user, has_totp_token=has_totp_token)
+
     response = Response(status_code=204)
     response.headers["X-Session"] = session_to_header(
         session, timeouts=session_store.timeouts
@@ -265,10 +276,14 @@ async def verify_totp(  # noqa: PLR0913
     if session.state == SessionState.NEW_TOTP_TOKEN:
         # TODO: this operation must also delete all IVAs of the user
         # store token in the database
-        user_token = UserToken(user_id=session.user_id, totp_token=totp_token)
+        user_token = UserToken(
+            user_id=session.user_id,
+            totp_token=totp_token,
+        )
         await token_dao.upsert(user_token)
     session.state = SessionState.AUTHENTICATED
     session.totp_token = None  # remove verified TOTP token from the session
+    await session_store.save_session(session)
     return Response(status_code=204)
 
 

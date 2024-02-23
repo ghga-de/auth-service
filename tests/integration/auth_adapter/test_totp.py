@@ -55,7 +55,7 @@ async def test_create_totp_token_without_body(
     client_with_session: ClientWithSession,
 ):
     """Test that TOTP token creation without request body fails."""
-    client, session = client_with_session
+    client, session = client_with_session[:2]
     response = await client.post(
         "/totp-token",
         headers=headers_for_session(session),
@@ -68,7 +68,7 @@ async def test_create_totp_token_with_unregistered_user(
     client_with_session: ClientWithSession,
 ):
     """Test that TOTP token creation with an unregistered user fails."""
-    client, session = client_with_session
+    client, session = client_with_session[:2]
     response = await client.post(
         "/totp-token",
         json={"user_id": "unknown-user-id", "force": False},
@@ -83,7 +83,7 @@ async def test_create_totp_token_without_csrf_token(
     client_with_session: ClientWithSession,
 ):
     """Test that TOTP token creation without CSRF token fails."""
-    client, session = client_with_session
+    client, session = client_with_session[:2]
     headers = headers_for_session(session)
     del headers["X-CSRF-Token"]
     response = await client.post(
@@ -100,7 +100,7 @@ async def test_create_totp_token_with_registered_user(
     client_with_session: ClientWithSession,
 ):
     """Test that TOTP token creation with an registered user is possible."""
-    client, session = client_with_session
+    client, session = client_with_session[:2]
     response = await client.post(
         "/totp-token",
         json={"user_id": "john@ghga.de", "force": False},
@@ -134,7 +134,7 @@ async def test_verify_totp_without_body(
     client_with_session: ClientWithSession,
 ):
     """Test that TOTP verification without request body fails."""
-    client, session = client_with_session
+    client, session = client_with_session[:2]
     response = await client.post(
         "/rpc/verify-totp",
         headers=headers_for_session(session),
@@ -147,7 +147,7 @@ async def test_verify_totp_with_unregistered_user(
     client_with_session: ClientWithSession,
 ):
     """Test that TOTP token creation with an unregistered user fails."""
-    client, session = client_with_session
+    client, session = client_with_session[:2]
     response = await client.post(
         "/rpc/verify-totp",
         json={"user_id": "unknown-user-id", "totp": "123456"},
@@ -162,7 +162,7 @@ async def test_verify_totp_without_csrf_token(
     client_with_session: ClientWithSession,
 ):
     """Test that TOTP token creation without CSRF token fails."""
-    client, session = client_with_session
+    client, session = client_with_session[:2]
     headers = headers_for_session(session)
     del headers["X-CSRF-Token"]
     response = await client.post(
@@ -179,13 +179,13 @@ async def test_verify_totp_with_new_totp_token(
     client_with_session: ClientWithSession,
 ):
     """Test that TOTP verification of a newly created token registers the token."""
-    client, session = client_with_session
+    client, session, user_token_dao = client_with_session
+    headers = headers_for_session(session)
+    user_id = "john@ghga.de"
     assert session.state is SessionState.REGISTERED
     # create a new TOTP token on the backend
     response = await client.post(
-        "/totp-token",
-        json={"user_id": "john@ghga.de", "force": False},
-        headers=headers_for_session(session),
+        "/totp-token", json={"user_id": user_id, "force": False}, headers=headers
     )
     assert response.status_code == status.HTTP_201_CREATED
     uri = response.json()["uri"]
@@ -199,9 +199,7 @@ async def test_verify_totp_with_new_totp_token(
     # create a valid code and verify it
     totp = pyotp.TOTP(secret).now()
     response = await client.post(
-        "/rpc/verify-totp",
-        json={"user_id": "john@ghga.de", "totp": totp},
-        headers=headers_for_session(session),
+        "/rpc/verify-totp", json={"user_id": user_id, "totp": totp}, headers=headers
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not response.text
@@ -209,9 +207,35 @@ async def test_verify_totp_with_new_totp_token(
     session = await query_new_session(client, session)
     assert session.state is SessionState.AUTHENTICATED
     assert session.totp_token is None
+    # check that the token has been moved to the database
+    user_tokens = user_token_dao.user_tokens
+    assert len(user_tokens) == 1
+    user_token = user_tokens.get(user_id, None)
+    assert user_token
+    totp_token = user_token.totp_token
+    assert len(totp_token.encrypted_secret) == 96
+    assert totp_token.counter
+    assert totp_token.attempts == -1  # verified
 
-    # TODO: Check that this is stored in the database
+    # decrease the TOTP counter so that we can re-login without waiting
+    totp_token.counter -= 1
+
+    # logout and re-login
+    response = await client.post("/rpc/logout", headers=headers)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    session = await query_new_session(client)
+    assert session.state is SessionState.HAS_TOTP_TOKEN
+    headers = headers_for_session(session)
+    # check that verification still works with
+    response = await client.post(
+        "/rpc/verify-totp", json={"user_id": user_id, "totp": totp}, headers=headers
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not response.text
+    # make sure the backend state is now as expected
+    session = await query_new_session(client, session)
+    assert session.state is SessionState.AUTHENTICATED
 
 
-# TODO: add test for other states,
-# but this needs the verification endpoint to be implemented
+# TODO: add test for other states
