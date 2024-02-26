@@ -30,7 +30,7 @@ services:
       AUTH_SERVICE_HOST: "0.0.0.0"
       AUTH_SERVICE_PORT: "8080"
       AUTH_SERVICE_AUTO_RELOAD: "true"
-      AUTH_SERVICE_DB_URL: mongodb://mongodb:27017/
+      AUTH_SERVICE_DB_CONNECTION_STR: mongodb://mongodb:27017/
       AUTH_SERVICE_CONFIG_YAML: /workspace/.devcontainer/.dev_config.yaml
 
   mongodb:
