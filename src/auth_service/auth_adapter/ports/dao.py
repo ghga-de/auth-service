@@ -36,9 +36,7 @@ class UserToken(BaseModel):
     user_id: str = Field(
         default=..., description="The user ID of the user who owns the TOTP token"
     )
-    totp_token: TOTPToken = Field(
-        default=..., description="The TOTP token of the user"
-    )
+    totp_token: TOTPToken = Field(default=..., description="The TOTP token of the user")
 
     model_config = {"extra": "forbid", "frozen": True}
 
