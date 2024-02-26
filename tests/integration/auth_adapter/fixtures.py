@@ -127,7 +127,9 @@ async def query_new_session(
     last_used = now - timedelta(seconds=session_dict.pop("timeout", 0))
     created = last_used - timedelta(seconds=session_dict.pop("extends", 0))
     session_dict.update(last_used=last_used, created=created)
-    return Session(session_id=session_id, **session_dict)
+    session = Session(session_id=session_id, **session_dict)
+    assert session.totp_token is None  # should never be passed to the client
+    return session
 
 
 @async_fixture(name="client_with_session")
