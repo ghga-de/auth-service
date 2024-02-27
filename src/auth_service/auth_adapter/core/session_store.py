@@ -52,23 +52,23 @@ class Session(BaseSession):
         default=None,
         description="Internal ID of the associated user, if registered",
     )
-    user_name: str = Field(default=..., description="the full name of the user")
+    user_name: str = Field(default=..., description="The full name of the user")
     user_email: EmailStr = Field(
-        default=..., description="the email address of the user"
+        default=..., description="The email address of the user"
     )
     user_title: Optional[str] = Field(
-        default=None, description="optional academic title of the user"
+        default=None, description="Optional academic title of the user"
     )
     state: SessionState = Field(
         default=SessionState.NEEDS_REGISTRATION,
-        description="the authentication state of the user session",
+        description="The authentication state of the user session",
     )
-    csrf_token: str = Field(default=..., description="the CSRF token for the session")
+    csrf_token: str = Field(default=..., description="The CSRF token for the session")
     totp_token: Optional[TOTPToken] = Field(
-        default=None, description="the TOTP token of the user if available"
+        default=None, description="The TOTP token of the user if available"
     )
-    created: UTCDatetime = Field(description="time when the session was created")
-    last_used: UTCDatetime = Field(description="time when the session was last used")
+    created: UTCDatetime = Field(description="Time when the session was created")
+    last_used: UTCDatetime = Field(description="Time when the session was last used")
 
 
 class SessionConfig(BaseSettings):
