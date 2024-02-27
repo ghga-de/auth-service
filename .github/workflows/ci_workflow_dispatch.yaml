@@ -28,4 +28,4 @@ jobs:
           tag: ${{ needs.fetch-tag.outputs.latest_tag }}-${{ github.sha }}
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
-          ignore_trivy: true
+          ignore_trivy: false
