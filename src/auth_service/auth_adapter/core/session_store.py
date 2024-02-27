@@ -44,10 +44,13 @@ class SessionState(str, Enum):
 class Session(BaseSession):
     """Model for storing user sessions."""
 
-    user_id: str = Field(
+    ext_id: str = Field(
         default=...,
-        description="internal ID of the associated user,"
-        " or external ID if the user is not registered yet",
+        description="External ID of the associated user",
+    )
+    user_id: Optional[str] = Field(
+        default=None,
+        description="internal ID of the associated user, if registered",
     )
     user_name: str = Field(default=..., description="the full name of the user")
     user_email: EmailStr = Field(
@@ -127,11 +130,12 @@ class SessionStore(SessionStorePort[Session]):
         """Generate a random CSRF token."""
         return secrets.token_urlsafe(self.config.csrf_token_bytes)
 
-    def _create_session(
+    def _create_session(  # noqa: PLR0913
         self,
-        user_id: str,
+        ext_id: str,
         user_name: str,
         user_email: str,
+        user_id: Optional[str] = None,
         user_title: Optional[str] = None,
     ) -> Session:
         """Create a new user session without saving it."""
@@ -140,6 +144,7 @@ class SessionStore(SessionStorePort[Session]):
         created = self._now()
         return Session(
             session_id=session_id,
+            ext_id=ext_id,
             user_id=user_id,
             user_name=user_name,
             user_email=user_email,
@@ -164,6 +169,7 @@ class SessionStore(SessionStorePort[Session]):
         return (
             not user
             or session.user_id != user.id
+            or session.ext_id != user.ext_id
             or session.user_name != user.name
             or session.user_email != user.email
         )
@@ -175,7 +181,7 @@ class SessionStore(SessionStorePort[Session]):
         has_totp_token: Optional[AsyncUserPredicate] = None,
     ) -> None:
         """Update the given user session."""
-        if user is not None:
+        if user is not None and user.ext_id == session.ext_id:
             if session.state is SessionState.NEEDS_REGISTRATION:
                 session.user_id = user.id
                 session.state = SessionState.NEEDS_RE_REGISTRATION
