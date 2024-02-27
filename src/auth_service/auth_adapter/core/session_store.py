@@ -50,7 +50,7 @@ class Session(BaseSession):
     )
     user_id: Optional[str] = Field(
         default=None,
-        description="internal ID of the associated user, if registered",
+        description="Internal ID of the associated user, if registered",
     )
     user_name: str = Field(default=..., description="the full name of the user")
     user_email: EmailStr = Field(
