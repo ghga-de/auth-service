@@ -30,6 +30,7 @@ from hexkit.protocols.dao import NoHitsFoundError, ResourceNotFoundError
 from pydantic import SecretStr
 
 from auth_service.config import CONFIG
+from auth_service.user_management.claims_repository.core.utils import is_data_steward
 from auth_service.user_management.claims_repository.deps import ClaimDao, get_claim_dao
 from auth_service.user_management.user_registry.deps import (
     Depends,
@@ -110,11 +111,12 @@ add_allowed_routes()
     description="Endpoint used when a user wants to log in.",
     status_code=204,
 )
-async def login(  # noqa: PLR0913
+async def login(  # noqa: C901, PLR0913
     session_store: SessionStoreDependency,
     session: SessionDependency,
     user_dao: Annotated[UserDao, Depends(get_user_dao)],
     token_dao: Annotated[UserTokenDao, Depends(get_user_token_dao)],
+    claim_dao: Annotated[ClaimDao, Depends(get_claim_dao)],
     authorization: Annotated[Optional[str], Header()] = None,
     x_authorization: Annotated[Optional[str], Header()] = None,
     x_csrf_token: Annotated[Optional[str], Header()] = None,
@@ -152,14 +154,24 @@ async def login(  # noqa: PLR0913
             detail="User account is disabled",
         )
 
-    async def has_totp_token(user: User) -> bool:
+    async def _is_data_steward(user: User) -> bool:
+        """Check whether the given user is a data steward."""
+        return await is_data_steward(user.id, claim_dao=claim_dao)
+
+    async def _has_totp_token(user: User) -> bool:
+        """Check whether the given user has a TOTP token."""
         try:
             _ = await token_dao.get_by_id(user.id)
         except ResourceNotFoundError:
             return False
         return True
 
-    await session_store.save_session(session, user=user, has_totp_token=has_totp_token)
+    await session_store.save_session(
+        session,
+        user=user,
+        is_data_steward=_is_data_steward,
+        has_totp_token=_has_totp_token,
+    )
 
     response = Response(status_code=204)
     response.headers["X-Session"] = session_to_header(

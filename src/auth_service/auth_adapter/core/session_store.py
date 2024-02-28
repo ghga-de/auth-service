@@ -181,6 +181,7 @@ class SessionStore(SessionStorePort[Session]):
         self,
         session: Session,
         user: Optional[User] = None,
+        is_data_steward: Optional[AsyncUserPredicate] = None,
         has_totp_token: Optional[AsyncUserPredicate] = None,
     ) -> None:
         """Update the given user session."""
@@ -196,6 +197,8 @@ class SessionStore(SessionStorePort[Session]):
                 session.user_email = user.email
                 session.user_title = user.title
                 session.state = SessionState.REGISTERED
+                if is_data_steward and await is_data_steward(user):
+                    session.role = "data_steward"
             if (
                 session.state is SessionState.REGISTERED
                 and has_totp_token

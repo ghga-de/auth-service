@@ -734,6 +734,8 @@ async def test_put_registered_user_with_session(
     main.app.dependency_overrides[get_user_dao] = lambda: user_dao
     user_token_dao = DummyUserTokenDao()
     main.app.dependency_overrides[get_user_token_dao] = lambda: user_token_dao
+    claim_dao = DummyClaimDao()
+    main.app.dependency_overrides[get_claim_dao] = lambda: claim_dao
 
     session = await query_new_session(client)
     assert session.user_id == "john@ghga.de"

@@ -37,11 +37,13 @@ from auth_service.auth_adapter.core.totp import TOTPHandler
 from auth_service.auth_adapter.deps import get_user_token_dao
 from auth_service.auth_adapter.ports.dao import UserToken
 from auth_service.deps import Config, get_config
+from auth_service.user_management.claims_repository.deps import get_claim_dao
 from auth_service.user_management.user_registry.deps import get_user_dao
 
 from ...fixtures.utils import (
     RE_USER_INFO_URL,
     USER_INFO,
+    DummyClaimDao,
     DummyUserDao,
     create_access_token,
     headers_for_session,
@@ -170,6 +172,8 @@ async def fixture_client_with_session(
     main.app.dependency_overrides[get_user_dao] = lambda: user_dao
     user_token_dao = DummyUserTokenDao()
     main.app.dependency_overrides[get_user_token_dao] = lambda: user_token_dao
+    claim_dao = DummyClaimDao()
+    main.app.dependency_overrides[get_claim_dao] = lambda: claim_dao
 
     session = await query_new_session(client)
     yield ClientWithSession(client, session, user_token_dao)
