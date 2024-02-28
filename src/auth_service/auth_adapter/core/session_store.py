@@ -59,6 +59,7 @@ class Session(BaseSession):
     user_title: Optional[str] = Field(
         default=None, description="Optional academic title of the user"
     )
+    role: Optional[str] = Field(default=None, description="Optional role of the user")
     state: SessionState = Field(
         default=SessionState.NEEDS_REGISTRATION,
         description="The authentication state of the user session",
@@ -137,6 +138,7 @@ class SessionStore(SessionStorePort[Session]):
         user_email: str,
         user_id: Optional[str] = None,
         user_title: Optional[str] = None,
+        role: Optional[str] = None,
     ) -> Session:
         """Create a new user session without saving it."""
         session_id = self._generate_session_id()
@@ -149,6 +151,7 @@ class SessionStore(SessionStorePort[Session]):
             user_name=user_name,
             user_email=user_email,
             user_title=user_title,
+            role=role,
             csrf_token=csrf_token,
             created=created,
             last_used=created,

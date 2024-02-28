@@ -44,6 +44,7 @@ from ..core.auth import (
     UserInfoError,
     exchange_token,
     get_user_info,
+    internal_token_from_session,
 )
 from ..core.session_store import SessionState
 from ..deps import (
@@ -187,6 +188,31 @@ async def logout(
         check_csrf("POST", x_csrf_token, session)
         await session_store.delete_session(session.session_id)
     return Response(status_code=204)
+
+
+@app.post(
+    "/users",
+    operation_id="post_user",
+    tags=["users"],
+    summary="Register a user",
+    description="Authenticate the endpoint used to register a new user.",
+    status_code=200,
+)
+async def post_user(
+    session: SessionDependency,
+    x_csrf_token: Annotated[Optional[str], Header()] = None,
+) -> Response:
+    """Register a user."""
+    response = Response(status_code=200)
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in"
+        )
+    check_csrf("POST", x_csrf_token, session)
+    internal_token = internal_token_from_session(session)
+    authorization = f"Bearer {internal_token}"
+    response.headers["Authorization"] = authorization
+    return response
 
 
 @app.post(

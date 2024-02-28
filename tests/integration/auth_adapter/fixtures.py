@@ -26,6 +26,7 @@ from fastapi import status
 from ghga_service_commons.api.testing import AsyncTestClient
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.protocols.dao import ResourceNotFoundError
+from httpx import Response
 from pydantic import SecretStr
 from pytest import fixture
 from pytest_asyncio import fixture as async_fixture
@@ -98,8 +99,30 @@ _map_session_dict_to_object = {
     "name": "user_name",
     "email": "user_email",
     "title": "user_title",
+    "role": "role",
     "csrf": "csrf_token",
 }
+
+
+def session_from_response(
+    response: Response, session_id: Optional[str] = None
+) -> Session:
+    """Get a session object from the response."""
+    if not session_id:
+        session_id = response.cookies.get("session")
+        assert session_id
+    session_header = response.headers.get("X-Session")
+    assert session_header
+    session_dict = json.loads(session_header)
+    for key, attr in _map_session_dict_to_object.items():
+        session_dict[attr] = session_dict.pop(key, None)
+    now = now_as_utc()
+    last_used = now - timedelta(seconds=session_dict.pop("timeout", 0))
+    created = last_used - timedelta(seconds=session_dict.pop("extends", 0))
+    session_dict.update(last_used=last_used, created=created)
+    session = Session(session_id=session_id, **session_dict)
+    assert session.totp_token is None  # should never be passed to the client
+    return session
 
 
 async def query_new_session(
