@@ -36,7 +36,7 @@ from auth_service.user_management.user_registry.deps import (
     UserDao,
     get_user_dao,
 )
-from auth_service.user_management.user_registry.models.dto import User
+from auth_service.user_management.user_registry.models.dto import User, UserStatus
 
 from .. import DESCRIPTION, TITLE, VERSION
 from ..core.auth import (
@@ -145,6 +145,12 @@ async def login(  # noqa: PLR0913
             user = await user_dao.find_one(mapping={"ext_id": session.ext_id})
         except NoHitsFoundError:
             user = None  # user is not yet registered
+
+    if user and user.status is not UserStatus.ACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User account is disabled",
+        )
 
     async def has_totp_token(user: User) -> bool:
         try:

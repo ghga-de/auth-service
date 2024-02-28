@@ -29,6 +29,7 @@ from auth_service.auth_adapter.api import main
 from auth_service.auth_adapter.deps import get_session_store, get_user_token_dao
 from auth_service.config import CONFIG
 from auth_service.user_management.user_registry.deps import get_user_dao
+from auth_service.user_management.user_registry.models.dto import UserStatus
 
 from ...fixtures.utils import (
     RE_USER_INFO_URL,
@@ -265,6 +266,21 @@ async def test_login_with_registered_user_with_title(
             "state": "Registered",
         },
     )
+
+
+@mark.asyncio
+async def test_login_with_deactivated_user(
+    client: AsyncTestClient, httpx_mock: HTTPXMock
+):
+    """Test that a login request can create a new session for a registered user."""
+    httpx_mock.add_response(url=RE_USER_INFO_URL, json=USER_INFO)
+
+    setup_daos(status=UserStatus.INACTIVE)
+
+    auth = f"Bearer {create_access_token()}"
+    response = await client.post("/rpc/login", headers={"Authorization": auth})
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json() == {"detail": "User account is disabled"}
 
 
 @mark.asyncio
