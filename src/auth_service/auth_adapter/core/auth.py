@@ -56,10 +56,6 @@ class TokenValidationError(AuthAdapterError):
     """Error when validating JWTs."""
 
 
-class UserDataMismatchError(AuthAdapterError):
-    """Raised when user claims do not match the registered user data."""
-
-
 class UserInfoError(AuthAdapterError):
     """Error when retrieving data from the userinfo endpoint."""
 
@@ -325,9 +321,9 @@ def get_user_info(access_token: Optional[str]):
         raise UserInfoError("No access token provided")
     try:
         at_claims = decode_and_validate_token(access_token)
+        _assert_at_claims_not_empty(at_claims)
     except TokenValidationError as error:
         raise UserInfoError(f"Access token error: {error}") from error
-    _assert_at_claims_not_empty(at_claims)
     ui_claims = _fetch_user_info(access_token)
     _assert_ui_claims_not_empty(ui_claims)
     if ui_claims["sub"] != at_claims["sub"]:
