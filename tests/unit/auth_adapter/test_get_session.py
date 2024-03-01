@@ -62,7 +62,7 @@ async def assert_get_session(
     elif with_cookie is True:
         cookie = session.session_id
     else:
-        cookie = None
+        cookie = with_cookie
 
     if with_csrf_token is False:
         csrf_token = None
@@ -73,7 +73,7 @@ async def assert_get_session(
 
     headers: list[tuple[bytes, bytes]] = []
     if cookie is not None:
-        headers.append((b"cookie", f"{SESSION_COOKIE}={session.session_id}".encode()))
+        headers.append((b"cookie", f"{SESSION_COOKIE}={cookie}".encode()))
     if csrf_token is not None:
         headers.append((CSRF_TOKEN_HEADER.lower().encode(), csrf_token.encode()))
 
