@@ -162,8 +162,10 @@ class SessionStore(SessionStorePort[Session]):
         config = self.config
         now = self._now()
         return (
-            0 <= (now - session.created).seconds < config.session_max_lifetime_seconds
-            and 0 <= (now - session.last_used).seconds < config.session_timeout_seconds
+            abs((now - session.created).total_seconds())
+            < config.session_max_lifetime_seconds
+            and abs((now - session.last_used).total_seconds())
+            < config.session_timeout_seconds
         )
 
     @staticmethod
