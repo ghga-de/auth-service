@@ -304,7 +304,7 @@ def test_grant_download_access(client_with_db):
     assert creation_date
     assert claim_data.pop("assertion_date") == creation_date
     creation_datetime = datetime.fromisoformat(creation_date.replace("Z", "+00:00"))
-    assert abs((current_datetime - creation_datetime).total_seconds()) < 5
+    assert 0 <= (creation_datetime - current_datetime).total_seconds() < 5
 
     assert claim_data == {
         "asserted_by": "dac",

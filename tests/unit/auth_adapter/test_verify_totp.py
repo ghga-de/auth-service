@@ -141,7 +141,7 @@ async def test_verify_totp(session_state: SessionState, totp_code: str):  # noqa
         assert status_change.by == user_id
         assert status_change.context == "Too many failed TOTP login attempts"
         assert status_change.change_date
-        assert abs((now_as_utc() - status_change.change_date).total_seconds()) < 3
+        assert 0 <= (now_as_utc() - status_change.change_date).total_seconds() < 3
         assert totp_token
         assert not totp_handler.is_invalid(totp_token)
     else:

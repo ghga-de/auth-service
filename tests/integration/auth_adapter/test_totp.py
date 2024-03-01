@@ -412,7 +412,7 @@ async def test_total_limit_totp(
     assert status_change.by == user_id
     assert status_change.context == "Too many failed TOTP login attempts"
     assert status_change.change_date
-    assert abs((now_as_utc() - status_change.change_date).total_seconds()) < 3
+    assert 0 <= (now_as_utc() - status_change.change_date).total_seconds() < 3
 
     # check that the user is not authorized any more
     response = await client.post("/users", headers=headers)
