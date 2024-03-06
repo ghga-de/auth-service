@@ -22,7 +22,7 @@ from hexkit.protocols.dao import DaoSurrogateId
 from typing_extensions import TypeAlias  # in typing only since Python 3.10
 
 from ..models.ivas import Iva as IvaDto
-from ..models.ivas import IvaData as IvaCreationDto
+from ..models.ivas import IvaFullData as IvaCreationDto
 from ..models.users import User as UserDto
 from ..models.users import UserData as UserCreationDto
 

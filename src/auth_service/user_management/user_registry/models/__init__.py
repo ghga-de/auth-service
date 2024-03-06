@@ -17,7 +17,7 @@
 This sub-package contains the models used in the user management service.
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 __all__ = ["BaseDto"]
 
@@ -25,4 +25,4 @@ __all__ = ["BaseDto"]
 class BaseDto(BaseModel):
     """Base model pre-configured for use as data transfer object."""
 
-    model_config = {"extra": "forbid", "frozen": True}
+    model_config = ConfigDict(extra="forbid", frozen=True)

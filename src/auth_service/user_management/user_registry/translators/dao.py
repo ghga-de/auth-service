@@ -21,7 +21,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 
 from ..models.ivas import Iva as IvaDto
-from ..models.ivas import IvaData as IvaCreationDto
+from ..models.ivas import IvaFullData as IvaCreationDto
 from ..models.users import User as UserDto
 from ..models.users import UserData as UserCreationDto
 from ..ports.dao import IvaDao, UserDao, UserDaoFactoryPort

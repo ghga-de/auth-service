@@ -25,7 +25,7 @@ from hexkit.protocols.dao import (
 )
 from pydantic_settings import BaseSettings
 
-from ..models.ivas import IvaExternal
+from ..models.ivas import IvaData
 from ..models.users import (
     StatusChange,
     User,
@@ -171,17 +171,17 @@ class UserRegistry(UserRegistryPort):
             log.error("Could not delete user: %s", error)
             raise self.UserDeletionError from error
 
-    async def get_ivas(self, user_id: str) -> list[IvaExternal]:
+    async def get_ivas(self, user_id: str) -> list[IvaData]:
         """Get all IVAs of a user.
 
         The internal data of the IVAs is not included in the result.
 
         May raise an IvaRetrievalError.
         """
-        external_fields = IvaExternal.model_fields
+        external_fields = IvaData.model_fields
         try:
             return [
-                IvaExternal(**iva.model_dump(include=external_fields))
+                IvaData(**iva.model_dump(include=external_fields))
                 async for iva in self.iva_dao.find_all(mapping={"user_id": user_id})
             ]
         except Exception as error:

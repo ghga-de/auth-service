@@ -27,7 +27,7 @@ from ..auth import (
     is_steward,
 )
 from .deps import Depends, get_user_registry
-from .models.ivas import IvaExternal
+from .models.ivas import IvaData
 from .models.users import (
     User,
     UserBasicData,
@@ -298,7 +298,7 @@ async def delete_user(
     " Can only be performed by a data steward or the same user.",
     responses={
         200: {
-            "model": list[IvaExternal],
+            "model": list[IvaData],
             "description": "User IVAs have been retrieved.",
         },
         401: {"description": "Not authorized to request IVAs."},
@@ -318,7 +318,7 @@ async def get_ivas(
     ],
     user_registry: Annotated[UserRegistryPort, Depends(get_user_registry)],
     auth_context: UserAuthContext,
-) -> list[IvaExternal]:
+) -> list[IvaData]:
     """Get all IVAs of a user."""
     # only data steward can request IVAs of other user accounts
     if not (is_steward(auth_context) or user_id == auth_context.id):

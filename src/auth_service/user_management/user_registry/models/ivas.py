@@ -22,11 +22,11 @@ from enum import Enum
 from typing import Optional
 
 from ghga_service_commons.utils.utc_dates import UTCDatetime
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from . import BaseDto
 
-__all__ = ["IVAType", "IVAState", "IvaExternal", "IvaData", "Iva"]
+__all__ = ["IVAType", "IVAState", "IvaData", "IvaFullData", "Iva"]
 
 
 class IVAType(str, Enum):
@@ -71,7 +71,7 @@ class IvaInternalData(BaseDto):
     )
 
 
-class IvaAutomaticDAta(BaseDto):
+class IvaAutomaticData(BaseDto):
     """Data that is automatically added to an IVA"""
 
     created: UTCDatetime = Field(
@@ -82,17 +82,26 @@ class IvaAutomaticDAta(BaseDto):
     )
 
 
-class IvaExternal(IvaBasicData, IvaAutomaticDAta):
-    """IVA data model including all external data and the ID"""
+class IvaData(IvaBasicData, IvaAutomaticData):
+    """IVA data model with all external data including ID"""
+
+    # this is the model that is exposed via the API
+    model_config = ConfigDict(
+        title="IVA",
+        json_schema_extra={
+            "title": "IVA",
+            "description": "Independent Verification Address (IVA)",
+        },
+    )
 
     id: str = Field(default=..., description="Internal IVA ID")  # actually UUID
 
 
-class IvaData(IvaBasicData, IvaInternalData, IvaAutomaticDAta):
+class IvaFullData(IvaBasicData, IvaInternalData, IvaAutomaticData):
     """IVA data model including all internal data without ID"""
 
 
-class Iva(IvaData):
+class Iva(IvaFullData):
     """IVA data model including internal data and the ID"""
 
     id: str = Field(default=..., description="Internal IVA ID")  # actually UUID

@@ -18,7 +18,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Union
 
-from ..models.ivas import IvaExternal
+from ..models.ivas import IvaData
 from ..models.users import User, UserBasicData, UserModifiableData, UserRegisteredData
 
 
@@ -106,7 +106,7 @@ class UserRegistryPort(ABC):
         ...
 
     @abstractmethod
-    async def get_ivas(self, user_id: str) -> list[IvaExternal]:
+    async def get_ivas(self, user_id: str) -> list[IvaData]:
         """Get all IVAs of a user.
 
         The internal data of the IVAs is not included in the result.
