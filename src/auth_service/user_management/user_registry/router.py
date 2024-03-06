@@ -33,7 +33,7 @@ from ..auth import (
     is_steward,
 )
 from .deps import Depends, UserDao, get_user_dao
-from .models.dto import (
+from .models.users import (
     StatusChange,
     User,
     UserBasicData,

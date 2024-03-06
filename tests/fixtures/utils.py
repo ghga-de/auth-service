@@ -32,12 +32,12 @@ from jwcrypto import jwk, jwt
 from auth_service.auth_adapter.core.session_store import Session
 from auth_service.auth_adapter.ports.dao import UserToken
 from auth_service.config import CONFIG
-from auth_service.user_management.claims_repository.models.dto import (
+from auth_service.user_management.claims_repository.models.claims import (
     AuthorityLevel,
     Claim,
     VisaType,
 )
-from auth_service.user_management.user_registry.models.dto import User
+from auth_service.user_management.user_registry.models.users import User
 
 BASE_DIR = Path(__file__).parent.resolve()
 

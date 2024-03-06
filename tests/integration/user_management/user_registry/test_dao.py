@@ -26,7 +26,7 @@ from auth_service.user_management.user_registry.deps import (
     get_config,
     get_user_dao_factory,
 )
-from auth_service.user_management.user_registry.models.dto import (
+from auth_service.user_management.user_registry.models.users import (
     AcademicTitle,
     StatusChange,
     User,

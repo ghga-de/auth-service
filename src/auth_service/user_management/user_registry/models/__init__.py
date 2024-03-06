@@ -16,3 +16,13 @@
 """
 This sub-package contains the models used in the user management service.
 """
+
+from pydantic import BaseModel
+
+__all__ = ["BaseDTO"]
+
+
+class BaseDTO(BaseModel):
+    """Base model pre-configured for use as data transfer object."""
+
+    model_config = {"extra": "forbid", "frozen": True}

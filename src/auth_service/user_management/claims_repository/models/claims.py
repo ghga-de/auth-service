@@ -13,17 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""DTOs for the claims repository service
-
-Note: we currently use the DTOs also as the core entities.
-"""
+"""Claims model classes used as DTOs and core entities."""
 
 from enum import Enum
 from typing import Any, Optional, Union
 
 from ghga_service_commons.utils.utc_dates import UTCDatetime
 from pydantic import (
-    BaseModel,
     EmailStr,
     Field,
     HttpUrl,
@@ -31,6 +27,8 @@ from pydantic import (
     field_serializer,
     field_validator,
 )
+
+from . import BaseDTO
 
 __all__ = [
     "AuthorityLevel",
@@ -46,12 +44,6 @@ __all__ = [
     "MatchType",
     "VisaType",
 ]
-
-
-class BaseDto(BaseModel):
-    """Base model pre-configured for use as Dto."""
-
-    model_config = {"extra": "forbid", "frozen": True}
 
 
 class VisaType(str, Enum):
@@ -93,7 +85,7 @@ class MatchType(str, Enum):
     SPLIT_PATTERN = "split_pattern"
 
 
-class ClaimMatch(BaseDto):
+class ClaimMatch(BaseDTO):
     """A pair of a claim name and a match value with type"""
 
     claim: MatchClaim
@@ -101,14 +93,14 @@ class ClaimMatch(BaseDto):
     match_value: str
 
 
-class Condition(BaseDto):
+class Condition(BaseDTO):
     """A single condition to check a type and a set of claims"""
 
     type: VisaType
     matches: list[ClaimMatch]
 
 
-class Identity(BaseDto):
+class Identity(BaseDTO):
     """A user identity based on an iss/sub pair"""
 
     iss: HttpUrl = Field(default=..., title="Issuer", description="OpenID Issuer")
@@ -120,7 +112,7 @@ class Identity(BaseDto):
         return str(iss).rstrip("/")
 
 
-class ClaimValidity(BaseDto):
+class ClaimValidity(BaseDTO):
     """Start and end dates for validating claims."""
 
     valid_from: UTCDatetime = Field(
@@ -186,7 +178,7 @@ class ClaimCreation(ClaimValidity):
         return value
 
 
-class ClaimUpdate(BaseDto):
+class ClaimUpdate(BaseDTO):
     """A set of attributes that shall be updated in a claim."""
 
     revocation_date: UTCDatetime = Field(default=..., description="Date of revocation")
@@ -196,7 +188,7 @@ class ClaimFullCreation(ClaimCreation):
     """A claim about a user with a user ID and all data except the claim ID"""
 
     user_id: str = Field(  # actually UUID
-        default=..., description="Internally used ID of the user"
+        default=..., description="Internal user ID"
     )
 
     creation_date: UTCDatetime = Field(
@@ -211,5 +203,5 @@ class Claim(ClaimFullCreation):
     """A claim about a user with a claim ID"""
 
     id: str = Field(  # actually UUID
-        default=..., description="Internally used ID of the claim"
+        default=..., description="Internal claim ID"
     )

@@ -21,8 +21,8 @@ from abc import ABC, abstractmethod
 from hexkit.protocols.dao import DaoSurrogateId
 from typing_extensions import TypeAlias  # in typing only since Python 3.10
 
-from ..models.dto import User as UserDto
-from ..models.dto import UserData as UserCreationDto
+from ..models.users import User as UserDto
+from ..models.users import UserData as UserCreationDto
 
 __all__ = ["UserDao", "UserDaoFactoryPort"]
 

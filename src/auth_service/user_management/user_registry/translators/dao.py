@@ -20,8 +20,8 @@ from hexkit.protocols.dao import DaoFactoryProtocol
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
-from ..models.dto import User as UserDto
-from ..models.dto import UserData as UserCreationDto
+from ..models.users import User as UserDto
+from ..models.users import UserData as UserCreationDto
 from ..ports.dao import UserDao, UserDaoFactoryPort
 
 __all__ = ["UserDaoFactory", "UserDaoConfig"]
