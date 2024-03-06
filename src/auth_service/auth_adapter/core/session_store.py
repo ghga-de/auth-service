@@ -113,10 +113,7 @@ class SessionStore(SessionStorePort[Session]):
         *,
         config: SessionConfig,
     ):
-        """Create a session store.
-
-        Functions for creating and validating sessions must be provided.
-        """
+        """Create a session store."""
         self.config = config
 
     def _now(self) -> UTCDatetime:

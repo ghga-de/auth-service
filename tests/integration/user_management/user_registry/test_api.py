@@ -22,7 +22,7 @@ from fastapi import status
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from pytest import mark
 
-from auth_service.user_management.user_registry.utils import is_internal_id
+from auth_service.user_management.user_registry.core.registry import UserRegistry
 
 from ....fixtures.utils import get_headers_for
 from .fixtures import (  # noqa: F401
@@ -83,7 +83,7 @@ async def test_post_user(client_with_db, new_user_headers):
     user = response.json()
 
     id_ = user.pop("id", None)
-    assert is_internal_id(id_)
+    assert UserRegistry.is_internal_user_id(id_)
 
     assert user.pop("status") == "active"
     assert user.pop("status_change") is None
@@ -114,7 +114,7 @@ async def test_post_user_with_minimal_data(client_with_db, new_user_headers):
     user = response.json()
 
     id_ = user.pop("id", None)
-    assert is_internal_id(id_)
+    assert UserRegistry.is_internal_user_id(id_)
 
     assert user.pop("status") == "active"
     assert user.pop("status_change") is None
@@ -212,7 +212,7 @@ async def test_put_user(client_with_db, new_user_headers):
     )
     assert response.status_code == status.HTTP_201_CREATED
     id_ = response.json()["id"]
-    assert is_internal_id(id_)
+    assert UserRegistry.is_internal_user_id(id_)
 
     new_data = {"name": "Max Headhall", "email": "head@example.org", "title": "Prof."}
     for key, value in new_data.items():
@@ -245,7 +245,7 @@ async def test_put_nonexisting_user_with_invalid_id(client_with_db):
     del user_data["ext_id"]
 
     id_ = "nonexisting-user-id"
-    assert not is_internal_id(id_)
+    assert not UserRegistry.is_internal_user_id(id_)
     headers = get_headers_for(id=id_, name=user_data["name"], email=user_data["email"])
 
     response = await client_with_db.put(

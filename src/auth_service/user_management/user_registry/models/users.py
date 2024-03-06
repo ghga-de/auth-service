@@ -21,7 +21,7 @@ from typing import Optional
 from ghga_service_commons.utils.utc_dates import UTCDatetime
 from pydantic import EmailStr, Field
 
-from . import BaseDTO
+from . import BaseDto
 
 __all__ = ["User", "UserData", "UserStatus", "StatusChange"]
 
@@ -40,7 +40,7 @@ class AcademicTitle(str, Enum):
     PROF = "Prof."
 
 
-class StatusChange(BaseDTO):
+class StatusChange(BaseDto):
     """Details of a status change"""
 
     previous: Optional[UserStatus] = Field(
@@ -57,7 +57,7 @@ class StatusChange(BaseDTO):
     )
 
 
-class UserBasicData(BaseDTO):
+class UserBasicData(BaseDto):
     """Basic data of a user"""
 
     name: str = Field(
@@ -86,7 +86,7 @@ class UserRegisteredData(UserBasicData):
     )
 
 
-class UserModifiableData(BaseDTO):
+class UserModifiableData(BaseDto):
     """User data that can be modified"""
 
     status: Optional[UserStatus] = Field(
@@ -97,7 +97,7 @@ class UserModifiableData(BaseDTO):
     )
 
 
-class UserAutomaticData(BaseDTO):
+class UserAutomaticData(BaseDto):
     """User data that is automatically created except the ID"""
 
     registration_date: UTCDatetime = Field(

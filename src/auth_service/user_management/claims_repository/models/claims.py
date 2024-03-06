@@ -28,7 +28,7 @@ from pydantic import (
     field_validator,
 )
 
-from . import BaseDTO
+from . import BaseDto
 
 __all__ = [
     "AuthorityLevel",
@@ -85,7 +85,7 @@ class MatchType(str, Enum):
     SPLIT_PATTERN = "split_pattern"
 
 
-class ClaimMatch(BaseDTO):
+class ClaimMatch(BaseDto):
     """A pair of a claim name and a match value with type"""
 
     claim: MatchClaim
@@ -93,14 +93,14 @@ class ClaimMatch(BaseDTO):
     match_value: str
 
 
-class Condition(BaseDTO):
+class Condition(BaseDto):
     """A single condition to check a type and a set of claims"""
 
     type: VisaType
     matches: list[ClaimMatch]
 
 
-class Identity(BaseDTO):
+class Identity(BaseDto):
     """A user identity based on an iss/sub pair"""
 
     iss: HttpUrl = Field(default=..., title="Issuer", description="OpenID Issuer")
@@ -112,7 +112,7 @@ class Identity(BaseDTO):
         return str(iss).rstrip("/")
 
 
-class ClaimValidity(BaseDTO):
+class ClaimValidity(BaseDto):
     """Start and end dates for validating claims."""
 
     valid_from: UTCDatetime = Field(
@@ -178,7 +178,7 @@ class ClaimCreation(ClaimValidity):
         return value
 
 
-class ClaimUpdate(BaseDTO):
+class ClaimUpdate(BaseDto):
     """A set of attributes that shall be updated in a claim."""
 
     revocation_date: UTCDatetime = Field(default=..., description="Date of revocation")

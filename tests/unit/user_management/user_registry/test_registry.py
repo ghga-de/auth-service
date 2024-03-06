@@ -14,16 +14,14 @@
 # limitations under the License.
 #
 
-"""Unit tests for the utils module."""
+"""Unit tests for the core user and IVA registry."""
 
-from auth_service.user_management.user_registry.utils import (
-    is_external_id,
-    is_internal_id,
-)
+from auth_service.user_management.user_registry.core.registry import UserRegistry
 
 
-def test_is_internal_id():
+def test_is_internal_user_id():
     """Test that internal IDs can be validated."""
+    is_internal_id = UserRegistry.is_internal_user_id
     assert is_internal_id(None) is False  # type: ignore
     assert is_internal_id(42) is False  # type: ignore
     assert is_internal_id("") is False
@@ -34,8 +32,9 @@ def test_is_internal_id():
     assert is_internal_id("16fd2706-8baf-433b-82eb-8c7f@da847da") is False
 
 
-def test_is_external_id():
+def test_is_external_user_id():
     """Test that internal IDs can be validated."""
+    is_external_id = UserRegistry.is_external_user_id
     assert is_external_id(None) is False  # type: ignore
     assert is_external_id(42) is False  # type: ignore
     assert is_external_id("") is False

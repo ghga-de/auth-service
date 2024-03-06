@@ -24,7 +24,9 @@ from typing import Optional
 from ghga_service_commons.utils.utc_dates import UTCDatetime
 from pydantic import Field
 
-from . import BaseDTO
+from . import BaseDto
+
+__all__ = ["IVAType", "IVAState", "IvaExternal", "IvaData", "Iva"]
 
 
 class IVAType(str, Enum):
@@ -46,16 +48,19 @@ class IVAState(str, Enum):
     CODE_VERIFIED = "CodeVerified"
 
 
-class IVABasicData(BaseDTO):
+class IvaBasicData(BaseDto):
     """Basic IVA data"""
 
     user_id: str = Field(default=..., description="Internal user ID")
     type: IVAType = Field(default=..., description="The type of the IVA")
     value: str = Field(default=..., description="The actual address")
+    state: IVAState = Field(
+        default=IVAState.UNVERIFIED, description="The state of the IVA"
+    )
 
 
-class IVAStateData(BaseDTO):
-    """Verification status of IVA data"""
+class IvaInternalData(BaseDto):
+    """Internal data of an IVA (not exposed via the API)"""
 
     verification_code_hash: Optional[str] = Field(
         default=None, description="Hash of the verification code for the IVA"
@@ -64,13 +69,10 @@ class IVAStateData(BaseDTO):
         default=0,
         description="Number of failed verification attempts for the verification code",
     )
-    state: IVAState = Field(
-        default=IVAState.UNVERIFIED, description="The state of the IVA"
-    )
 
 
-class IVAAutomaticDAta(BaseDTO):
-    """Data that is automatically added to an IVA."""
+class IvaAutomaticDAta(BaseDto):
+    """Data that is automatically added to an IVA"""
 
     created: UTCDatetime = Field(
         default=..., description="The date and time when the IVA was created"
@@ -80,7 +82,17 @@ class IVAAutomaticDAta(BaseDTO):
     )
 
 
-class IVA(IVABasicData, IVAStateData, IVAAutomaticDAta):
-    """IVA data model including all data and the ID"""
+class IvaExternal(IvaBasicData, IvaAutomaticDAta):
+    """IVA data model including all external data and the ID"""
+
+    id: str = Field(default=..., description="Internal IVA ID")  # actually UUID
+
+
+class IvaData(IvaBasicData, IvaInternalData, IvaAutomaticDAta):
+    """IVA data model including all internal data without ID"""
+
+
+class Iva(IvaData):
+    """IVA data model including internal data and the ID"""
 
     id: str = Field(default=..., description="Internal IVA ID")  # actually UUID

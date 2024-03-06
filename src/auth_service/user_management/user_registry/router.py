@@ -14,39 +14,30 @@
 # limitations under the License.
 #
 
-"""Routes for managing users"""
+"""Routes for managing users and IVAs"""
 
-import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Path, Response
 from fastapi.exceptions import HTTPException
-from ghga_service_commons.utils.utc_dates import now_as_utc
-from hexkit.protocols.dao import (
-    NoHitsFoundError,
-    ResourceNotFoundError,
-)
 
 from ..auth import (
     StewardAuthContext,
     UserAuthContext,
     is_steward,
 )
-from .deps import Depends, UserDao, get_user_dao
+from .deps import Depends, get_user_registry
+from .models.ivas import IvaExternal
 from .models.users import (
-    StatusChange,
     User,
     UserBasicData,
-    UserData,
     UserModifiableData,
     UserRegisteredData,
     UserStatus,
 )
-from .utils import is_external_id, is_internal_id
+from .ports.registry import UserRegistryPort
 
 __all__ = ["router"]
-
-log = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -71,7 +62,7 @@ INITIAL_USER_STATUS = UserStatus.ACTIVE
 )
 async def post_user(
     user_data: UserRegisteredData,
-    user_dao: Annotated[UserDao, Depends(get_user_dao)],
+    user_registry: Annotated[UserRegistryPort, Depends(get_user_registry)],
     auth_context: UserAuthContext,
 ) -> User:
     """Register a user."""
@@ -80,30 +71,21 @@ async def post_user(
     if ext_id != auth_context.id:  # users can only register themselves
         raise HTTPException(status_code=403, detail="Not authorized to register user.")
     if not (
-        is_external_id(ext_id)
+        user_registry.is_external_user_id(ext_id)
         and user_data.name == auth_context.name  # specified name must match token
         and user_data.email == auth_context.email  # specified email must match token
     ):
         raise HTTPException(status_code=422, detail="User cannot be registered.")
     try:
-        user = await user_dao.find_one(mapping={"ext_id": ext_id})
-    except NoHitsFoundError:
-        pass
-    else:
-        raise HTTPException(status_code=409, detail="User was already registered.")
-    full_user_data = UserData(
-        **user_data.model_dump(),
-        status=INITIAL_USER_STATUS,
-        registration_date=now_as_utc(),
-    )
-    try:
-        user = await user_dao.insert(full_user_data)
-    except Exception as error:
-        log.error("Could not insert user: %s", error)
+        return await user_registry.create_user(user_data)
+    except user_registry.UserAlreadyExistsError as error:
+        raise HTTPException(
+            status_code=409, detail="User was already registered."
+        ) from error
+    except user_registry.UserCreationError as error:
         raise HTTPException(
             status_code=500, detail="User cannot be registered."
         ) from error
-    return user
 
 
 @router.put(
@@ -133,31 +115,26 @@ async def put_user(
             description="Internal ID",
         ),
     ],
-    user_dao: Annotated[UserDao, Depends(get_user_dao)],
+    user_registry: Annotated[UserRegistryPort, Depends(get_user_registry)],
     auth_context: UserAuthContext,
 ) -> Response:
     """Update a user."""
     if id_ != auth_context.id:  # users can only update themselves
         raise HTTPException(status_code=403, detail="Not authorized to update user.")
     if not (
-        is_internal_id(id_)
+        user_registry.is_internal_user_id(id_)
         and user_data.name == auth_context.name  # specified name must match token
         and user_data.email == auth_context.email  # specified email must match token
     ):
         raise HTTPException(status_code=422, detail="User cannot be updated.")
     try:
-        user = await user_dao.get_by_id(id_)
-        user = user.model_copy(update=user_data.model_dump())
-        await user_dao.update(user)
-    except ResourceNotFoundError as error:
-        log.error("Could not update user: %s", error)
+        await user_registry.update_user(id_, user_data)
+    except user_registry.UserDoesNotExistError as error:
         raise HTTPException(status_code=404, detail="User does not exist.") from error
-    except Exception as error:
-        log.error("Could not update user: %s", error)
+    except user_registry.UserUpdateError as error:
         raise HTTPException(
             status_code=500, detail="User cannot be updated."
         ) from error
-
     return Response(status_code=204)
 
 
@@ -186,24 +163,20 @@ async def get_user(
             description="Internal User ID",
         ),
     ],
-    user_dao: Annotated[UserDao, Depends(get_user_dao)],
+    user_registry: Annotated[UserRegistryPort, Depends(get_user_registry)],
     auth_context: UserAuthContext,
 ) -> User:
     """Get user data."""
-    # Only data steward can request other user accounts
+    # only data stewards can request other user accounts
     if not (is_steward(auth_context) or id_ == auth_context.id):
         raise HTTPException(status_code=403, detail="Not authorized to request user.")
     try:
-        if is_internal_id(id_):
-            user = await user_dao.get_by_id(id_)
-        else:
-            raise ResourceNotFoundError(id_=id_)
-    except ResourceNotFoundError as error:
+        user = await user_registry.get_user(id_)
+    except user_registry.UserDoesNotExistError as error:
         raise HTTPException(
             status_code=404, detail="The user was not found."
         ) from error
-    except Exception as error:
-        log.error("Could not request user: %s", error)
+    except user_registry.UserRetrievalError as error:
         raise HTTPException(
             status_code=500, detail="The user cannot be requested."
         ) from error
@@ -238,15 +211,14 @@ async def patch_user(
             description="Internal ID",
         ),
     ],
-    user_dao: Annotated[UserDao, Depends(get_user_dao)],
+    user_registry: Annotated[UserRegistryPort, Depends(get_user_registry)],
     auth_context: UserAuthContext,
 ) -> Response:
     """Modify user data."""
-    update_data = user_data.model_dump(exclude_unset=True)
     # Everybody is allowed to modify their own data except the status,
     # but only data stewards are allowed to modify other accounts
     allowed = (
-        "status" not in update_data
+        "status" not in user_data.model_fields_set
         if id_ == auth_context.id
         else is_steward(auth_context)
     )
@@ -255,28 +227,20 @@ async def patch_user(
             status_code=403, detail="Not authorized to make this modification."
         )
     try:
-        if not is_internal_id(id_):
-            raise ResourceNotFoundError(id_=id_)
-        user = await user_dao.get_by_id(id_)
-        if "status" in update_data and update_data["status"] != user.status:
-            update_data["status_change"] = StatusChange(
-                previous=user.status,
-                by=auth_context.id,
-                context="manual change",
-                change_date=now_as_utc(),
-            )
-        user = user.model_copy(update=update_data)
-        await user_dao.update(user)
-    except ResourceNotFoundError as error:
+        await user_registry.update_user(
+            id_,
+            user_data,
+            changed_by=auth_context.id,
+            context="manual change",
+        )
+    except user_registry.UserDoesNotExistError as error:
         raise HTTPException(
             status_code=404, detail="The user was not found."
         ) from error
-    except Exception as error:
-        log.error("Could not modify user: %s", error)
+    except user_registry.UserRetrievalError as error:
         raise HTTPException(
             status_code=500, detail="The user cannot be modified."
         ) from error
-
     return Response(status_code=204)
 
 
@@ -304,7 +268,7 @@ async def delete_user(
             description="Internal ID",
         ),
     ],
-    user_dao: Annotated[UserDao, Depends(get_user_dao)],
+    user_registry: Annotated[UserRegistryPort, Depends(get_user_registry)],
     auth_context: StewardAuthContext,
 ) -> Response:
     """Delete user."""
@@ -313,17 +277,55 @@ async def delete_user(
             status_code=403, detail="Not authorized to delete this user."
         )
     try:
-        if not is_internal_id(id_):
-            raise ResourceNotFoundError(id_=id_)
-        await user_dao.delete(id_=id_)
-    except ResourceNotFoundError as error:
+        await user_registry.delete_user(id_)
+    except user_registry.UserDoesNotExistError as error:
         raise HTTPException(
             status_code=404, detail="The user was not found."
         ) from error
-    except Exception as error:
-        log.error("Could not delete user: %s", error)
+    except user_registry.UserRetrievalError as error:
         raise HTTPException(
             status_code=500, detail="The user cannot be deleted."
         ) from error
-
     return Response(status_code=204)
+
+
+@router.get(
+    "/users/{user_id}/ivas",
+    operation_id="get_ivas",
+    tags=["users"],
+    summary="Get all IVAs of a user",
+    description="Endpoint used to get all IVAs for a specified user."
+    " Can only be performed by a data steward or the same user.",
+    responses={
+        200: {
+            "model": list[IvaExternal],
+            "description": "User IVAs have been retrieved.",
+        },
+        401: {"description": "Not authorized to request IVAs."},
+        403: {"description": "Not authorized to request these IVAs."},
+        422: {"description": "Validation error in submitted user identification."},
+    },
+    status_code=200,
+)
+async def get_ivas(
+    user_id: Annotated[
+        str,
+        Path(
+            ...,
+            alias="user_id",
+            description="Internal User ID",
+        ),
+    ],
+    user_registry: Annotated[UserRegistryPort, Depends(get_user_registry)],
+    auth_context: UserAuthContext,
+) -> list[IvaExternal]:
+    """Get all IVAs of a user."""
+    # only data steward can request IVAs of other user accounts
+    if not (is_steward(auth_context) or user_id == auth_context.id):
+        raise HTTPException(
+            status_code=403, detail="Not authorized to request these IVAs."
+        )
+    try:
+        return await user_registry.get_ivas(user_id)
+    except user_registry.IvaRetrievalError as error:
+        raise HTTPException(status_code=500, detail="Cannot retrieve IVAs.") from error
