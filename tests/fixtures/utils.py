@@ -37,7 +37,7 @@ from auth_service.user_management.claims_repository.models.claims import (
     Claim,
     VisaType,
 )
-from auth_service.user_management.user_registry.models.ivas import Iva
+from auth_service.user_management.user_registry.models.ivas import Iva, IvaFullData
 from auth_service.user_management.user_registry.models.users import User, UserData
 
 BASE_DIR = Path(__file__).parent.resolve()
@@ -270,6 +270,12 @@ class DummyIvaDao:
     def __init__(self, ivas: Optional[list[Iva]] = None):
         """Initialize the dummy UserDao"""
         self.ivas = ivas if ivas else []
+
+    async def insert(self, iva: IvaFullData) -> Iva:
+        """Insert a dummy IVA."""
+        iva = Iva(id="new-iva", **iva.model_dump())
+        self.ivas.append(iva)
+        return iva
 
     async def find_all(self, *, mapping: Mapping[str, Any]) -> AsyncIterator[Iva]:
         """Find all dummy IVAs."""

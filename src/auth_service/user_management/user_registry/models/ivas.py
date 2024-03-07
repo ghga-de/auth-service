@@ -26,7 +26,15 @@ from pydantic import ConfigDict, Field
 
 from . import BaseDto
 
-__all__ = ["IvaType", "IvaState", "IvaData", "IvaFullData", "Iva"]
+__all__ = [
+    "IvaType",
+    "IvaState",
+    "IvaTypeAndValue",
+    "IvaId",
+    "IvaData",
+    "IvaFullData",
+    "Iva",
+]
 
 
 class IvaType(str, Enum):
@@ -48,12 +56,17 @@ class IvaState(str, Enum):
     CODE_VERIFIED = "CodeVerified"
 
 
-class IvaBasicData(BaseDto):
+class IvaTypeAndValue(BaseDto):
+    """IVA type and value"""
+
+    type: IvaType = Field(default=..., description="The type of the IVA")
+    value: str = Field(default=..., description="The actual address")
+
+
+class IvaBasicData(IvaTypeAndValue):
     """Basic IVA data"""
 
     user_id: str = Field(default=..., description="Internal user ID")
-    type: IvaType = Field(default=..., description="The type of the IVA")
-    value: str = Field(default=..., description="The actual address")
     state: IvaState = Field(
         default=IvaState.UNVERIFIED, description="The state of the IVA"
     )
@@ -82,7 +95,13 @@ class IvaAutomaticData(BaseDto):
     )
 
 
-class IvaData(IvaBasicData, IvaAutomaticData):
+class IvaId(BaseDto):
+    """The ID of an IVA"""
+
+    id: str = Field(default=..., description="Internal IVA ID")  # actually UUID
+
+
+class IvaData(IvaId, IvaBasicData, IvaAutomaticData):
     """IVA data model with all external data including ID"""
 
     # this is the model that is exposed via the API
@@ -94,14 +113,10 @@ class IvaData(IvaBasicData, IvaAutomaticData):
         },
     )
 
-    id: str = Field(default=..., description="Internal IVA ID")  # actually UUID
-
 
 class IvaFullData(IvaBasicData, IvaInternalData, IvaAutomaticData):
     """IVA data model including all internal data without ID"""
 
 
-class Iva(IvaFullData):
+class Iva(IvaId, IvaFullData):
     """IVA data model including internal data and the ID"""
-
-    id: str = Field(default=..., description="Internal IVA ID")  # actually UUID

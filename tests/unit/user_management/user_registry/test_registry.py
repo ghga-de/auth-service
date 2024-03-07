@@ -27,7 +27,13 @@ from auth_service.user_management.user_registry.core.registry import (
     UserDao,
     UserRegistry,
 )
-from auth_service.user_management.user_registry.models.ivas import Iva, IvaData, IvaType
+from auth_service.user_management.user_registry.models.ivas import (
+    Iva,
+    IvaBasicData,
+    IvaData,
+    IvaState,
+    IvaType,
+)
 from auth_service.user_management.user_registry.models.users import (
     AcademicTitle,
     User,
@@ -251,6 +257,37 @@ async def test_delete_non_existing_user():
     registry = UserRegistryForTesting()
     with raises(registry.UserDoesNotExistError):
         await registry.delete_user("nobody@ghga.de")
+
+
+async def test_create_new_iva():
+    """Test creating a new IVA."""
+    registry = UserRegistryForTesting()
+    iva_data = IvaBasicData(user_id="john@ghga.de", type=IvaType.PHONE, value="123456")
+    iva_id = await registry.create_iva(iva_data)
+    assert iva_id
+    ivas = registry.dummy_ivas
+    assert isinstance(ivas, list)
+    assert len(ivas) == 1
+    iva = ivas[0]
+    assert iva.id == iva_id
+    assert iva.user_id == "john@ghga.de"
+    assert iva.type == IvaType.PHONE
+    assert iva.value == "123456"
+    assert iva.state == IvaState.UNVERIFIED
+    assert iva.verification_code_hash is None
+    assert iva.verification_attempts == 0
+    assert 0 <= (now_as_utc() - iva.created).total_seconds() < 3
+    assert 0 <= (now_as_utc() - iva.changed).total_seconds() < 3
+
+
+async def test_create_iva_for_non_existing_user():
+    """Test creating an IVA for a non-existing user."""
+    registry = UserRegistryForTesting()
+    iva_data = IvaBasicData(
+        user_id="nobody@ghga.de", type=IvaType.PHONE, value="123456"
+    )
+    with raises(registry.UserDoesNotExistError):
+        await registry.create_iva(iva_data)
 
 
 async def test_get_ivas_of_non_existing_user():

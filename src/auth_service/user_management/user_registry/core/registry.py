@@ -25,7 +25,7 @@ from hexkit.protocols.dao import (
 )
 from pydantic_settings import BaseSettings
 
-from ..models.ivas import IvaData
+from ..models.ivas import IvaBasicData, IvaData, IvaFullData
 from ..models.users import (
     StatusChange,
     User,
@@ -170,6 +170,26 @@ class UserRegistry(UserRegistryPort):
         except Exception as error:
             log.error("Could not delete user: %s", error)
             raise self.UserDeletionError from error
+
+    async def create_iva(self, data: IvaBasicData) -> str:
+        """Create an IVA with the given basic data.
+
+        Returns the internal ID of the newly createdIVA.
+
+        May raise a UserDoesNotExistError or an IvaCreationError.
+        """
+        try:
+            await self.get_user(data.user_id)
+        except self.UserRetrievalError as error:
+            raise self.IvaCreationError from error
+        created = changed = now_as_utc()
+        iva = IvaFullData(**data.model_dump(), created=created, changed=changed)
+        try:
+            iva = await self.iva_dao.insert(iva)
+        except Exception as error:
+            log.error("Could not create IVA: %s", error)
+            raise self.IvaCreationError from error
+        return iva.id
 
     async def get_ivas(self, user_id: str) -> list[IvaData]:
         """Get all IVAs of a user.

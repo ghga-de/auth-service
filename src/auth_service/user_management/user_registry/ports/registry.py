@@ -18,7 +18,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Union
 
-from ..models.ivas import IvaData
+from ..models.ivas import IvaBasicData, IvaData
 from ..models.users import User, UserBasicData, UserModifiableData, UserRegisteredData
 
 
@@ -45,6 +45,9 @@ class UserRegistryPort(ABC):
 
     class UserDeletionError(UserRegistryError):
         """Raised when a user cannot be deleted in the database."""
+
+    class IvaCreationError(UserRegistryError):
+        """Raised when an IVA cannot be created in the database."""
 
     class IvaRetrievalError(UserRegistryError):
         """Raised when IVAs cannot be retrieved from the database."""
@@ -102,6 +105,16 @@ class UserRegistryPort(ABC):
         """Delete a user.
 
         May raise a UserDoesNotExistError or a UserDeletionError.
+        """
+        ...
+
+    @abstractmethod
+    async def create_iva(self, data: IvaBasicData) -> str:
+        """Create an IVA with the given basic data.
+
+        Returns the internal ID of the newly createdIVA.
+
+        May raise an IvaCreationError.
         """
         ...
 
