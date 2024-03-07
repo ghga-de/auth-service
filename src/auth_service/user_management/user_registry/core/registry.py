@@ -142,8 +142,8 @@ class UserRegistry(UserRegistryPort):
         if "status" in update_data and user.status != update_data["status"]:
             update_data["status_change"] = StatusChange(
                 previous=user.status,
-                by=changed_by,
-                context=context,
+                by=(changed_by or "").strip() or None,
+                context=(context or "").strip() or None,
                 change_date=now_as_utc(),
             )
         try:

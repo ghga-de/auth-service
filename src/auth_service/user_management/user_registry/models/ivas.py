@@ -26,10 +26,10 @@ from pydantic import ConfigDict, Field
 
 from . import BaseDto
 
-__all__ = ["IVAType", "IVAState", "IvaData", "IvaFullData", "Iva"]
+__all__ = ["IvaType", "IvaState", "IvaData", "IvaFullData", "Iva"]
 
 
-class IVAType(str, Enum):
+class IvaType(str, Enum):
     """The type of IVA"""
 
     PHONE = "Phone"
@@ -38,7 +38,7 @@ class IVAType(str, Enum):
     IN_PERSON = "InPerson"
 
 
-class IVAState(str, Enum):
+class IvaState(str, Enum):
     """The state of an IVA"""
 
     UNVERIFIED = "Unverified"
@@ -52,10 +52,10 @@ class IvaBasicData(BaseDto):
     """Basic IVA data"""
 
     user_id: str = Field(default=..., description="Internal user ID")
-    type: IVAType = Field(default=..., description="The type of the IVA")
+    type: IvaType = Field(default=..., description="The type of the IVA")
     value: str = Field(default=..., description="The actual address")
-    state: IVAState = Field(
-        default=IVAState.UNVERIFIED, description="The state of the IVA"
+    state: IvaState = Field(
+        default=IvaState.UNVERIFIED, description="The state of the IVA"
     )
 
 
