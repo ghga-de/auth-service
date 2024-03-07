@@ -346,3 +346,118 @@ async def test_get_ivas_of_an_existing_user_with_ivas():
     assert [Iva(**iva.model_dump()) for iva in ivas] == [
         iva for iva in dummy_ivas if iva.user_id.startswith("john")
     ]
+
+
+async def test_delete_existing_iva():
+    """Test deleting an existing IVA."""
+    registry = UserRegistryForTesting()
+    now = now_as_utc()
+    dummy_ivas = registry.dummy_ivas
+    dummy_ivas.extend(
+        (
+            Iva(
+                id="iva-1",
+                user_id="john@ghga.de",
+                type=IvaType.PHONE,
+                value="123",
+                created=now,
+                changed=now,
+            ),
+            Iva(
+                id="iva-2",
+                user_id="jane@ghga.de",
+                type=IvaType.PHONE,
+                value="456",
+                created=now,
+                changed=now,
+            ),
+        )
+    )
+    assert len(dummy_ivas) == 2
+    await registry.delete_iva("iva-2")
+    assert len(dummy_ivas) == 1
+    assert dummy_ivas[0].id == "iva-1"
+    await registry.delete_iva("iva-1")
+    assert not dummy_ivas
+
+
+async def test_delete_non_existing_iva():
+    """Test deleting a non-existing IVA."""
+    registry = UserRegistryForTesting()
+    now = now_as_utc()
+    dummy_ivas = registry.dummy_ivas
+    dummy_ivas.append(
+        Iva(
+            id="iva-1",
+            user_id="john@ghga.de",
+            type=IvaType.PHONE,
+            value="123",
+            created=now,
+            changed=now,
+        ),
+    )
+    assert len(dummy_ivas) == 1
+    with raises(registry.IvaDoesNotExistError):
+        await registry.delete_iva("iva-2")
+
+
+async def test_delete_iva_for_a_user():
+    """Test deleting an IVA for a given user."""
+    registry = UserRegistryForTesting()
+    now = now_as_utc()
+    dummy_ivas = registry.dummy_ivas
+    dummy_ivas.append(
+        Iva(
+            id="iva-1",
+            user_id="john@ghga.de",
+            type=IvaType.PHONE,
+            value="123",
+            created=now,
+            changed=now,
+        ),
+    )
+    assert len(dummy_ivas) == 1
+    await registry.delete_iva("iva-1", user_id="john@ghga.de")
+    assert not dummy_ivas
+
+
+async def test_delete_iva_for_nonexisting_user():
+    """Test deleting an IVA for a non-existing user."""
+    registry = UserRegistryForTesting()
+    now = now_as_utc()
+    dummy_ivas = registry.dummy_ivas
+    dummy_ivas.append(
+        Iva(
+            id="iva-1",
+            user_id="john@ghga.de",
+            type=IvaType.PHONE,
+            value="123",
+            created=now,
+            changed=now,
+        ),
+    )
+    assert len(dummy_ivas) == 1
+    with raises(registry.IvaDoesNotExistError):
+        await registry.delete_iva("iva-1", user_id="nobody@ghga.de")
+
+
+async def test_delete_iva_for_wrong_user():
+    """Test deleting an IVA for the wrong user."""
+    registry = UserRegistryForTesting()
+    now = now_as_utc()
+    dummy_ivas = registry.dummy_ivas
+    dummy_ivas.append(
+        Iva(
+            id="iva-1",
+            user_id="john@ghga.de",
+            type=IvaType.PHONE,
+            value="123",
+            created=now,
+            changed=now,
+        ),
+    )
+    assert len(dummy_ivas) == 1
+    with raises(registry.IvaDoesNotExistError):
+        await registry.delete_iva("iva-1", user_id="jane@ghga.de")
+    assert len(dummy_ivas) == 1
+    assert dummy_ivas[0].id == "iva-1"

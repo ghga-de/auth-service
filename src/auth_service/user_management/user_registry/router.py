@@ -378,3 +378,53 @@ async def post_iva(
     except user_registry.IvaRetrievalError as error:
         raise HTTPException(status_code=500, detail="Cannot create IVA") from error
     return IvaId(id=id_)
+
+
+@router.post(
+    "/users/{user_id}/ivas",
+    operation_id="post_ivas",
+    tags=["users"],
+    summary="Create a new IVA",
+    description="Endpoint used to create a new IVA for a specified user.",
+    responses={
+        204: {"description": "IVA have been deleted."},
+        401: {"description": "Not authorized to delete IVAs."},
+        403: {"description": "Not authorized to request this IVA."},
+        404: {"description": "The user was not found."},
+        422: {"description": "Validation error in submitted user identification."},
+    },
+    status_code=200,
+)
+async def delete_iva(
+    user_id: Annotated[
+        str,
+        Path(
+            ...,
+            alias="user_id",
+            description="Internal User ID",
+        ),
+    ],
+    iva_id: Annotated[
+        str,
+        Path(
+            ...,
+            alias="iva_id",
+            description="IVA ID",
+        ),
+    ],
+    user_registry: Annotated[UserRegistryPort, Depends(get_user_registry)],
+    auth_context: UserAuthContext,
+) -> Response:
+    """Delete an IVA of the given user."""
+    # only data steward can create IVAs for other user accounts
+    if not (is_steward(auth_context) or user_id == auth_context.id):
+        raise HTTPException(
+            status_code=403, detail="Not authorized to create this IVA."
+        )
+    try:
+        await user_registry.delete_iva(iva_id, user_id=user_id)
+    except user_registry.IvaDoesNotExistError as error:
+        raise HTTPException(status_code=404, detail="The IVA was not found.") from error
+    except user_registry.IvaDeletionError as error:
+        raise HTTPException(status_code=500, detail="Cannot delete IVA") from error
+    return Response(status_code=204)

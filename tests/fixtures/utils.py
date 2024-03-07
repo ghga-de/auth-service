@@ -271,11 +271,12 @@ class DummyIvaDao:
         """Initialize the dummy UserDao"""
         self.ivas = ivas if ivas else []
 
-    async def insert(self, iva: IvaFullData) -> Iva:
-        """Insert a dummy IVA."""
-        iva = Iva(id="new-iva", **iva.model_dump())
-        self.ivas.append(iva)
-        return iva
+    async def get_by_id(self, id_: str) -> Iva:
+        """Get a dummy IVA via its ID."""
+        for iva in self.ivas:
+            if iva.id == id_:
+                return iva
+        raise ResourceNotFoundError(id_=id_)
 
     async def find_all(self, *, mapping: Mapping[str, Any]) -> AsyncIterator[Iva]:
         """Find all dummy IVAs."""
@@ -288,6 +289,17 @@ class DummyIvaDao:
                     break
             else:
                 yield iva
+
+    async def insert(self, iva: IvaFullData) -> Iva:
+        """Insert a dummy IVA."""
+        iva = Iva(id="new-iva", **iva.model_dump())
+        self.ivas.append(iva)
+        return iva
+
+    async def delete(self, *, id_: str) -> None:
+        """Delete a dummy IVA."""
+        iva = await self.get_by_id(id_)
+        self.ivas.remove(iva)
 
 
 class DummyUserTokenDao:

@@ -207,3 +207,28 @@ class UserRegistry(UserRegistryPort):
         except Exception as error:
             log.error("Could not retrieve IVAs: %s", error)
             raise self.IvaRetrievalError from error
+
+    async def delete_iva(self, iva_id: str, *, user_id: Optional[str] = None) -> None:
+        """Delete the IVA with the ID.
+
+        If the user ID is given, the IVA is only deleted if it belongs to the user.
+
+        May raise an IvaDoesNotExistError or an IvaDeletionError.
+        """
+        if user_id:
+            try:
+                iva = await self.iva_dao.get_by_id(iva_id)
+            except ResourceNotFoundError as error:
+                raise self.IvaDoesNotExistError from error
+            except Exception as error:
+                log.error("Could not retrieve IVA: %s", error)
+                raise self.IvaDeletionError from error
+            if iva.user_id != user_id:
+                raise self.IvaDoesNotExistError
+        try:
+            iva = await self.iva_dao.delete(id_=iva_id)
+        except ResourceNotFoundError as error:
+            raise self.IvaDoesNotExistError from error
+        except Exception as error:
+            log.error("Could not delete IVA: %s", error)
+            raise self.IvaDeletionError from error

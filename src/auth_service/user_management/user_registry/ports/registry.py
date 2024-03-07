@@ -52,6 +52,12 @@ class UserRegistryPort(ABC):
     class IvaRetrievalError(UserRegistryError):
         """Raised when IVAs cannot be retrieved from the database."""
 
+    class IvaDoesNotExistError(UserRegistryError):
+        """Raised when trying to access a non-existing IVA."""
+
+    class IvaDeletionError(UserRegistryError):
+        """Raised when IVAs cannot be deleted from the database."""
+
     @staticmethod
     @abstractmethod
     def is_internal_user_id(id_: str) -> bool:
@@ -125,5 +131,15 @@ class UserRegistryPort(ABC):
         The internal data of the IVAs is not included in the result.
 
         May raise an IvaRetrievalError.
+        """
+        ...
+
+    @abstractmethod
+    async def delete_iva(self, iva_id: str, *, user_id: Optional[str] = None) -> None:
+        """Delete the IVA with the ID.
+
+        If the user ID is given, the IVA is only deleted if it belongs to the user.
+
+        May raise an IvaDoesNotExistError or an IvaDeletionError.
         """
         ...
