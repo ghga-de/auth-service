@@ -159,6 +159,8 @@ class UserRegistry(UserRegistryPort):
     async def delete_user(self, user_id: str) -> None:
         """Delete a user.
 
+        This also deletes all IVAs belonging to the user.
+
         May raise a UserDoesNotExistError or a UserDeletionError.
         """
         try:
@@ -169,6 +171,15 @@ class UserRegistry(UserRegistryPort):
             raise self.UserDoesNotExistError from error
         except Exception as error:
             log.error("Could not delete user: %s", error)
+            raise self.UserDeletionError from error
+        try:
+            try:
+                async for iva in self.iva_dao.find_all(mapping={"user_id": user_id}):
+                    await self.iva_dao.delete(id_=iva.id)
+            except ResourceNotFoundError:
+                pass
+        except Exception as error:
+            log.error("Could not delete IVAs of user: %s", error)
             raise self.UserDeletionError from error
 
     async def create_iva(self, data: IvaBasicData) -> str:

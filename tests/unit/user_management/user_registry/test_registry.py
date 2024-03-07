@@ -259,6 +259,47 @@ async def test_delete_non_existing_user():
         await registry.delete_user("nobody@ghga.de")
 
 
+async def test_delete_existing_user_with_ivas():
+    """Test deleting an existing user who has IVAs."""
+    registry = UserRegistryForTesting()
+    now = now_as_utc()
+    dummy_ivas = registry.dummy_ivas
+    dummy_ivas.extend(
+        (
+            Iva(
+                id="iva-1",
+                user_id="john@ghga.de",
+                type=IvaType.PHONE,
+                value="123",
+                created=now,
+                changed=now,
+            ),
+            Iva(
+                id="iva-2",
+                user_id="jane@ghga.de",
+                type=IvaType.PHONE,
+                value="456",
+                created=now,
+                changed=now,
+            ),
+            Iva(
+                id="iva-3",
+                user_id="john@ghga.de",
+                type=IvaType.FAX,
+                value="789",
+                created=now,
+                changed=now,
+            ),
+        )
+    )
+    assert len(dummy_ivas) == 3
+    await registry.delete_user("john@ghga.de")
+    dummy_user = registry.dummy_user
+    assert dummy_user.id == "deleted"
+    assert len(dummy_ivas) == 1
+    assert dummy_ivas[0].user_id == "jane@ghga.de"
+
+
 async def test_create_new_iva():
     """Test creating a new IVA."""
     registry = UserRegistryForTesting()
