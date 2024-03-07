@@ -27,7 +27,7 @@ from ..auth import (
     is_steward,
 )
 from .deps import Depends, get_user_registry
-from .models.ivas import IvaBasicData, IvaData, IvaId, IvaTypeAndValue
+from .models.ivas import IvaBasicData, IvaData, IvaId
 from .models.users import (
     User,
     UserBasicData,
@@ -320,7 +320,7 @@ async def get_ivas(
     auth_context: UserAuthContext,
 ) -> list[IvaData]:
     """Get all IVAs of a user."""
-    # only data steward can request IVAs of other user accounts
+    # only data stewards can request IVAs of other user accounts
     if not (is_steward(auth_context) or user_id == auth_context.id):
         raise HTTPException(
             status_code=403, detail="Not authorized to request these IVAs."
@@ -333,21 +333,18 @@ async def get_ivas(
 
 @router.post(
     "/users/{user_id}/ivas",
-    operation_id="post_ivas",
+    operation_id="post_iva",
     tags=["users"],
     summary="Create a new IVA",
     description="Endpoint used to create a new IVA for a specified user.",
     responses={
-        200: {
-            "model": IvaId,
-            "description": "User IVA have been created.",
-        },
+        201: {"model": IvaId, "description": "User IVA has been successfully created."},
         401: {"description": "Not authorized to create IVAs."},
-        403: {"description": "Not authorized to request this IVA."},
+        403: {"description": "Not authorized to create this IVA."},
         404: {"description": "The user was not found."},
         422: {"description": "Validation error in submitted user identification."},
     },
-    status_code=200,
+    status_code=201,
 )
 async def post_iva(
     user_id: Annotated[
@@ -358,19 +355,19 @@ async def post_iva(
             description="Internal User ID",
         ),
     ],
-    type_and_value: IvaTypeAndValue,
+    data: IvaBasicData,
     user_registry: Annotated[UserRegistryPort, Depends(get_user_registry)],
     auth_context: UserAuthContext,
 ) -> IvaId:
     """Create new IVA for a given user."""
-    # only data steward can create IVAs for other user accounts
+    # only data stewards can create IVAs for other user accounts
     if not (is_steward(auth_context) or user_id == auth_context.id):
         raise HTTPException(
             status_code=403, detail="Not authorized to create this IVA."
         )
-    basic_data = IvaBasicData(user_id=user_id, **type_and_value.model_dump())
+    basic_data = IvaBasicData(**data.model_dump())
     try:
-        id_ = await user_registry.create_iva(basic_data)
+        id_ = await user_registry.create_iva(user_id, basic_data)
     except user_registry.UserDoesNotExistError as error:
         raise HTTPException(
             status_code=404, detail="The user was not found."
@@ -380,20 +377,20 @@ async def post_iva(
     return IvaId(id=id_)
 
 
-@router.post(
-    "/users/{user_id}/ivas",
-    operation_id="post_ivas",
+@router.delete(
+    "/users/{user_id}/ivas/{iva_id}",
+    operation_id="delete_iva",
     tags=["users"],
-    summary="Create a new IVA",
-    description="Endpoint used to create a new IVA for a specified user.",
+    summary="Delete an IVA",
+    description="Endpoint used to delete an IVA for a specified user.",
     responses={
-        204: {"description": "IVA have been deleted."},
+        204: {"description": "User IVA was successfully deleted."},
         401: {"description": "Not authorized to delete IVAs."},
-        403: {"description": "Not authorized to request this IVA."},
-        404: {"description": "The user was not found."},
+        403: {"description": "Not authorized to delete this IVA."},
+        404: {"description": "The IVA was not found."},
         422: {"description": "Validation error in submitted user identification."},
     },
-    status_code=200,
+    status_code=204,
 )
 async def delete_iva(
     user_id: Annotated[
@@ -416,10 +413,10 @@ async def delete_iva(
     auth_context: UserAuthContext,
 ) -> Response:
     """Delete an IVA of the given user."""
-    # only data steward can create IVAs for other user accounts
+    # only data stewards can delete IVAs for other user accounts
     if not (is_steward(auth_context) or user_id == auth_context.id):
         raise HTTPException(
-            status_code=403, detail="Not authorized to create this IVA."
+            status_code=403, detail="Not authorized to delete this IVA."
         )
     try:
         await user_registry.delete_iva(iva_id, user_id=user_id)

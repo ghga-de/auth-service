@@ -303,8 +303,8 @@ async def test_delete_existing_user_with_ivas():
 async def test_create_new_iva():
     """Test creating a new IVA."""
     registry = UserRegistryForTesting()
-    iva_data = IvaBasicData(user_id="john@ghga.de", type=IvaType.PHONE, value="123456")
-    iva_id = await registry.create_iva(iva_data)
+    iva_data = IvaBasicData(type=IvaType.PHONE, value="123456")
+    iva_id = await registry.create_iva("john@ghga.de", iva_data)
     assert iva_id
     ivas = registry.dummy_ivas
     assert isinstance(ivas, list)
@@ -324,11 +324,9 @@ async def test_create_new_iva():
 async def test_create_iva_for_non_existing_user():
     """Test creating an IVA for a non-existing user."""
     registry = UserRegistryForTesting()
-    iva_data = IvaBasicData(
-        user_id="nobody@ghga.de", type=IvaType.PHONE, value="123456"
-    )
+    iva_data = IvaBasicData(type=IvaType.PHONE, value="123456")
     with raises(registry.UserDoesNotExistError):
-        await registry.create_iva(iva_data)
+        await registry.create_iva("nobody@ghga.de", iva_data)
 
 
 async def test_get_ivas_of_non_existing_user():
@@ -384,7 +382,7 @@ async def test_get_ivas_of_an_existing_user_with_ivas():
     assert len(ivas) == 2
     for iva in ivas:
         assert isinstance(iva, IvaData)
-    assert [Iva(**iva.model_dump()) for iva in ivas] == [
+    assert [Iva(**iva.model_dump(), user_id="john@ghga.de") for iva in ivas] == [
         iva for iva in dummy_ivas if iva.user_id.startswith("john")
     ]
 

@@ -115,12 +115,12 @@ class UserRegistryPort(ABC):
         ...
 
     @abstractmethod
-    async def create_iva(self, data: IvaBasicData) -> str:
-        """Create an IVA with the given basic data.
+    async def create_iva(self, user_id: str, data: IvaBasicData) -> str:
+        """Create an IVA for the given user with the given basic data.
 
         Returns the internal ID of the newly createdIVA.
 
-        May raise an IvaCreationError.
+        May raise a UserDoesNotExistError or an IvaCreationError.
         """
         ...
 

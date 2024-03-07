@@ -416,25 +416,6 @@ components:
       - matches
       title: Condition
       type: object
-    IVAState:
-      description: The state of an IVA
-      enum:
-      - Unverified
-      - CodeRequested
-      - CodeCreated
-      - CodeTransmitted
-      - CodeVerified
-      title: IVAState
-      type: string
-    IVAType:
-      description: The type of IVA
-      enum:
-      - Phone
-      - Fax
-      - PostalAddress
-      - InPerson
-      title: IVAType
-      type: string
     Identity:
       additionalProperties: false
       description: A user identity based on an iss/sub pair
@@ -454,6 +435,23 @@ components:
       - iss
       - sub
       title: Identity
+      type: object
+    IvaBasicData:
+      additionalProperties: false
+      description: Basic IVA data
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/IvaType'
+          description: The type of the IVA
+        value:
+          description: The actual address
+          title: Value
+          type: string
+      required:
+      - type
+      - value
+      title: IvaBasicData
       type: object
     IvaData:
       additionalProperties: false
@@ -475,17 +473,13 @@ components:
           type: string
         state:
           allOf:
-          - $ref: '#/components/schemas/IVAState'
+          - $ref: '#/components/schemas/IvaState'
           default: Unverified
           description: The state of the IVA
         type:
           allOf:
-          - $ref: '#/components/schemas/IVAType'
+          - $ref: '#/components/schemas/IvaType'
           description: The type of the IVA
-        user_id:
-          description: Internal user ID
-          title: User Id
-          type: string
         value:
           description: The actual address
           title: Value
@@ -493,12 +487,42 @@ components:
       required:
       - created
       - changed
-      - user_id
       - type
       - value
       - id
       title: IVA
       type: object
+    IvaId:
+      additionalProperties: false
+      description: The ID of an IVA
+      properties:
+        id:
+          description: Internal IVA ID
+          title: Id
+          type: string
+      required:
+      - id
+      title: IvaId
+      type: object
+    IvaState:
+      description: The state of an IVA
+      enum:
+      - Unverified
+      - CodeRequested
+      - CodeCreated
+      - CodeTransmitted
+      - CodeVerified
+      title: IvaState
+      type: string
+    IvaType:
+      description: The type of IVA
+      enum:
+      - Phone
+      - Fax
+      - PostalAddress
+      - InPerson
+      title: IvaType
+      type: string
     MatchClaim:
       description: Possible visa claim names for conditions
       enum:
@@ -1271,6 +1295,81 @@ paths:
       security:
       - HTTPBearer: []
       summary: Get all IVAs of a user
+      tags:
+      - users
+    post:
+      description: Endpoint used to create a new IVA for a specified user.
+      operationId: post_iva
+      parameters:
+      - description: Internal User ID
+        in: path
+        name: user_id
+        required: true
+        schema:
+          description: Internal User ID
+          title: User Id
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IvaBasicData'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IvaId'
+          description: User IVA has been successfully created.
+        '401':
+          description: Not authorized to create IVAs.
+        '403':
+          description: Not authorized to create this IVA.
+        '404':
+          description: The user was not found.
+        '422':
+          description: Validation error in submitted user identification.
+      security:
+      - HTTPBearer: []
+      summary: Create a new IVA
+      tags:
+      - users
+  /users/{user_id}/ivas/{iva_id}:
+    delete:
+      description: Endpoint used to delete an IVA for a specified user.
+      operationId: delete_iva
+      parameters:
+      - description: Internal User ID
+        in: path
+        name: user_id
+        required: true
+        schema:
+          description: Internal User ID
+          title: User Id
+          type: string
+      - description: IVA ID
+        in: path
+        name: iva_id
+        required: true
+        schema:
+          description: IVA ID
+          title: Iva Id
+          type: string
+      responses:
+        '204':
+          description: User IVA was successfully deleted.
+        '401':
+          description: Not authorized to delete IVAs.
+        '403':
+          description: Not authorized to delete this IVA.
+        '404':
+          description: The IVA was not found.
+        '422':
+          description: Validation error in submitted user identification.
+      security:
+      - HTTPBearer: []
+      summary: Delete an IVA
       tags:
       - users
 tags:

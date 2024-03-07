@@ -29,7 +29,7 @@ from . import BaseDto
 __all__ = [
     "IvaType",
     "IvaState",
-    "IvaTypeAndValue",
+    "IvaBasicData",
     "IvaId",
     "IvaData",
     "IvaFullData",
@@ -56,17 +56,16 @@ class IvaState(str, Enum):
     CODE_VERIFIED = "CodeVerified"
 
 
-class IvaTypeAndValue(BaseDto):
-    """IVA type and value"""
+class IvaBasicData(BaseDto):
+    """Basic IVA data"""
 
     type: IvaType = Field(default=..., description="The type of the IVA")
     value: str = Field(default=..., description="The actual address")
 
 
-class IvaBasicData(IvaTypeAndValue):
-    """Basic IVA data"""
+class IvaWithState(IvaBasicData):
+    """Basic IVA data and current state"""
 
-    user_id: str = Field(default=..., description="Internal user ID")
     state: IvaState = Field(
         default=IvaState.UNVERIFIED, description="The state of the IVA"
     )
@@ -75,6 +74,7 @@ class IvaBasicData(IvaTypeAndValue):
 class IvaInternalData(BaseDto):
     """Internal data of an IVA (not exposed via the API)"""
 
+    user_id: str = Field(default=..., description="Internal user ID")
     verification_code_hash: Optional[str] = Field(
         default=None, description="Hash of the verification code for the IVA"
     )
@@ -101,7 +101,7 @@ class IvaId(BaseDto):
     id: str = Field(default=..., description="Internal IVA ID")  # actually UUID
 
 
-class IvaData(IvaId, IvaBasicData, IvaAutomaticData):
+class IvaData(IvaId, IvaWithState, IvaAutomaticData):
     """IVA data model with all external data including ID"""
 
     # this is the model that is exposed via the API
@@ -114,7 +114,7 @@ class IvaData(IvaId, IvaBasicData, IvaAutomaticData):
     )
 
 
-class IvaFullData(IvaBasicData, IvaInternalData, IvaAutomaticData):
+class IvaFullData(IvaWithState, IvaInternalData, IvaAutomaticData):
     """IVA data model including all internal data without ID"""
 
 

@@ -182,19 +182,21 @@ class UserRegistry(UserRegistryPort):
             log.error("Could not delete IVAs of user: %s", error)
             raise self.UserDeletionError from error
 
-    async def create_iva(self, data: IvaBasicData) -> str:
-        """Create an IVA with the given basic data.
+    async def create_iva(self, user_id: str, data: IvaBasicData) -> str:
+        """Create an IVA for the given user with the given basic data.
 
         Returns the internal ID of the newly createdIVA.
 
         May raise a UserDoesNotExistError or an IvaCreationError.
         """
         try:
-            await self.get_user(data.user_id)
+            await self.get_user(user_id)
         except self.UserRetrievalError as error:
             raise self.IvaCreationError from error
         created = changed = now_as_utc()
-        iva = IvaFullData(**data.model_dump(), created=created, changed=changed)
+        iva = IvaFullData(
+            **data.model_dump(), user_id=user_id, created=created, changed=changed
+        )
         try:
             iva = await self.iva_dao.insert(iva)
         except Exception as error:
