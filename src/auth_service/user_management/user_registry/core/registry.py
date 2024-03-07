@@ -194,11 +194,11 @@ class UserRegistry(UserRegistryPort):
         except self.UserRetrievalError as error:
             raise self.IvaCreationError from error
         created = changed = now_as_utc()
-        iva = IvaFullData(
+        iva_data = IvaFullData(
             **data.model_dump(), user_id=user_id, created=created, changed=changed
         )
         try:
-            iva = await self.iva_dao.insert(iva)
+            iva = await self.iva_dao.insert(iva_data)
         except Exception as error:
             log.error("Could not create IVA: %s", error)
             raise self.IvaCreationError from error
