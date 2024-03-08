@@ -53,7 +53,7 @@ class IvaState(str, Enum):
     CODE_REQUESTED = "CodeRequested"
     CODE_CREATED = "CodeCreated"
     CODE_TRANSMITTED = "CodeTransmitted"
-    CODE_VERIFIED = "CodeVerified"
+    VERIFIED = "Verified"
 
 
 class IvaBasicData(BaseDto):
@@ -76,7 +76,7 @@ class IvaInternalData(BaseDto):
 
     user_id: str = Field(default=..., description="Internal user ID")
     verification_code_hash: Optional[str] = Field(
-        default=None, description="Hash of the verification code for the IVA"
+        default=None, description="Salted hash of the verification code for the IVA"
     )
     verification_attempts: int = Field(
         default=0,

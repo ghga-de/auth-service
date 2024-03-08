@@ -500,3 +500,52 @@ async def test_delete_iva_for_wrong_user():
         await registry.delete_iva("iva-1", user_id="jane@ghga.de")
     assert len(dummy_ivas) == 1
     assert dummy_ivas[0].id == "iva-1"
+
+
+async def test_iva_verification_happy_path():
+    """Test happy path of IVA verification."""
+    registry = UserRegistryForTesting()
+    iva_data = IvaBasicData(type=IvaType.PHONE, value="123456")
+    iva_id = await registry.create_iva("john@ghga.de", iva_data)
+    assert iva_id
+    ivas = registry.dummy_ivas
+    assert len(ivas) == 1
+    iva = ivas[0]
+    assert iva.id == iva_id
+    assert iva.state == IvaState.UNVERIFIED
+    assert iva.verification_code_hash is None
+    assert iva.verification_attempts == 0
+    # request code
+    await registry.request_iva_verification_code(iva_id)
+    assert len(ivas) == 1
+    iva = ivas[0]
+    assert iva.state == IvaState.CODE_REQUESTED
+    assert iva.verification_code_hash is None
+    assert iva.verification_attempts == 0
+    # create code
+    code = await registry.create_iva_verification_code(iva_id)
+    assert isinstance(code, str)
+    assert code.isascii()
+    assert code.isalnum()
+    assert code.isupper()
+    assert len(code) == 6
+    assert len(ivas) == 1
+    iva = ivas[0]
+    assert iva.state == IvaState.CODE_CREATED
+    assert iva.verification_code_hash is not None
+    assert iva.verification_attempts == 0
+    # transmit code
+    await registry.confirm_iva_code_transmission(iva_id)
+    assert len(ivas) == 1
+    iva = ivas[0]
+    assert iva.state == IvaState.CODE_TRANSMITTED
+    assert iva.verification_code_hash is not None
+    assert iva.verification_attempts == 0
+    # validate code
+    validated = await registry.validate_iva_verification_code(iva_id, code)
+    assert len(ivas) == 1
+    iva = ivas[0]
+    assert validated is True
+    assert iva.state == IvaState.VERIFIED
+    assert iva.verification_code_hash is None
+    assert iva.verification_attempts == 0

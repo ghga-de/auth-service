@@ -511,7 +511,7 @@ components:
       - CodeRequested
       - CodeCreated
       - CodeTransmitted
-      - CodeVerified
+      - Verified
       title: IvaState
       type: string
     IvaType:

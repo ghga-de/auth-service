@@ -16,9 +16,9 @@
 """Port for the core user registry."""
 
 from abc import ABC, abstractmethod
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
-from ..models.ivas import IvaBasicData, IvaData
+from ..models.ivas import Iva, IvaBasicData, IvaData
 from ..models.users import User, UserBasicData, UserModifiableData, UserRegisteredData
 
 
@@ -46,17 +46,29 @@ class UserRegistryPort(ABC):
     class UserDeletionError(UserRegistryError):
         """Raised when a user cannot be deleted in the database."""
 
-    class IvaCreationError(UserRegistryError):
+    class UserRegistryIvaError(UserRegistryError):
+        """Base class for IVA-related user registry errors."""
+
+    class IvaCreationError(UserRegistryIvaError):
         """Raised when an IVA cannot be created in the database."""
 
-    class IvaRetrievalError(UserRegistryError):
+    class IvaRetrievalError(UserRegistryIvaError):
         """Raised when IVAs cannot be retrieved from the database."""
 
-    class IvaDoesNotExistError(UserRegistryError):
+    class IvaDoesNotExistError(UserRegistryIvaError):
         """Raised when trying to access a non-existing IVA."""
 
-    class IvaDeletionError(UserRegistryError):
+    class IvaModificationError(UserRegistryIvaError):
+        """Raised when IVAs cannot be modified in the database."""
+
+    class IvaDeletionError(UserRegistryIvaError):
         """Raised when IVAs cannot be deleted from the database."""
+
+    class IvaUnexpectedStateError(UserRegistryIvaError):
+        """Raised when an IVA is in an unexpected state."""
+
+    class IvaTooManyVerificationAttemptsError(UserRegistryIvaError):
+        """Raised when a verification code if verified too often."""
 
     @staticmethod
     @abstractmethod
@@ -125,6 +137,15 @@ class UserRegistryPort(ABC):
         ...
 
     @abstractmethod
+    async def get_iva(self, iva_id: str) -> Iva:
+        """Get the IVA with the given ID.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
+        orr an IvaRetrievalError.
+        """
+        ...
+
+    @abstractmethod
     async def get_ivas(self, user_id: str) -> list[IvaData]:
         """Get all IVAs of a user.
 
@@ -135,11 +156,70 @@ class UserRegistryPort(ABC):
         ...
 
     @abstractmethod
+    async def update_iva(self, iva: Iva, **update: Any) -> None:
+        """Update the IVA with the given data.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError
+        or an IvaModificationError.
+        """
+        ...
+
+    @abstractmethod
     async def delete_iva(self, iva_id: str, *, user_id: Optional[str] = None) -> None:
         """Delete the IVA with the ID.
 
         If the user ID is given, the IVA is only deleted if it belongs to the user.
 
         May raise an IvaDoesNotExistError or an IvaDeletionError.
+        """
+        ...
+
+    @abstractmethod
+    async def unverify_iva(self, iva_id: str):
+        """Reset an IVA as being unverified.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
+        an IvaUnexpectedStateError or an IvaModificationError.
+        """
+        ...
+
+    @abstractmethod
+    async def request_iva_verification_code(self, iva_id: str):
+        """Request a verification code for the IVA with the given ID.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
+        an IvaUnexpectedStateError or an IvaModificationError.
+        """
+        ...
+
+    @abstractmethod
+    async def create_iva_verification_code(self, iva_id: str) -> str:
+        """Create a verification code for the IVA with the given ID.
+
+        The code is returned as a string and its hash is stored in the database.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
+        an IvaUnexpectedStateError or an IvaModificationError.
+        """
+        ...
+
+    @abstractmethod
+    async def confirm_iva_code_transmission(self, iva_id: str) -> None:
+        """Confirm the transmission of the verification code for the given IVA.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
+        an IvaUnexpectedStateError or an IvaModificationError.
+        """
+        ...
+
+    @abstractmethod
+    async def validate_iva_verification_code(self, iva_id: str, code: str) -> bool:
+        """Validate a verification code for the given IVA.
+
+        Checks whether the given verification code matches the stored hash.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
+        an IvaUnexpectedStateError, an IvaTooManyVerificationAttemptsError or
+        an IvaModificationError.
         """
         ...

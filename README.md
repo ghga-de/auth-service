@@ -179,6 +179,8 @@ The service requires the following configuration parameters:
   ```
 
 
+- **`max_iva_verification_attempts`** *(integer)*: Maximum number of verification attempts for an IVA. Default: `10`.
+
 - **`totp_issuer`** *(string)*: Issuer name for TOTP provisioning URIs. Default: `"GHGA"`.
 
 - **`totp_image`**: URL of the PNG image provided in the TOTP provisioning URIs. Default: `null`.

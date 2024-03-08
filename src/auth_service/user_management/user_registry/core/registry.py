@@ -16,16 +16,17 @@
 """Implementation of the core user registry."""
 
 import logging
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.protocols.dao import (
     NoHitsFoundError,
     ResourceNotFoundError,
 )
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
-from ..models.ivas import IvaBasicData, IvaData, IvaFullData
+from ..models.ivas import Iva, IvaBasicData, IvaData, IvaFullData, IvaState
 from ..models.users import (
     StatusChange,
     User,
@@ -37,6 +38,7 @@ from ..models.users import (
 )
 from ..ports.registry import UserRegistryPort
 from ..translators.dao import IvaDao, UserDao
+from .verification_codes import generate_code, hash_code, validate_code
 
 log = logging.getLogger(__name__)
 
@@ -46,6 +48,10 @@ INITIAL_USER_STATUS = UserStatus.ACTIVE
 class UserRegistryConfig(BaseSettings):
     """Configuration for the user registry."""
 
+    max_iva_verification_attempts: int = Field(
+        default=10, description="Maximum number of verification attempts for an IVA"
+    )
+
 
 class UserRegistry(UserRegistryPort):
     """Registry for users including their IVAs."""
@@ -54,7 +60,7 @@ class UserRegistry(UserRegistryPort):
         self, *, config: UserRegistryConfig, user_dao: UserDao, iva_dao: IvaDao
     ):
         """Initialize the user registry."""
-        self.config = config
+        self.max_iva_verification_attempts = config.max_iva_verification_attempts
         self.user_dao = user_dao
         self.iva_dao = iva_dao
 
@@ -204,6 +210,20 @@ class UserRegistry(UserRegistryPort):
             raise self.IvaCreationError from error
         return iva.id
 
+    async def get_iva(self, iva_id: str) -> Iva:
+        """Get the IVA with the given ID.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
+        orr an IvaRetrievalError.
+        """
+        try:
+            return await self.iva_dao.get_by_id(iva_id)
+        except ResourceNotFoundError as error:
+            raise self.IvaDoesNotExistError from error
+        except Exception as error:
+            log.error("Could not retrieve IVA: %s", error)
+            raise self.IvaRetrievalError from error
+
     async def get_ivas(self, user_id: str) -> list[IvaData]:
         """Get all IVAs of a user.
 
@@ -221,20 +241,36 @@ class UserRegistry(UserRegistryPort):
             log.error("Could not retrieve IVAs: %s", error)
             raise self.IvaRetrievalError from error
 
+    async def update_iva(self, iva: Iva, **update: Any) -> None:
+        """Update the IVA with the given data.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError
+        or an IvaModificationError.
+        """
+        if "changed" not in update:
+            update["changed"] = now_as_utc()
+        iva = iva.model_copy(update=update)
+        try:
+            await self.iva_dao.update(iva)
+        except ResourceNotFoundError as error:
+            log.warning("IVA not found: %s", error)
+            raise self.IvaDoesNotExistError from error
+        except Exception as error:
+            log.error("Could not update IVA: %s", error)
+            raise self.IvaModificationError from error
+
     async def delete_iva(self, iva_id: str, *, user_id: Optional[str] = None) -> None:
         """Delete the IVA with the ID.
 
         If the user ID is given, the IVA is only deleted if it belongs to the user.
 
-        May raise an IvaDoesNotExistError or an IvaDeletionError.
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError
+        or an IvaDeletionError.
         """
         if user_id:
             try:
-                iva = await self.iva_dao.get_by_id(iva_id)
-            except ResourceNotFoundError as error:
-                raise self.IvaDoesNotExistError from error
-            except Exception as error:
-                log.error("Could not retrieve IVA: %s", error)
+                iva = await self.get_iva(iva_id)
+            except self.IvaRetrievalError as error:
                 raise self.IvaDeletionError from error
             if iva.user_id != user_id:
                 raise self.IvaDoesNotExistError
@@ -245,3 +281,124 @@ class UserRegistry(UserRegistryPort):
         except Exception as error:
             log.error("Could not delete IVA: %s", error)
             raise self.IvaDeletionError from error
+
+    async def unverify_iva(self, iva_id: str):
+        """Reset an IVA as being unverified.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
+        an IvaUnexpectedStateError or an IvaModificationError.
+        """
+        try:
+            iva = await self.get_iva(iva_id)
+        except Exception as error:
+            raise self.IvaModificationError from error
+        try:
+            await self.update_iva(
+                iva,
+                state=IvaState.UNVERIFIED,
+                verification_code_hash=None,
+                verification_attempts=0,
+            )
+        except Exception as error:
+            raise self.IvaModificationError from error
+        # TODO: should also send a notification to the user
+
+    async def request_iva_verification_code(self, iva_id: str):
+        """Request a verification code for the IVA with the given ID.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
+        an IvaUnexpectedStateError or an IvaModificationError.
+        """
+        try:
+            iva = await self.get_iva(iva_id)
+        except Exception as error:
+            raise self.IvaModificationError from error
+        if iva.state is not IvaState.UNVERIFIED:
+            raise self.IvaUnexpectedStateError
+        try:
+            await self.update_iva(iva, state=IvaState.CODE_REQUESTED)
+        except Exception as error:
+            raise self.IvaModificationError from error
+        # TODO: should also send a notification to the user and a data steward
+
+    async def create_iva_verification_code(self, iva_id: str) -> str:
+        """Create a verification code for the IVA with the given ID.
+
+        The code is returned as a string and its hash is stored in the database.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
+        an IvaUnexpectedStateError or an IvaModificationError.
+        """
+        try:
+            iva = await self.get_iva(iva_id)
+        except Exception as error:
+            raise self.IvaModificationError from error
+        if iva.state not in (IvaState.CODE_REQUESTED, IvaState.CODE_CREATED):
+            raise self.IvaUnexpectedStateError
+        code = generate_code()
+        try:
+            await self.update_iva(
+                iva,
+                state=IvaState.CODE_CREATED,
+                verification_code_hash=hash_code(code),
+                verification_attempts=0,
+            )
+        except Exception as error:
+            raise self.IvaModificationError from error
+        return code
+
+    async def confirm_iva_code_transmission(self, iva_id: str) -> None:
+        """Confirm the transmission of the verification code for the given IVA.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
+        an IvaUnexpectedStateError or an IvaModificationError.
+        """
+        try:
+            iva = await self.get_iva(iva_id)
+        except Exception as error:
+            raise self.IvaModificationError from error
+        if iva.state is not IvaState.CODE_CREATED:
+            raise self.IvaUnexpectedStateError
+        try:
+            await self.update_iva(
+                iva,
+                state=IvaState.CODE_TRANSMITTED,
+            )
+        except Exception as error:
+            raise self.IvaModificationError from error
+        # TODO: should also send a notification to the user
+
+    async def validate_iva_verification_code(self, iva_id: str, code: str) -> bool:
+        """Validate a verification code for the given IVA.
+
+        Checks whether the given verification code matches the stored hash.
+
+        May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
+        an IvaUnexpectedStateError, an IvaTooManyVerificationAttemptsError or
+        an IvaModificationError.
+        """
+        try:
+            iva = await self.get_iva(iva_id)
+        except Exception as error:
+            raise self.IvaModificationError from error
+        if (
+            iva.state not in (IvaState.CODE_CREATED, IvaState.CODE_TRANSMITTED)
+            or not iva.verification_code_hash
+        ):
+            raise self.IvaUnexpectedStateError
+        too_many = iva.verification_attempts >= self.max_iva_verification_attempts
+        validated = not too_many and validate_code(code, iva.verification_code_hash)
+        change: dict[str, Any] = {}
+        if too_many:
+            change.update(state=IvaState.UNVERIFIED)
+        elif validated:
+            change.update(state=IvaState.VERIFIED)
+        if too_many or validated:
+            change.update(verification_code_hash=None, verification_attempts=0)
+        else:
+            change.update(verification_attempts=iva.verification_attempts + 1)
+        await self.update_iva(iva, **change)
+        if too_many:
+            raise self.IvaTooManyVerificationAttemptsError
+        # TODO: should also send a notification to the data steward
+        return validated
