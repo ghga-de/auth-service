@@ -7,20 +7,21 @@ default_language_version:
 minimum_pre_commit_version: 3.6.0
 
 repos:
-  - repo: local
-    hooks:
-      - id: update-hook-revs
-        name: "ensure hooks are up to date"
-        language: python
-        additional_dependencies:
-          - "packaging"
-          - "typer"
-        fail_fast: true
-        always_run: true
-        entry: ./scripts/update_hook_revs.py
-        files: '\.pre-commit-config.yaml'
-        args: [--check]
-        pass_filenames: false
+  # FIX: temporarily disabled since there is no hook for mypy 1.9.0 yet
+  #- repo: local
+  #  hooks:
+  #    - id: update-hook-revs
+  #      name: "ensure hooks are up to date"
+  #      language: python
+  #      additional_dependencies:
+  #        - "packaging"
+  #        - "typer"
+  #      fail_fast: true
+  #      always_run: true
+  #      entry: ./scripts/update_hook_revs.py
+  #      files: '\.pre-commit-config.yaml'
+  #      args: [--check]
+  #      pass_filenames: false
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
@@ -48,7 +49,7 @@ repos:
       - id: no-commit-to-branch
         args: [--branch, dev, --branch, int, --branch, main]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.0
+    rev: v0.3.1
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
