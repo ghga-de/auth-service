@@ -25,9 +25,9 @@ from tests.fixtures.auth_keys import reload_auth_key_config
 
 __all__ = ["app"]
 
-try:
-    from auth_service.user_management.api.main import app
-except Exception:
-    # this needs to be fixed properly (no global config)
-    reload_auth_key_config(False)
-    from auth_service.user_management.api.main import app
+reload_auth_key_config(False)
+
+from auth_service.user_management.api.main import app, claims_router, users_router
+
+app.include_router(users_router)
+app.include_router(claims_router)
