@@ -628,6 +628,34 @@ async def test_request_verification_code_for_non_existing_iva():
         await registry.request_iva_verification_code("non-existing-iva-id")
 
 
+async def test_request_verification_code_for_different_user():
+    """Test requesting a verification code for a different user."""
+    registry = UserRegistryForTesting()
+    now = now_as_utc()
+    before = now - timedelta(hours=3)
+    registry = UserRegistryForTesting()
+    from_iva = Iva(
+        id="some-iva-id",
+        state=IvaState.UNVERIFIED,
+        type=IvaType.PHONE,
+        value="123456",
+        user_id="some-user-id",
+        created=before,
+        changed=before,
+    )
+    ivas = registry.dummy_ivas
+    ivas.append(from_iva)
+    with raises(
+        registry.IvaDoesNotExistError,
+        match="User with ID other-user-id does not have an IVA with ID some-iva-id",
+    ):
+        await registry.request_iva_verification_code(
+            "some-iva-id", user_id="other-user-id"
+        )
+    await registry.request_iva_verification_code("some-iva-id", user_id="some-user-id")
+    assert ivas[0].state == IvaState.CODE_REQUESTED
+
+
 @mark.parametrize(
     "from_state",
     [
@@ -982,6 +1010,40 @@ async def test_validate_verification_code_for_non_existing_iva():
         match="IVA with ID non-existing-iva-id does not exist",
     ):
         await registry.validate_iva_verification_code("non-existing-iva-id", "123456")
+
+
+async def test_validate_verification_code_for_different_user():
+    """Test validating a verification code for a different user."""
+    registry = UserRegistryForTesting()
+    now = now_as_utc()
+    before = now - timedelta(hours=3)
+    registry = UserRegistryForTesting()
+    code = generate_code()
+    verification_code_hash = hash_code(code)
+    from_iva = Iva(
+        id="some-iva-id",
+        state=IvaState.CODE_TRANSMITTED,
+        type=IvaType.PHONE,
+        value="123456",
+        user_id="some-user-id",
+        verification_code_hash=verification_code_hash,
+        created=before,
+        changed=before,
+    )
+    ivas = registry.dummy_ivas
+    ivas.append(from_iva)
+    with raises(
+        registry.IvaDoesNotExistError,
+        match="User with ID other-user-id does not have an IVA with ID some-iva-id",
+    ):
+        await registry.validate_iva_verification_code(
+            "some-iva-id", code, user_id="other-user-id"
+        )
+    validated = await registry.validate_iva_verification_code(
+        "some-iva-id", code, user_id="some-user-id"
+    )
+    assert validated is True
+    assert ivas[0].state == IvaState.VERIFIED
 
 
 @mark.parametrize(

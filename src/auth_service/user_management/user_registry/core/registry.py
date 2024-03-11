@@ -210,19 +210,19 @@ class UserRegistry(UserRegistryPort):
             raise self.IvaCreationError(user_id=user_id) from error
         return iva.id
 
-    async def get_iva(self, iva_id: str) -> Iva:
+    async def get_iva(self, iva_id: str, *, user_id: Optional[str] = None) -> Iva:
         """Get the IVA with the given ID.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
         orr an IvaRetrievalError.
         """
         try:
-            return await self.iva_dao.get_by_id(iva_id)
+            iva = await self.iva_dao.get_by_id(iva_id)
         except ResourceNotFoundError as error:
             raise self.IvaDoesNotExistError(iva_id=iva_id) from error
-        except Exception as error:
-            log.error("Could not retrieve IVA: %s", error)
-            raise self.IvaRetrievalError(iva_id=iva_id) from error
+        if user_id and iva.user_id != user_id:
+            raise self.IvaDoesNotExistError(iva_id=iva_id, user_id=user_id)
+        return iva
 
     async def get_ivas(self, user_id: str) -> list[IvaData]:
         """Get all IVAs of a user.
@@ -268,11 +268,10 @@ class UserRegistry(UserRegistryPort):
         If a user ID is specified, and the IVA does not belong to the user,
         then an IvaDoesNotExistError is raised.
         """
-        iva = await self.get_iva(iva_id)
-        if user_id and iva.user_id != user_id:
-            raise self.IvaDoesNotExistError(iva_id=iva_id, user_id=user_id)
+        if user_id:
+            await self.get_iva(iva_id, user_id=user_id)
         try:
-            iva = await self.iva_dao.delete(id_=iva_id)
+            await self.iva_dao.delete(id_=iva_id)
         except ResourceNotFoundError as error:
             raise self.IvaDoesNotExistError(iva_id=iva_id) from error
         except Exception as error:
@@ -305,9 +304,7 @@ class UserRegistry(UserRegistryPort):
         If a user ID is specified, and the IVA does not belong to the user,
         then an IvaDoesNotExistError is raised.
         """
-        iva = await self.get_iva(iva_id)
-        if user_id and iva.user_id != user_id:
-            raise self.IvaDoesNotExistError(iva_id=iva_id, user_id=user_id)
+        iva = await self.get_iva(iva_id, user_id=user_id)
         if iva.state is not IvaState.UNVERIFIED:
             raise self.IvaUnexpectedStateError(iva_id=iva_id, state=iva.state)
         await self.update_iva(iva, state=IvaState.CODE_REQUESTED)
@@ -362,7 +359,7 @@ class UserRegistry(UserRegistryPort):
         If a user ID is specified, and the IVA does not belong to the user,
         then an IvaDoesNotExistError is raised.
         """
-        iva = await self.get_iva(iva_id)
+        iva = await self.get_iva(iva_id, user_id=user_id)
         if (
             iva.state not in (IvaState.CODE_CREATED, IvaState.CODE_TRANSMITTED)
             or not iva.verification_code_hash
