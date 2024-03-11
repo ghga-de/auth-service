@@ -95,9 +95,9 @@ class UserRegistry(UserRegistryPort):
             pass
         except Exception as error:
             log.error("Could not insert user: %s", error)
-            raise self.UserCreationError from error
+            raise self.UserCreationError(ext_id=ext_id) from error
         else:
-            raise self.UserAlreadyExistsError
+            raise self.UserAlreadyExistsError(ext_id=ext_id)
         full_user_data = UserData(
             **user_data.model_dump(),
             status=INITIAL_USER_STATUS,
@@ -107,7 +107,7 @@ class UserRegistry(UserRegistryPort):
             user = await self.user_dao.insert(full_user_data)
         except Exception as error:
             log.error("Could not insert user: %s", error)
-            raise self.UserCreationError from error
+            raise self.UserCreationError(ext_id=ext_id) from error
         return user
 
     async def get_user(self, user_id: str) -> User:
@@ -120,10 +120,10 @@ class UserRegistry(UserRegistryPort):
                 raise ResourceNotFoundError(id_=user_id)
             user = await self.user_dao.get_by_id(user_id)
         except ResourceNotFoundError as error:
-            raise self.UserDoesNotExistError from error
+            raise self.UserDoesNotExistError(user_id=user_id) from error
         except Exception as error:
             log.error("Could not request user: %s", error)
-            raise self.UserRetrievalError from error
+            raise self.UserRetrievalError(user_id=user_id) from error
         return user
 
     async def update_user(
@@ -144,7 +144,7 @@ class UserRegistry(UserRegistryPort):
         try:
             user = await self.get_user(user_id)
         except self.UserRetrievalError as error:
-            raise self.UserUpdateError from error
+            raise self.UserUpdateError(user_id=user_id) from error
         if "status" in update_data and user.status != update_data["status"]:
             update_data["status_change"] = StatusChange(
                 previous=user.status,
@@ -157,10 +157,10 @@ class UserRegistry(UserRegistryPort):
             await self.user_dao.update(user)
         except ResourceNotFoundError as error:
             log.warning("User not found: %s", error)
-            raise self.UserDoesNotExistError from error
+            raise self.UserDoesNotExistError(user_id=user_id) from error
         except Exception as error:
             log.error("Could not update user: %s", error)
-            raise self.UserUpdateError from error
+            raise self.UserUpdateError(user_id=user_id) from error
 
     async def delete_user(self, user_id: str) -> None:
         """Delete a user.
@@ -174,10 +174,10 @@ class UserRegistry(UserRegistryPort):
                 raise ResourceNotFoundError(id_=user_id)
             await self.user_dao.delete(id_=user_id)
         except ResourceNotFoundError as error:
-            raise self.UserDoesNotExistError from error
+            raise self.UserDoesNotExistError(user_id=user_id) from error
         except Exception as error:
             log.error("Could not delete user: %s", error)
-            raise self.UserDeletionError from error
+            raise self.UserDeletionError(user_id=user_id) from error
         try:
             try:
                 async for iva in self.iva_dao.find_all(mapping={"user_id": user_id}):
@@ -186,7 +186,7 @@ class UserRegistry(UserRegistryPort):
                 pass
         except Exception as error:
             log.error("Could not delete IVAs of user: %s", error)
-            raise self.UserDeletionError from error
+            raise self.UserDeletionError(user_id=user_id) from error
 
     async def create_iva(self, user_id: str, data: IvaBasicData) -> str:
         """Create an IVA for the given user with the given basic data.
@@ -198,7 +198,7 @@ class UserRegistry(UserRegistryPort):
         try:
             await self.get_user(user_id)
         except self.UserRetrievalError as error:
-            raise self.IvaCreationError from error
+            raise self.IvaCreationError(user_id=user_id) from error
         created = changed = now_as_utc()
         iva_data = IvaFullData(
             **data.model_dump(), user_id=user_id, created=created, changed=changed
@@ -207,7 +207,7 @@ class UserRegistry(UserRegistryPort):
             iva = await self.iva_dao.insert(iva_data)
         except Exception as error:
             log.error("Could not create IVA: %s", error)
-            raise self.IvaCreationError from error
+            raise self.IvaCreationError(user_id=user_id) from error
         return iva.id
 
     async def get_iva(self, iva_id: str) -> Iva:
@@ -219,10 +219,10 @@ class UserRegistry(UserRegistryPort):
         try:
             return await self.iva_dao.get_by_id(iva_id)
         except ResourceNotFoundError as error:
-            raise self.IvaDoesNotExistError from error
+            raise self.IvaDoesNotExistError(iva_id=iva_id) from error
         except Exception as error:
             log.error("Could not retrieve IVA: %s", error)
-            raise self.IvaRetrievalError from error
+            raise self.IvaRetrievalError(iva_id=iva_id) from error
 
     async def get_ivas(self, user_id: str) -> list[IvaData]:
         """Get all IVAs of a user.
@@ -239,7 +239,7 @@ class UserRegistry(UserRegistryPort):
             ]
         except Exception as error:
             log.error("Could not retrieve IVAs: %s", error)
-            raise self.IvaRetrievalError from error
+            raise self.IvaRetrievalError(user_id=user_id) from error
 
     async def update_iva(self, iva: Iva, **update: Any) -> None:
         """Update the IVA with the given data.
@@ -254,10 +254,10 @@ class UserRegistry(UserRegistryPort):
             await self.iva_dao.update(iva)
         except ResourceNotFoundError as error:
             log.warning("IVA not found: %s", error)
-            raise self.IvaDoesNotExistError from error
+            raise self.IvaDoesNotExistError(iva_id=iva.id) from error
         except Exception as error:
             log.error("Could not update IVA: %s", error)
-            raise self.IvaModificationError from error
+            raise self.IvaModificationError(iva_id=iva.id) from error
 
     async def delete_iva(self, iva_id: str, *, user_id: Optional[str] = None) -> None:
         """Delete the IVA with the ID.
@@ -271,16 +271,16 @@ class UserRegistry(UserRegistryPort):
             try:
                 iva = await self.get_iva(iva_id)
             except self.IvaRetrievalError as error:
-                raise self.IvaDeletionError from error
+                raise self.IvaDeletionError(iva_id=iva_id) from error
             if iva.user_id != user_id:
-                raise self.IvaDoesNotExistError
+                raise self.IvaDoesNotExistError(iva_id=iva_id)
         try:
             iva = await self.iva_dao.delete(id_=iva_id)
         except ResourceNotFoundError as error:
-            raise self.IvaDoesNotExistError from error
+            raise self.IvaDoesNotExistError(iva_id=iva_id) from error
         except Exception as error:
             log.error("Could not delete IVA: %s", error)
-            raise self.IvaDeletionError from error
+            raise self.IvaDeletionError(iva_id=iva_id) from error
 
     async def unverify_iva(self, iva_id: str):
         """Reset an IVA as being unverified.
@@ -291,7 +291,7 @@ class UserRegistry(UserRegistryPort):
         try:
             iva = await self.get_iva(iva_id)
         except Exception as error:
-            raise self.IvaModificationError from error
+            raise self.IvaModificationError(iva_id=iva_id) from error
         try:
             await self.update_iva(
                 iva,
@@ -300,7 +300,7 @@ class UserRegistry(UserRegistryPort):
                 verification_attempts=0,
             )
         except Exception as error:
-            raise self.IvaModificationError from error
+            raise self.IvaModificationError(iva_id=iva_id) from error
         # TODO: should also send a notification to the user
 
     async def request_iva_verification_code(self, iva_id: str):
@@ -312,13 +312,13 @@ class UserRegistry(UserRegistryPort):
         try:
             iva = await self.get_iva(iva_id)
         except Exception as error:
-            raise self.IvaModificationError from error
+            raise self.IvaModificationError(iva_id=iva_id) from error
         if iva.state is not IvaState.UNVERIFIED:
-            raise self.IvaUnexpectedStateError
+            raise self.IvaUnexpectedStateError(iva_id=iva_id, state=iva.state)
         try:
             await self.update_iva(iva, state=IvaState.CODE_REQUESTED)
         except Exception as error:
-            raise self.IvaModificationError from error
+            raise self.IvaModificationError(iva_id=iva_id) from error
         # TODO: should also send a notification to the user and a data steward
 
     async def create_iva_verification_code(self, iva_id: str) -> str:
@@ -332,9 +332,9 @@ class UserRegistry(UserRegistryPort):
         try:
             iva = await self.get_iva(iva_id)
         except Exception as error:
-            raise self.IvaModificationError from error
+            raise self.IvaModificationError(iva_id=iva_id) from error
         if iva.state not in (IvaState.CODE_REQUESTED, IvaState.CODE_CREATED):
-            raise self.IvaUnexpectedStateError
+            raise self.IvaUnexpectedStateError(iva_id=iva_id, state=iva.state)
         code = generate_code()
         try:
             await self.update_iva(
@@ -344,7 +344,7 @@ class UserRegistry(UserRegistryPort):
                 verification_attempts=0,
             )
         except Exception as error:
-            raise self.IvaModificationError from error
+            raise self.IvaModificationError(iva_id=iva_id) from error
         return code
 
     async def confirm_iva_code_transmission(self, iva_id: str) -> None:
@@ -356,16 +356,16 @@ class UserRegistry(UserRegistryPort):
         try:
             iva = await self.get_iva(iva_id)
         except Exception as error:
-            raise self.IvaModificationError from error
+            raise self.IvaModificationError(iva_id=iva_id) from error
         if iva.state is not IvaState.CODE_CREATED:
-            raise self.IvaUnexpectedStateError
+            raise self.IvaUnexpectedStateError(iva_id=iva_id, state=iva.state)
         try:
             await self.update_iva(
                 iva,
                 state=IvaState.CODE_TRANSMITTED,
             )
         except Exception as error:
-            raise self.IvaModificationError from error
+            raise self.IvaModificationError(iva_id=iva_id) from error
         # TODO: should also send a notification to the user
 
     async def validate_iva_verification_code(self, iva_id: str, code: str) -> bool:
@@ -380,12 +380,12 @@ class UserRegistry(UserRegistryPort):
         try:
             iva = await self.get_iva(iva_id)
         except Exception as error:
-            raise self.IvaModificationError from error
+            raise self.IvaModificationError(iva_id=iva_id) from error
         if (
             iva.state not in (IvaState.CODE_CREATED, IvaState.CODE_TRANSMITTED)
             or not iva.verification_code_hash
         ):
-            raise self.IvaUnexpectedStateError
+            raise self.IvaUnexpectedStateError(iva_id=iva_id, state=iva.state)
         too_many = iva.verification_attempts >= self.max_iva_verification_attempts
         validated = not too_many and validate_code(code, iva.verification_code_hash)
         change: dict[str, Any] = {}
@@ -399,6 +399,6 @@ class UserRegistry(UserRegistryPort):
             change.update(verification_attempts=iva.verification_attempts + 1)
         await self.update_iva(iva, **change)
         if too_many:
-            raise self.IvaTooManyVerificationAttemptsError
+            raise self.IvaTooManyVerificationAttemptsError(iva_id=iva_id)
         # TODO: should also send a notification to the data steward
         return validated

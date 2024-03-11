@@ -117,7 +117,7 @@ async def test_create_existing_user():
         await registry.create_user(user_data)
 
 
-async def test_create_new_suser():
+async def test_create_new_user():
     """Test creating a user account that does not yet exist."""
     registry = UserRegistryForTesting()
     user = registry.dummy_user

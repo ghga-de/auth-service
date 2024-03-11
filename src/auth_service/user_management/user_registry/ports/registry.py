@@ -18,7 +18,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Union
 
-from ..models.ivas import Iva, IvaBasicData, IvaData
+from ..models.ivas import Iva, IvaBasicData, IvaData, IvaState
 from ..models.users import User, UserBasicData, UserModifiableData, UserRegisteredData
 
 
@@ -31,20 +31,45 @@ class UserRegistryPort(ABC):
     class UserCreationError(UserRegistryError):
         """Raised when a user cannot be created in the database."""
 
+        def __init__(self, *, ext_id: str, details: Optional[str] = None):
+            message = f"Could not create user with external ID {ext_id}"
+            if details:
+                message += f": {details}"
+            super().__init__(message)
+
     class UserAlreadyExistsError(UserCreationError):
         """Raised when trying to create a that already exists."""
+
+        def __init__(self, *, ext_id: str):
+            super().__init__(ext_id=ext_id, details="user already exists")
 
     class UserRetrievalError(UserRegistryError):
         """Raised when a user cannot be retrieved from the database."""
 
+        def __init__(self, *, user_id: str):
+            message = f"Could not retrieve user with ID {user_id}"
+            super().__init__(message)
+
     class UserDoesNotExistError(UserRegistryError):
         """Raised when trying to access a non-existing user."""
+
+        def __init__(self, *, user_id: str):
+            message = f"User with ID {user_id} does not exist"
+            super().__init__(message)
 
     class UserUpdateError(UserRegistryError):
         """Raised when a user cannot be updated in the database."""
 
+        def __init__(self, *, user_id: str):
+            message = f"Could not update user with ID {user_id}"
+            super().__init__(message)
+
     class UserDeletionError(UserRegistryError):
         """Raised when a user cannot be deleted in the database."""
+
+        def __init__(self, *, user_id: str):
+            message = f"Could not delete user with ID {user_id}"
+            super().__init__(message)
 
     class UserRegistryIvaError(UserRegistryError):
         """Base class for IVA-related user registry errors."""
@@ -52,23 +77,57 @@ class UserRegistryPort(ABC):
     class IvaCreationError(UserRegistryIvaError):
         """Raised when an IVA cannot be created in the database."""
 
+        def __init__(self, *, user_id: str):
+            message = f"Could not create IVA for user with ID {user_id}"
+            super().__init__(message)
+
     class IvaRetrievalError(UserRegistryIvaError):
         """Raised when IVAs cannot be retrieved from the database."""
+
+        def __init__(
+            self, *, iva_id: Optional[str] = None, user_id: Optional[str] = None
+        ):
+            message = "Could not retrieve IVA"
+            if iva_id:
+                message += f" with ID {iva_id}"
+            if user_id:
+                message += f" for user with ID {user_id}"
+            super().__init__(message)
 
     class IvaDoesNotExistError(UserRegistryIvaError):
         """Raised when trying to access a non-existing IVA."""
 
+        def __init__(self, *, iva_id: str):
+            message = f"IVA with ID {iva_id} does not exist"
+            super().__init__(message)
+
     class IvaModificationError(UserRegistryIvaError):
         """Raised when IVAs cannot be modified in the database."""
+
+        def __init__(self, *, iva_id: str):
+            message = f"Could not modify IVA with ID {iva_id}"
+            super().__init__(message)
 
     class IvaDeletionError(UserRegistryIvaError):
         """Raised when IVAs cannot be deleted from the database."""
 
+        def __init__(self, *, iva_id: str):
+            message = f"Could not delete IVA with ID {iva_id}"
+            super().__init__(message)
+
     class IvaUnexpectedStateError(UserRegistryIvaError):
         """Raised when an IVA is in an unexpected state."""
 
+        def __init__(self, *, iva_id: str, state: IvaState):
+            message = f"IVA with ID {iva_id} has an unexpected state {state.name}"
+            super().__init__(message)
+
     class IvaTooManyVerificationAttemptsError(UserRegistryIvaError):
         """Raised when a verification code if verified too often."""
+
+        def __init__(self, *, iva_id: str):
+            message = f"Too many verification attempts for IVA with ID {iva_id}"
+            super().__init__(message)
 
     @staticmethod
     @abstractmethod
