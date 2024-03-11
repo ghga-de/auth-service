@@ -97,8 +97,12 @@ class UserRegistryPort(ABC):
     class IvaDoesNotExistError(UserRegistryIvaError):
         """Raised when trying to access a non-existing IVA."""
 
-        def __init__(self, *, iva_id: str):
-            message = f"IVA with ID {iva_id} does not exist"
+        def __init__(self, *, iva_id: str, user_id: Optional[str] = None):
+            message = (
+                f"User with ID {user_id} does not have an IVA with ID {iva_id}"
+                if user_id
+                else f"IVA with ID {iva_id} does not exist"
+            )
             super().__init__(message)
 
     class IvaModificationError(UserRegistryIvaError):
@@ -238,7 +242,7 @@ class UserRegistryPort(ABC):
         """Reset an IVA as being unverified.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        an IvaUnexpectedStateError or an IvaModificationError.
+        an IvaRetrievalError or an IvaModificationError.
         """
         ...
 
@@ -247,7 +251,7 @@ class UserRegistryPort(ABC):
         """Request a verification code for the IVA with the given ID.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        an IvaUnexpectedStateError or an IvaModificationError.
+        an IvaRetrievalError, an IvaUnexpectedStateError or an IvaModificationError.
         """
         ...
 
@@ -258,7 +262,7 @@ class UserRegistryPort(ABC):
         The code is returned as a string and its hash is stored in the database.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        an IvaUnexpectedStateError or an IvaModificationError.
+        an IvaRetrievalError, an IvaUnexpectedStateError or an IvaModificationError.
         """
         ...
 
@@ -267,7 +271,7 @@ class UserRegistryPort(ABC):
         """Confirm the transmission of the verification code for the given IVA.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        an IvaUnexpectedStateError or an IvaModificationError.
+        an IvaRetrievalError, an IvaUnexpectedStateError or an IvaModificationError.
         """
         ...
 
@@ -278,7 +282,7 @@ class UserRegistryPort(ABC):
         Checks whether the given verification code matches the stored hash.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        an IvaUnexpectedStateError, an IvaTooManyVerificationAttemptsError or
-        an IvaModificationError.
+        an IvaIvaRetrievalError, an IvaUnexpectedStateError,
+        an IvaTooManyVerificationAttemptsError or an IvaModificationError.
         """
         ...

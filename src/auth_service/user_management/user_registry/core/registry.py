@@ -268,12 +268,9 @@ class UserRegistry(UserRegistryPort):
         or an IvaDeletionError.
         """
         if user_id:
-            try:
-                iva = await self.get_iva(iva_id)
-            except self.IvaRetrievalError as error:
-                raise self.IvaDeletionError(iva_id=iva_id) from error
+            iva = await self.get_iva(iva_id)
             if iva.user_id != user_id:
-                raise self.IvaDoesNotExistError(iva_id=iva_id)
+                raise self.IvaDoesNotExistError(iva_id=iva_id, user_id=user_id)
         try:
             iva = await self.iva_dao.delete(id_=iva_id)
         except ResourceNotFoundError as error:
@@ -286,39 +283,27 @@ class UserRegistry(UserRegistryPort):
         """Reset an IVA as being unverified.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        an IvaUnexpectedStateError or an IvaModificationError.
+        an IvaRetrievalError or an IvaModificationError.
         """
-        try:
-            iva = await self.get_iva(iva_id)
-        except Exception as error:
-            raise self.IvaModificationError(iva_id=iva_id) from error
-        try:
-            await self.update_iva(
-                iva,
-                state=IvaState.UNVERIFIED,
-                verification_code_hash=None,
-                verification_attempts=0,
-            )
-        except Exception as error:
-            raise self.IvaModificationError(iva_id=iva_id) from error
+        iva = await self.get_iva(iva_id)
+        await self.update_iva(
+            iva,
+            state=IvaState.UNVERIFIED,
+            verification_code_hash=None,
+            verification_attempts=0,
+        )
         # TODO: should also send a notification to the user
 
     async def request_iva_verification_code(self, iva_id: str):
         """Request a verification code for the IVA with the given ID.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        an IvaUnexpectedStateError or an IvaModificationError.
+        an IvaRetrievalError, an IvaUnexpectedStateError or an IvaModificationError.
         """
-        try:
-            iva = await self.get_iva(iva_id)
-        except Exception as error:
-            raise self.IvaModificationError(iva_id=iva_id) from error
+        iva = await self.get_iva(iva_id)
         if iva.state is not IvaState.UNVERIFIED:
             raise self.IvaUnexpectedStateError(iva_id=iva_id, state=iva.state)
-        try:
-            await self.update_iva(iva, state=IvaState.CODE_REQUESTED)
-        except Exception as error:
-            raise self.IvaModificationError(iva_id=iva_id) from error
+        await self.update_iva(iva, state=IvaState.CODE_REQUESTED)
         # TODO: should also send a notification to the user and a data steward
 
     async def create_iva_verification_code(self, iva_id: str) -> str:
@@ -327,45 +312,33 @@ class UserRegistry(UserRegistryPort):
         The code is returned as a string and its hash is stored in the database.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        an IvaUnexpectedStateError or an IvaModificationError.
+        an IvaRetrievalError, an IvaUnexpectedStateError or an IvaModificationError.
         """
-        try:
-            iva = await self.get_iva(iva_id)
-        except Exception as error:
-            raise self.IvaModificationError(iva_id=iva_id) from error
+        iva = await self.get_iva(iva_id)
         if iva.state not in (IvaState.CODE_REQUESTED, IvaState.CODE_CREATED):
             raise self.IvaUnexpectedStateError(iva_id=iva_id, state=iva.state)
         code = generate_code()
-        try:
-            await self.update_iva(
-                iva,
-                state=IvaState.CODE_CREATED,
-                verification_code_hash=hash_code(code),
-                verification_attempts=0,
-            )
-        except Exception as error:
-            raise self.IvaModificationError(iva_id=iva_id) from error
+        await self.update_iva(
+            iva,
+            state=IvaState.CODE_CREATED,
+            verification_code_hash=hash_code(code),
+            verification_attempts=0,
+        )
         return code
 
     async def confirm_iva_code_transmission(self, iva_id: str) -> None:
         """Confirm the transmission of the verification code for the given IVA.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        an IvaUnexpectedStateError or an IvaModificationError.
+        an IvaRetrievalError, an IvaUnexpectedStateError or an IvaModificationError.
         """
-        try:
-            iva = await self.get_iva(iva_id)
-        except Exception as error:
-            raise self.IvaModificationError(iva_id=iva_id) from error
+        iva = await self.get_iva(iva_id)
         if iva.state is not IvaState.CODE_CREATED:
             raise self.IvaUnexpectedStateError(iva_id=iva_id, state=iva.state)
-        try:
-            await self.update_iva(
-                iva,
-                state=IvaState.CODE_TRANSMITTED,
-            )
-        except Exception as error:
-            raise self.IvaModificationError(iva_id=iva_id) from error
+        await self.update_iva(
+            iva,
+            state=IvaState.CODE_TRANSMITTED,
+        )
         # TODO: should also send a notification to the user
 
     async def validate_iva_verification_code(self, iva_id: str, code: str) -> bool:
@@ -374,13 +347,10 @@ class UserRegistry(UserRegistryPort):
         Checks whether the given verification code matches the stored hash.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        an IvaUnexpectedStateError, an IvaTooManyVerificationAttemptsError or
-        an IvaModificationError.
+        an IvaIvaRetrievalError, an IvaUnexpectedStateError,
+        an IvaTooManyVerificationAttemptsError or an IvaModificationError.
         """
-        try:
-            iva = await self.get_iva(iva_id)
-        except Exception as error:
-            raise self.IvaModificationError(iva_id=iva_id) from error
+        iva = await self.get_iva(iva_id)
         if (
             iva.state not in (IvaState.CODE_CREATED, IvaState.CODE_TRANSMITTED)
             or not iva.verification_code_hash
