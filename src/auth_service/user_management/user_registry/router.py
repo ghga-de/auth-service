@@ -474,6 +474,7 @@ async def unverify_iva(
         204: {"description": "A verification code for the IVA has been requested."},
         401: {"description": "Not authorized to request verification codes for IVAs."},
         404: {"description": "The IVA was not found."},
+        409: {"description": "The IVA does not have the proper state."},
     },
     status_code=204,
 )
@@ -496,6 +497,10 @@ async def request_code_for_iva(
         )
     except user_registry.IvaDoesNotExistError as error:
         raise HTTPException(status_code=404, detail="The IVA was not found.") from error
+    except user_registry.IvaUnexpectedStateError as error:
+        raise HTTPException(
+            status_code=409, detail="The IVA does not have the proper state."
+        ) from error
     except user_registry.UserRegistryIvaError as error:
         raise HTTPException(
             status_code=500, detail="Cannot request a verification code for the IVA"
@@ -513,6 +518,7 @@ async def request_code_for_iva(
         201: {"description": "A verification code for the IVA has been created."},
         401: {"description": "Not authorized to create verification codes for IVAs."},
         404: {"description": "The IVA was not found."},
+        409: {"description": "The IVA does not have the proper state."},
     },
     status_code=201,
 )
@@ -533,6 +539,10 @@ async def create_code_for_iva(
         code = await user_registry.create_iva_verification_code(iva_id)
     except user_registry.IvaDoesNotExistError as error:
         raise HTTPException(status_code=404, detail="The IVA was not found.") from error
+    except user_registry.IvaUnexpectedStateError as error:
+        raise HTTPException(
+            status_code=409, detail="The IVA does not have the proper state."
+        ) from error
     except user_registry.UserRegistryIvaError as error:
         raise HTTPException(
             status_code=500, detail="Cannot create a verification code for the IVA"
@@ -554,6 +564,7 @@ async def create_code_for_iva(
             " the transmission of verification codes for IVAs."
         },
         404: {"description": "The IVA was not found."},
+        409: {"description": "The IVA does not have the proper state."},
     },
     status_code=204,
 )
@@ -574,6 +585,10 @@ async def confirm_code_for_iva_transmitted(
         await user_registry.confirm_iva_code_transmission(iva_id)
     except user_registry.IvaDoesNotExistError as error:
         raise HTTPException(status_code=404, detail="The IVA was not found.") from error
+    except user_registry.IvaUnexpectedStateError as error:
+        raise HTTPException(
+            status_code=409, detail="The IVA does not have the proper state."
+        ) from error
     except user_registry.UserRegistryIvaError as error:
         raise HTTPException(
             status_code=500,
@@ -593,6 +608,7 @@ async def confirm_code_for_iva_transmitted(
         401: {"description": "Not authorized to validate verification codes for IVAs."},
         403: {"description": "The submitted verification code was invalid."},
         404: {"description": "The IVA was not found."},
+        409: {"description": "The IVA does not have the proper state."},
         422: {"description": "Validation error in submitted verification data."},
         429: {"description": "Too many attempts, IVA was reset to unverified state."},
     },
@@ -618,6 +634,10 @@ async def validate_code_for_iva(
         )
     except user_registry.IvaDoesNotExistError as error:
         raise HTTPException(status_code=404, detail="The IVA was not found.") from error
+    except user_registry.IvaUnexpectedStateError as error:
+        raise HTTPException(
+            status_code=409, detail="The IVA does not have the proper state."
+        ) from error
     except user_registry.IvaTooManyVerificationAttemptsError as error:
         raise HTTPException(
             status_code=429,
