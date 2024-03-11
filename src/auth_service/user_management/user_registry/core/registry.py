@@ -262,15 +262,15 @@ class UserRegistry(UserRegistryPort):
     async def delete_iva(self, iva_id: str, *, user_id: Optional[str] = None) -> None:
         """Delete the IVA with the ID.
 
-        If the user ID is given, the IVA is only deleted if it belongs to the user.
-
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError
         or an IvaDeletionError.
+
+        If a user ID is specified, and the IVA does not belong to the user,
+        then an IvaDoesNotExistError is raised.
         """
-        if user_id:
-            iva = await self.get_iva(iva_id)
-            if iva.user_id != user_id:
-                raise self.IvaDoesNotExistError(iva_id=iva_id, user_id=user_id)
+        iva = await self.get_iva(iva_id)
+        if user_id and iva.user_id != user_id:
+            raise self.IvaDoesNotExistError(iva_id=iva_id, user_id=user_id)
         try:
             iva = await self.iva_dao.delete(id_=iva_id)
         except ResourceNotFoundError as error:
@@ -294,13 +294,20 @@ class UserRegistry(UserRegistryPort):
         )
         # TODO: should also send a notification to the user
 
-    async def request_iva_verification_code(self, iva_id: str):
+    async def request_iva_verification_code(
+        self, iva_id: str, *, user_id: Optional[str] = None
+    ):
         """Request a verification code for the IVA with the given ID.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
         an IvaRetrievalError, an IvaUnexpectedStateError or an IvaModificationError.
+
+        If a user ID is specified, and the IVA does not belong to the user,
+        then an IvaDoesNotExistError is raised.
         """
         iva = await self.get_iva(iva_id)
+        if user_id and iva.user_id != user_id:
+            raise self.IvaDoesNotExistError(iva_id=iva_id, user_id=user_id)
         if iva.state is not IvaState.UNVERIFIED:
             raise self.IvaUnexpectedStateError(iva_id=iva_id, state=iva.state)
         await self.update_iva(iva, state=IvaState.CODE_REQUESTED)
@@ -341,7 +348,9 @@ class UserRegistry(UserRegistryPort):
         )
         # TODO: should also send a notification to the user
 
-    async def validate_iva_verification_code(self, iva_id: str, code: str) -> bool:
+    async def validate_iva_verification_code(
+        self, iva_id: str, code: str, *, user_id: Optional[str] = None
+    ) -> bool:
         """Validate a verification code for the given IVA.
 
         Checks whether the given verification code matches the stored hash.
@@ -349,6 +358,9 @@ class UserRegistry(UserRegistryPort):
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
         an IvaIvaRetrievalError, an IvaUnexpectedStateError,
         an IvaTooManyVerificationAttemptsError or an IvaModificationError.
+
+        If a user ID is specified, and the IVA does not belong to the user,
+        then an IvaDoesNotExistError is raised.
         """
         iva = await self.get_iva(iva_id)
         if (

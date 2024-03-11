@@ -30,6 +30,8 @@ __all__ = [
     "IvaType",
     "IvaState",
     "IvaBasicData",
+    "IvaWithState",
+    "IvaVerificationCode",
     "IvaId",
     "IvaData",
     "IvaFullData",
@@ -68,6 +70,14 @@ class IvaWithState(IvaBasicData):
 
     state: IvaState = Field(
         default=IvaState.UNVERIFIED, description="The state of the IVA"
+    )
+
+
+class IvaVerificationCode(BaseDto):
+    """Request and response model containing the verification code for an IVA."""
+
+    verification_code: str = Field(
+        default=..., description="The verification code for the IVA"
     )
 
 

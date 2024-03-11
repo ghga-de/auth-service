@@ -1024,3 +1024,67 @@ async def test_deleting_non_existing_iva_for_existing_user_as_data_steward(
     assert response.status_code == status.HTTP_404_NOT_FOUND
     error = response.json()
     assert error["detail"] == "The IVA was not found."
+
+
+async def test_happy_path_for_verifying_an_iva(
+    client_with_db: AsyncTestClient,
+    new_user_headers: dict[str, str],
+    steward_headers: dict[str, str],
+):
+    """Test the happy path for the creation and verification of an IVA."""
+    # Create a user
+    user_data = MIN_USER_DATA
+    response = await client_with_db.post(
+        "/users", json=user_data, headers=new_user_headers
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    user = response.json()
+    user_id = user["id"]
+
+    headers = get_headers_for(id=user_id, name=user["name"], email=user["email"])
+
+    # Create an IVA
+    data = {"type": "Phone", "value": "123"}
+    response = await client_with_db.post(
+        f"/users/{user_id}/ivas", json=data, headers=headers
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    iva_id = response.json()["id"]
+    assert iva_id
+
+    # request code
+    response = await client_with_db.post(
+        f"/rpc/ivas/{iva_id}/request-code", headers=headers
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not response.text
+
+    # create code
+    response = await client_with_db.post(
+        f"/rpc/ivas/{iva_id}/create-code", headers=steward_headers
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    response_obj = response.json()
+    assert isinstance(response_obj, dict)
+    assert list(response_obj) == ["verification_code"]
+    code = response_obj["verification_code"]
+    assert isinstance(code, str)
+    assert code.isascii()
+    assert code.isalnum()
+    assert code.isupper()
+    assert len(code) == 6
+
+    # transmit code
+    response = await client_with_db.post(
+        f"/rpc/ivas/{iva_id}/code-transmitted", headers=steward_headers
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not response.text
+
+    # validate code
+    data = {"verification_code": code}
+    response = await client_with_db.post(
+        f"/rpc/ivas/{iva_id}/validate-code", json=data, headers=steward_headers
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not response.text

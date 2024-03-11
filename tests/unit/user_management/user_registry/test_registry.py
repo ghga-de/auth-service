@@ -592,18 +592,19 @@ async def test_request_iva_verification_code():
     before = now - timedelta(hours=3)
     registry = UserRegistryForTesting()
     iva_id = "some-iva-id"
+    user_id = "some-user-id"
     from_iva = Iva(
         id=iva_id,
         state=IvaState.UNVERIFIED,
         type=IvaType.PHONE,
         value="123456",
-        user_id="some-user-id",
+        user_id=user_id,
         created=before,
         changed=before,
     )
     ivas = registry.dummy_ivas
     ivas.append(from_iva)
-    await registry.request_iva_verification_code(iva_id)
+    await registry.request_iva_verification_code(iva_id, user_id=user_id)
     assert len(ivas) == 1
     iva = ivas[0]
     changed = iva.changed
@@ -835,6 +836,7 @@ async def test_validate_iva_verification_code(from_state: IvaState, attempts: in
     before = now - timedelta(hours=3)
     registry = UserRegistryForTesting()
     iva_id = "some-iva-id"
+    user_id = "some-user-id"
     code = generate_code()
     verification_code_hash = hash_code(code)
     from_iva = Iva(
@@ -842,7 +844,7 @@ async def test_validate_iva_verification_code(from_state: IvaState, attempts: in
         state=from_state,
         type=IvaType.PHONE,
         value="123456",
-        user_id="some-user-id",
+        user_id=user_id,
         verification_attempts=attempts,
         verification_code_hash=verification_code_hash,
         created=before,
@@ -850,7 +852,9 @@ async def test_validate_iva_verification_code(from_state: IvaState, attempts: in
     )
     ivas = registry.dummy_ivas
     ivas.append(from_iva)
-    validated = await registry.validate_iva_verification_code(iva_id, code)
+    validated = await registry.validate_iva_verification_code(
+        iva_id, code, user_id=user_id
+    )
     assert validated is True
     assert len(ivas) == 1
     iva = ivas[0]
@@ -883,6 +887,7 @@ async def test_validate_iva_with_invalid_verification_code(
     before = now - timedelta(hours=3)
     registry = UserRegistryForTesting()
     iva_id = "some-iva-id"
+    user_id = "some-user-id"
     code = generate_code()
     verification_code_hash = hash_code(code)
     from_iva = Iva(
@@ -890,7 +895,7 @@ async def test_validate_iva_with_invalid_verification_code(
         state=from_state,
         type=IvaType.PHONE,
         value="123456",
-        user_id="some-user-id",
+        user_id=user_id,
         verification_attempts=attempts,
         verification_code_hash=verification_code_hash,
         created=before,
@@ -899,7 +904,9 @@ async def test_validate_iva_with_invalid_verification_code(
     ivas = registry.dummy_ivas
     ivas.append(from_iva)
     invalid_code = code[:-1] + ("Y" if code[-1] == "X" else "X")
-    validated = await registry.validate_iva_verification_code(iva_id, invalid_code)
+    validated = await registry.validate_iva_verification_code(
+        iva_id, invalid_code, user_id=user_id
+    )
     assert validated is False
     assert len(ivas) == 1
     iva = ivas[0]
@@ -931,6 +938,7 @@ async def test_validate_iva_verification_code_too_often(
     before = now - timedelta(hours=3)
     registry = UserRegistryForTesting()
     iva_id = "some-iva-id"
+    user_id = "some-user-id"
     code = generate_code()
     verification_code_hash = hash_code(code)
     from_iva = Iva(
@@ -938,7 +946,7 @@ async def test_validate_iva_verification_code_too_often(
         state=from_state,
         type=IvaType.PHONE,
         value="123456",
-        user_id="some-user-id",
+        user_id=user_id,
         verification_attempts=attempts,
         verification_code_hash=verification_code_hash,
         created=before,
@@ -950,7 +958,7 @@ async def test_validate_iva_verification_code_too_often(
         registry.IvaTooManyVerificationAttemptsError,
         match=f"Too many verification attempts for IVA with ID {iva_id}",
     ):
-        await registry.validate_iva_verification_code(iva_id, code)
+        await registry.validate_iva_verification_code(iva_id, code, user_id=user_id)
     assert len(ivas) == 1
     iva = ivas[0]
     changed = iva.changed
@@ -1048,7 +1056,8 @@ async def test_iva_verification_happy_path():
     """Test happy path of a complete IVA verification."""
     registry = UserRegistryForTesting()
     iva_data = IvaBasicData(type=IvaType.PHONE, value="123456")
-    iva_id = await registry.create_iva("john@ghga.de", iva_data)
+    user_id = "john@ghga.de"
+    iva_id = await registry.create_iva(user_id, iva_data)
     assert iva_id
     ivas = registry.dummy_ivas
     assert len(ivas) == 1
@@ -1058,7 +1067,7 @@ async def test_iva_verification_happy_path():
     assert iva.verification_code_hash is None
     assert iva.verification_attempts == 0
     # request code
-    await registry.request_iva_verification_code(iva_id)
+    await registry.request_iva_verification_code(iva_id, user_id=user_id)
     assert len(ivas) == 1
     iva = ivas[0]
     assert iva.state == IvaState.CODE_REQUESTED
@@ -1084,7 +1093,9 @@ async def test_iva_verification_happy_path():
     assert iva.verification_code_hash is not None
     assert iva.verification_attempts == 0
     # validate code
-    validated = await registry.validate_iva_verification_code(iva_id, code)
+    validated = await registry.validate_iva_verification_code(
+        iva_id, code, user_id=user_id
+    )
     assert len(ivas) == 1
     iva = ivas[0]
     assert validated is True
