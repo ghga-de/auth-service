@@ -1015,6 +1015,8 @@ paths:
             codes for IVAs.
         '404':
           description: The IVA was not found.
+        '409':
+          description: The IVA does not have the proper state.
         '422':
           content:
             application/json:
@@ -1050,6 +1052,8 @@ paths:
           description: Not authorized to create verification codes for IVAs.
         '404':
           description: The IVA was not found.
+        '409':
+          description: The IVA does not have the proper state.
         '422':
           content:
             application/json:
@@ -1081,6 +1085,8 @@ paths:
           description: Not authorized to request verification codes for IVAs.
         '404':
           description: The IVA was not found.
+        '409':
+          description: The IVA does not have the proper state.
         '422':
           content:
             application/json:
@@ -1151,6 +1157,8 @@ paths:
           description: The submitted verification code was invalid.
         '404':
           description: The IVA was not found.
+        '409':
+          description: The IVA does not have the proper state.
         '422':
           description: Validation error in submitted verification data.
         '429':
