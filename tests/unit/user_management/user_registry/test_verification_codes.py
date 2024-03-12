@@ -25,27 +25,13 @@ from auth_service.user_management.user_registry.core.verification_codes import (
 )
 
 
-def test_generate_verification_code_with_default_size():
-    """Test the generation of verification codes with default size."""
-    codes = set()
-    for _ in range(100):
-        code = generate_code()
-        codes.add(code)
-        assert len(code) == 6
-        assert code.isascii()
-        assert code.isalnum()
-        assert code.isupper()
-        assert sum(c.isalpha() for c in code) >= 2
-        assert sum(c.isdigit() for c in code) >= 2
-    assert len(codes) > 75
-
-
-@mark.parametrize("size", [4, 8, 10, 12])
-def test_generate_verification_code_with_alternative_size(size: int):
+@mark.parametrize("size", [4, 6, 8, 10, 12])
+def test_generate_verification_code_with_various_size(size: int):
     """Test the generation of verification codes with alternative sizes."""
     codes = set()
     for _ in range(10 * size):
-        code = generate_code(size)
+        # also test that 6 is the default size
+        code = generate_code() if size == 6 else generate_code(size)
         codes.add(code)
         assert len(code) == size
         assert code.isascii()
