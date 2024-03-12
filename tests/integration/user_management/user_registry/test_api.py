@@ -1089,6 +1089,18 @@ async def test_happy_path_for_verifying_an_iva(
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not response.text
 
+    # Check that the IVA has really been verified
+    response = await client_with_db.get(f"/users/{user_id}/ivas", headers=headers)
+    assert response.status_code == status.HTTP_200_OK
+    ivas = response.json()
+    assert isinstance(ivas, list)
+    assert len(ivas) == 1
+    iva = ivas[0]
+    assert iva["id"] == iva_id
+    assert iva["type"] == "Phone"
+    assert iva["value"] == "123"
+    assert iva["state"] == "Verified"
+
 
 async def test_data_steward_iva_operations_without_authorization(
     client_with_db: AsyncTestClient,
@@ -1234,6 +1246,16 @@ async def test_wrongly_verifying_a_few_times(
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
+    # Check that the IVA has really been verified
+    response = await client_with_db.get(f"/users/{user_id}/ivas", headers=headers)
+    assert response.status_code == status.HTTP_200_OK
+    ivas = response.json()
+    assert isinstance(ivas, list)
+    assert len(ivas) == 1
+    iva = ivas[0]
+    assert iva["id"] == iva_id
+    assert iva["state"] == "Verified"
+
 
 async def test_wrongly_verifying_an_iva_too_often(
     client_with_db: AsyncTestClient,
@@ -1310,3 +1332,13 @@ async def test_wrongly_verifying_an_iva_too_often(
     assert response.status_code == status.HTTP_409_CONFLICT
     error = response.json()
     assert error == {"detail": "The IVA does not have the proper state."}
+
+    # Check that the IVA has really not been verified
+    response = await client_with_db.get(f"/users/{user_id}/ivas", headers=headers)
+    assert response.status_code == status.HTTP_200_OK
+    ivas = response.json()
+    assert isinstance(ivas, list)
+    assert len(ivas) == 1
+    iva = ivas[0]
+    assert iva["id"] == iva_id
+    assert iva["state"] == "Unverified"
