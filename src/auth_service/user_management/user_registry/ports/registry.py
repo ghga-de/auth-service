@@ -204,7 +204,7 @@ class UserRegistryPort(ABC):
         """Get the IVA with the given ID.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        orr an IvaRetrievalError.
+        or an IvaRetrievalError.
         """
         ...
 
