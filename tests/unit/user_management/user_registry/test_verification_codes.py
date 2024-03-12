@@ -25,6 +25,8 @@ from auth_service.user_management.user_registry.core.verification_codes import (
 )
 
 DEFAULT_CODE_SIZE = 6  # the code size that we expect is used as the default
+DEFAULT_SALT_SIZE = 16  # the size of the salt that we expect to be used by default
+DEFAULT_HASH_SIZE = 64  # the size of the code hash that we expect to be used
 
 
 @mark.parametrize("size", [DEFAULT_CODE_SIZE, 4, 8, 10, 12])
@@ -61,7 +63,7 @@ TEST_CODES = [
 def test_hash_and_validate_code(code: str):
     """Test the hashing and validation of a selection of possible verification codes."""
     hash_with_salt = hash_code(code)
-    assert len(hash_with_salt) == 16 + 64
+    assert len(hash_with_salt) == DEFAULT_SALT_SIZE + DEFAULT_HASH_SIZE
     assert hash_with_salt.isascii()
     assert set(hash_with_salt).issubset(set("0123456789abcdef"))
     assert validate_code(code, hash_with_salt)
@@ -76,7 +78,7 @@ def test_hash_and_validate_generated_codes():
     for _ in range(100):
         code = generate_code()
         hash_with_salt = hash_code(code)
-        assert len(hash_with_salt) == 16 + 64
+        assert len(hash_with_salt) == DEFAULT_SALT_SIZE + DEFAULT_HASH_SIZE
         assert hash_with_salt.isascii()
         assert set(hash_with_salt).issubset(set("0123456789abcdef"))
         assert validate_code(code, hash_with_salt)
