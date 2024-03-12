@@ -24,14 +24,16 @@ from auth_service.user_management.user_registry.core.verification_codes import (
     validate_code,
 )
 
+DEFAULT_CODE_SIZE = 6  # the code size that we expect is used as the default
 
-@mark.parametrize("size", [4, 6, 8, 10, 12])
+
+@mark.parametrize("size", [DEFAULT_CODE_SIZE, 4, 8, 10, 12])
 def test_generate_verification_code_with_various_size(size: int):
     """Test the generation of verification codes with alternative sizes."""
     codes = set()
     for _ in range(10 * size):
         # also test that 6 is the default size
-        code = generate_code() if size == 6 else generate_code(size)
+        code = generate_code() if size == DEFAULT_CODE_SIZE else generate_code(size)
         codes.add(code)
         assert len(code) == size
         assert code.isascii()
