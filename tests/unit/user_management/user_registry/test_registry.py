@@ -54,6 +54,9 @@ from ....fixtures.utils import DummyIvaDao, DummyUserDao
 pytestmark = mark.asyncio()
 
 
+VERIFICATION_CODE_SIZE = 6  # the expected size of verification codes
+
+
 class UserRegistryForTesting(UserRegistry):
     """A modified user registry for testing."""
 
@@ -719,7 +722,7 @@ async def test_create_iva_verification_code(from_state: IvaState):
     assert code.isascii()
     assert code.isalnum()
     assert code.isupper()
-    assert len(code) == 6
+    assert len(code) == VERIFICATION_CODE_SIZE
     iva = ivas[0]
     changed = iva.changed
     assert 0 <= (changed - now).total_seconds() < 3
@@ -1141,7 +1144,7 @@ async def test_iva_verification_happy_path():
     assert code.isascii()
     assert code.isalnum()
     assert code.isupper()
-    assert len(code) == 6
+    assert len(code) == VERIFICATION_CODE_SIZE
     assert len(ivas) == 1
     iva = ivas[0]
     assert iva.state == IvaState.CODE_CREATED

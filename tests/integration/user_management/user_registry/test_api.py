@@ -49,6 +49,8 @@ MAX_USER_DATA = {**MIN_USER_DATA, **OPT_USER_DATA}
 
 DUMMY_USER_ID = "12345678-9012-3456-7890-123456789012"
 
+VERIFICATION_CODE_SIZE = 6  # the expected size of verification codes
+
 
 def seconds_passed(date_string: str) -> float:
     """Get number of seconds that have passed since the given date string."""
@@ -1072,7 +1074,7 @@ async def test_happy_path_for_verifying_an_iva(
     assert code.isascii()
     assert code.isalnum()
     assert code.isupper()
-    assert len(code) == 6
+    assert len(code) == VERIFICATION_CODE_SIZE
 
     # Transmit code
     response = await client_with_db.post(
@@ -1221,7 +1223,7 @@ async def test_wrongly_verifying_a_few_times(
     assert code.isascii()
     assert code.isalnum()
     assert code.isupper()
-    assert len(code) == 6
+    assert len(code) == VERIFICATION_CODE_SIZE
     # Transmit code
     response = await client_with_db.post(
         f"/rpc/ivas/{iva_id}/code-transmitted", headers=steward_headers
@@ -1298,7 +1300,7 @@ async def test_wrongly_verifying_an_iva_too_often(
     assert code.isascii()
     assert code.isalnum()
     assert code.isupper()
-    assert len(code) == 6
+    assert len(code) == VERIFICATION_CODE_SIZE
     # Transmit code
     response = await client_with_db.post(
         f"/rpc/ivas/{iva_id}/code-transmitted", headers=steward_headers
