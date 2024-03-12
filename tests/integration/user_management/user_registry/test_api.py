@@ -1164,7 +1164,7 @@ async def test_data_steward_iva_operations_without_authorization(
     error = response.json()
     assert error == {"detail": "The IVA was not found."}
 
-    # Validate code as the proper users, but code has not been requested
+    # Validate code as the proper user, but code has not been requested
     data = {"verification_code": "123456"}
     response = await client_with_db.post(
         f"/rpc/ivas/{iva_id}/validate-code", json=data, headers=headers
