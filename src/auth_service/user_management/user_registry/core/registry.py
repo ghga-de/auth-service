@@ -353,7 +353,7 @@ class UserRegistry(UserRegistryPort):
         Checks whether the given verification code matches the stored hash.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        an IvaIvaRetrievalError, an IvaUnexpectedStateError,
+        an IvaRetrievalError, an IvaUnexpectedStateError,
         an IvaTooManyVerificationAttemptsError or an IvaModificationError.
 
         If a user ID is specified, and the IVA does not belong to the user,
