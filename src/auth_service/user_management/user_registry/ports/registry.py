@@ -127,7 +127,7 @@ class UserRegistryPort(ABC):
             super().__init__(message)
 
     class IvaTooManyVerificationAttemptsError(UserRegistryIvaError):
-        """Raised when a verification code if verified too often."""
+        """Raised when a verification code is verified too often."""
 
         def __init__(self, *, iva_id: str):
             message = f"Too many verification attempts for IVA with ID {iva_id}"
