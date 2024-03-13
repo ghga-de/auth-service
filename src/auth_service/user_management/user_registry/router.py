@@ -521,7 +521,7 @@ async def request_code_for_iva(
     description="Endpoint used to create a verification code for a given IVA.",
     responses={
         201: {"description": "A verification code for the IVA has been created."},
-        401: {"description": "Not autenticated."},
+        401: {"description": "Not authenticated."},
         403: {"description": "Not authorized to create verification codes for IVAs."},
         404: {"description": "The IVA was not found."},
         409: {"description": "The IVA does not have the proper state."},
