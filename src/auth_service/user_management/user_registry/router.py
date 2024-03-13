@@ -54,7 +54,8 @@ INITIAL_USER_STATUS = UserStatus.ACTIVE
     " Data delivered by the OIDC provider may not be altered.",
     responses={
         201: {"model": User, "description": "User was successfully registered."},
-        403: {"description": "Not authorized to register user."},
+        401: {"description": "Not authorized to register users."},
+        403: {"description": "Not authorized to register this user."},
         409: {"description": "User was already registered."},
         422: {"description": "Validation error in submitted user data."},
     },
@@ -99,7 +100,8 @@ async def post_user(
     " Data delivered by the OIDC provider may not be altered.",
     responses={
         204: {"description": "User was successfully updated."},
-        403: {"description": "Not authorized to update user."},
+        401: {"description": "Not authorized to update users."},
+        403: {"description": "Not authorized to update this user."},
         404: {"description": "User does not exist."},
         422: {"description": "Validation error in submitted user data."},
     },
@@ -147,8 +149,8 @@ async def put_user(
     " Can only be performed by a data steward or the same user.",
     responses={
         200: {"model": User, "description": "Requested user has been found."},
-        401: {"description": "Not authorized to get user data."},
-        403: {"description": "Not authorized to request user."},
+        401: {"description": "Not authorized to request user data."},
+        403: {"description": "Not authorized to request data of this user."},
         404: {"description": "The user was not found."},
         422: {"description": "Validation error in submitted user identification."},
     },
@@ -558,7 +560,10 @@ async def create_code_for_iva(
     description="Endpoint used to confirm"
     " that the verification code for an IVA has been transmitted.",
     responses={
-        204: {"description": "The code has been confirmed as transmitted for the IVA."},
+        204: {
+            "description": "The verification code for the IVA has been confirmed"
+            " as transmitted."
+        },
         401: {
             "description": "Not authorized to confirm"
             " the transmission of verification codes for IVAs."
