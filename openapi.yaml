@@ -1011,6 +1011,8 @@ paths:
         '204':
           description: The verification code for the IVA has been confirmed as transmitted.
         '401':
+          description: Not authenticated.
+        '403':
           description: Not authorized to confirm the transmission of verification
             codes for IVAs.
         '404':
@@ -1049,6 +1051,8 @@ paths:
                 $ref: '#/components/schemas/IvaVerificationCode'
           description: A verification code for the IVA has been created.
         '401':
+          description: Not autenticated.
+        '403':
           description: Not authorized to create verification codes for IVAs.
         '404':
           description: The IVA was not found.
@@ -1115,6 +1119,8 @@ paths:
         '204':
           description: The state of the IVA has been reset to unverified.
         '401':
+          description: Not authenticated.
+        '403':
           description: Not authorized to unverify IVAs.
         '404':
           description: The IVA was not found.
@@ -1221,6 +1227,8 @@ paths:
           description: Successful Response
         '204':
           description: User data was successfully deleted.
+        '401':
+          description: Not authenticated.
         '403':
           description: Not authorized to delete this user.
         '404':
@@ -1292,6 +1300,8 @@ paths:
           description: Successful Response
         '204':
           description: User data was successfully saved.
+        '401':
+          description: Not authenticated.
         '403':
           description: Not authorized to make this modification.
         '404':
