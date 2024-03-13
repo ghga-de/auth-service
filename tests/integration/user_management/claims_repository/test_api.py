@@ -85,6 +85,7 @@ async def test_post_claim(client_with_db):
     assert len(claim_id) == 36
     assert claim_id.count("-") == 4
     assert claim.pop("user_id") == "john@ghga.de"
+    assert claim.pop("iva_id") is None
     assert claim.pop("sub_source") is None
     assert claim.pop("conditions") is None
     assert claim.pop("revocation_date") is None
@@ -322,6 +323,7 @@ async def test_grant_download_access(client_with_db):
         "source": DATASET_CLAIM_DATA["source"],
         "sub_source": None,
         "user_id": "john@ghga.de",
+        "iva_id": None,
         "valid_from": validity["valid_from"],
         "valid_until": validity["valid_until"],
         "visa_type": DATASET_CLAIM_DATA["visa_type"],
@@ -491,6 +493,7 @@ async def test_get_claims_for_seeded_data_steward(client_with_db):
         "conditions": None,
         "revocation_date": None,
         "user_id": "the-id-of-rod-steward",
+        "iva_id": None,
         "source": "https://ghga.de",
         "sub_source": None,
         "visa_type": "https://www.ghga.de/GA4GH/VisaTypes/Role/v1.0",
