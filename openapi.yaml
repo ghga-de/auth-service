@@ -1051,7 +1051,7 @@ paths:
                 $ref: '#/components/schemas/IvaVerificationCode'
           description: A verification code for the IVA has been created.
         '401':
-          description: Not autenticated.
+          description: Not authenticated.
         '403':
           description: Not authorized to create verification codes for IVAs.
         '404':
