@@ -31,7 +31,7 @@ Emissary-ingress does not forward all authorization headers by default, therefor
   - cookie
   - x-authorization
   - x-csrf-token
-  - x-session-header
+  - x-session
 ```
 
 The `x-authorization` header is only needed when an additional HTTP Basic Auth is used on top of the OIDC based authentication. Only the default `authorization` header actually needs to be modified by the Auth Adapter. However, for security purposes the Auth Adapter also empties the authorization headers that it consumes and evaluates itself and which are therefore not needed by the backend. Therefore, these are also specified as response headers.
