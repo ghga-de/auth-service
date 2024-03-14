@@ -393,7 +393,7 @@ async def test_grant_download_access_with_unverified_iva(client_with_db):
 
 
 async def test_grant_download_access_without_iva(client_with_db):
-    """Test that granting access to a dataset when the IVA does not exist."""
+    """Test granting access to a dataset when the IVA does not exist."""
     user_dao = DummyUserDao()
     client_with_db.app.dependency_overrides[get_user_dao] = lambda: user_dao
     iva_dao = DummyIvaDao()
