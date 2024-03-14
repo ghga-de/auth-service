@@ -352,7 +352,7 @@ async def test_grant_download_access(client_with_db):
 
 
 async def test_grant_download_access_with_unverified_iva(client_with_db):
-    """Test that granting access to a dataset when the IVA is not yet verified."""
+    """Test granting access to a dataset when the IVA is not yet verified."""
     user_dao = DummyUserDao()
     client_with_db.app.dependency_overrides[get_user_dao] = lambda: user_dao
     now = now_as_utc()
