@@ -194,9 +194,6 @@ class ClaimFullCreation(ClaimCreation):
     user_id: str = Field(  # actually UUID
         default=..., description="Internal user ID"
     )
-    iva_id: Optional[str] = Field(  # actually UUID
-        default=None, description="ID of the IVA associated with this claim"
-    )
 
     creation_date: UTCDatetime = Field(
         default=..., description="Date of creation of this claim"
