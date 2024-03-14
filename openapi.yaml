@@ -60,7 +60,7 @@ components:
           anyOf:
           - type: string
           - type: 'null'
-          description: ID of the IVA associated with this claim
+          description: ID of an IVA associated with this claim
           title: Iva Id
         revocation_date:
           anyOf:
@@ -182,7 +182,7 @@ components:
           anyOf:
           - type: string
           - type: 'null'
-          description: ID of the IVA associated with this claim
+          description: ID of an IVA associated with this claim
           title: Iva Id
         revocation_date:
           anyOf:
