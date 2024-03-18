@@ -32,9 +32,14 @@ from auth_service.auth_adapter.core.verify_totp import verify_totp
 from auth_service.auth_adapter.ports.dao import UserToken, UserTokenDao
 from auth_service.config import Config
 from auth_service.user_management.user_registry.models.users import UserStatus
-from auth_service.user_management.user_registry.ports.dao import UserDao
+from auth_service.user_management.user_registry.ports.dao import IvaDao, UserDao
 
-from ...fixtures.utils import DummyUserDao, DummyUserTokenDao
+from ...fixtures.utils import (
+    DummyIvaDao,
+    DummyUserDao,
+    DummyUserTokenDao,
+    UserRegistryForTesting,
+)
 
 SESSION_ARGS = {
     "ext_id": "john@aai.org",
@@ -87,6 +92,10 @@ async def test_verify_totp(session_state: SessionState, totp_code: str):  # noqa
     session.totp_token = totp_token
 
     user_dao = DummyUserDao()
+    iva_dao = DummyIvaDao()
+    user_registry = UserRegistryForTesting(
+        config=config, user_dao=cast(UserDao, user_dao), iva_dao=cast(IvaDao, iva_dao)
+    )
     user_id = user_dao.user.id
     user_token_dao = DummyUserTokenDao()
     if user_has_token:
@@ -115,7 +124,7 @@ async def test_verify_totp(session_state: SessionState, totp_code: str):  # noqa
             session_store=session_store,
             session=session,
             totp_handler=totp_handler,
-            user_dao=cast(UserDao, user_dao),
+            user_registry=user_registry,
             token_dao=cast(UserTokenDao, user_token_dao),
         )
     if should_verify:

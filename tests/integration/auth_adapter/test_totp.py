@@ -52,14 +52,14 @@ def get_valid_totp_code(
 ) -> str:
     """Generate a valid TOTP code for the given secret."""
     if not when:
-        when = datetime.utcnow()
+        when = now_as_utc()
     return pyotp.TOTP(secret).at(when, offset)
 
 
 def get_invalid_totp_code(secret: str, when: Optional[datetime] = None) -> str:
     """Generate an invalid TOTP code for the given secret."""
     if not when:
-        when = datetime.utcnow()
+        when = now_as_utc()
     # get the time codes for the tolerance interval
     # plus one more for possible timecode increment during the test
     valid_codes = {get_valid_totp_code(secret, when, offset) for offset in range(-1, 3)}
@@ -195,9 +195,7 @@ async def test_verify_totp_without_csrf_token(
     assert response.json() == {"detail": "Invalid or missing CSRF token"}
 
 
-async def test_verify_totp(
-    client_with_session: ClientWithSession,
-):
+async def test_verify_totp(client_with_session: ClientWithSession):
     """Test verification of TOTP tokens."""
     client, session, _user_dao, user_token_dao = client_with_session
     headers = headers_for_session(session)
@@ -332,9 +330,7 @@ async def test_rate_limiting_totp(
     assert not response.text
 
 
-async def test_total_limit_totp(
-    client_with_session: ClientWithSession,
-):
+async def test_total_limit_totp(client_with_session: ClientWithSession):
     """Test that there is a total limit for code verification."""
     client, session, user_dao, user_token_dao = client_with_session
     headers = headers_for_session(session)

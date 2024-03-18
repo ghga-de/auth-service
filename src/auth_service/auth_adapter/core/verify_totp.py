@@ -17,14 +17,13 @@
 """Application logic for verifying user TOTP tokens."""
 
 from fastapi import HTTPException, status
-from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.protocols.dao import ResourceNotFoundError
 
 from auth_service.user_management.user_registry.models.users import (
-    StatusChange,
+    UserModifiableData,
     UserStatus,
 )
-from auth_service.user_management.user_registry.ports.dao import UserDao
+from auth_service.user_management.user_registry.ports.registry import UserRegistryPort
 
 from ..ports.dao import UserToken, UserTokenDao
 from ..ports.session_store import SessionStorePort
@@ -41,7 +40,7 @@ async def verify_totp(  # noqa: C901, PLR0912, PLR0913
     session_store: SessionStorePort,
     session: Session,
     totp_handler: TOTPHandlerPort,
-    user_dao: UserDao,
+    user_registry: UserRegistryPort,
     token_dao: UserTokenDao,
 ) -> None:
     """Verify the given TOTP code for the user with the given ID."""
@@ -52,8 +51,8 @@ async def verify_totp(  # noqa: C901, PLR0912, PLR0913
     else:
         # get verified TOTP token from the database
         try:
-            user = await user_dao.get_by_id(user_id)
-        except ResourceNotFoundError:
+            user = await user_registry.get_user(user_id)
+        except user_registry.UserDoesNotExistError:
             user = user_token = None
         else:
             try:
@@ -67,19 +66,14 @@ async def verify_totp(  # noqa: C901, PLR0912, PLR0913
             verified = None
             # too many invalid TOTP codes
             if user and user.status is UserStatus.ACTIVE:
-                # disable the user account
-                user = user.model_copy(
-                    update={
-                        "status": UserStatus.INACTIVE,
-                        "status_change": StatusChange(
-                            previous=user.status,
-                            by=session.user_id,
-                            context="Too many failed TOTP login attempts",
-                            change_date=now_as_utc(),
-                        ),
-                    }
+                # disable the user account (only the specified fields will be changed)
+                modified_user_data = UserModifiableData(status=UserStatus.INACTIVE)
+                await user_registry.update_user(
+                    user.id,
+                    modified_user_data,
+                    context="Too many failed TOTP login attempts",
+                    changed_by=session.user_id,
                 )
-                await user_dao.update(user)
             # reset the TOTP token again
             totp_handler.reset(totp_token)
             # remove the session (logging the user out)
@@ -100,7 +94,7 @@ async def verify_totp(  # noqa: C901, PLR0912, PLR0913
             detail="Too many failed attempts" if limit else "Invalid TOTP code",
         )
     if session.state == SessionState.NEW_TOTP_TOKEN and totp_token:
-        # TODO: this operation must also delete all IVAs of the user
+        # TODO: This operation must also reset all IVAs of the user.
         # store token in the database
         user_token = UserToken(
             user_id=user_id,

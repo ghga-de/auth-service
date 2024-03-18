@@ -46,6 +46,7 @@ from ...fixtures.utils import (
     DummyUserTokenDao,
     create_access_token,
     headers_for_session,
+    modified_user_registry_for_testing,
 )
 
 totp_encryption_key = TOTPHandler.random_encryption_key()
@@ -157,7 +158,9 @@ async def fixture_client_with_session(
     main.app.dependency_overrides[get_claim_dao] = lambda: claim_dao
 
     session = await query_new_session(client)
-    yield ClientWithSession(client, session, user_dao, user_token_dao)
+
+    with modified_user_registry_for_testing():
+        yield ClientWithSession(client, session, user_dao, user_token_dao)
 
 
 @fixture(name="with_basic_auth")
