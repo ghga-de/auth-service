@@ -17,8 +17,7 @@
 
 import json
 import re
-from collections.abc import AsyncIterator, Generator, Mapping
-from contextlib import contextmanager
+from collections.abc import AsyncIterator, Mapping
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, Optional, Union, cast
@@ -42,6 +41,7 @@ from auth_service.user_management.user_registry.core.registry import (
     IvaDao,
     UserDao,
     UserRegistry,
+    UserRegistryConfig,
 )
 from auth_service.user_management.user_registry.models.ivas import Iva, IvaFullData
 from auth_service.user_management.user_registry.models.users import User, UserData
@@ -404,11 +404,17 @@ class DummyClaimDao:
         self.claims.remove(claim)
 
 
-class UserRegistryForTesting(UserRegistry):
-    """A modified user registry for testing.
+class DummyUserRegistry(UserRegistry):
+    """A modified user registry for testing with the dummy DAOs."""
 
-    This modified class allows the format of user IDs used for testing.
-    """
+    def __init__(self, *, config: UserRegistryConfig = CONFIG):
+        self.dummy_user_dao = DummyUserDao()
+        self.dummy_iva_dao = DummyIvaDao()
+        super().__init__(
+            config=config,
+            user_dao=cast(UserDao, self.dummy_user_dao),
+            iva_dao=cast(IvaDao, self.dummy_iva_dao),
+        )
 
     @staticmethod
     def is_internal_user_id(id_: str) -> bool:
@@ -419,33 +425,6 @@ class UserRegistryForTesting(UserRegistry):
     def is_external_user_id(id_: str) -> bool:
         """Check if the passed ID is an external user id."""
         return isinstance(id_, str) and id_.endswith("@aai.org")
-
-
-@contextmanager
-def modified_user_registry_for_testing() -> Generator[None, None, None]:
-    """Patch the user registry class for testing."""
-    cls = UserRegistry
-    is_internal_user_id = cls.is_internal_user_id
-    is_external_user_id = cls.is_external_user_id
-    test_cls = UserRegistryForTesting
-    cls.is_internal_user_id = staticmethod(test_cls.is_internal_user_id)  # type: ignore
-    cls.is_external_user_id = staticmethod(test_cls.is_external_user_id)  # type: ignore
-    yield
-    cls.is_internal_user_id = staticmethod(is_internal_user_id)  # type: ignore
-    cls.is_external_user_id = staticmethod(is_external_user_id)  # type: ignore
-
-
-class DummyUserRegistryForTesting(UserRegistryForTesting):
-    """A modified user registry for testing with the dummy DAOs."""
-
-    def __init__(self):
-        self.dummy_user_dao = DummyUserDao()
-        self.dummy_iva_dao = DummyIvaDao()
-        super().__init__(
-            config=CONFIG,
-            user_dao=cast(UserDao, self.dummy_user_dao),
-            iva_dao=cast(IvaDao, self.dummy_iva_dao),
-        )
 
     @property
     def dummy_user(self) -> User:

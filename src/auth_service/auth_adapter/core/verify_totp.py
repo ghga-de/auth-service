@@ -43,7 +43,11 @@ async def verify_totp(  # noqa: C901, PLR0912, PLR0913
     user_registry: UserRegistryPort,
     token_dao: UserTokenDao,
 ) -> None:
-    """Verify the given TOTP code for the user with the given ID."""
+    """Verify the given TOTP code for the user with the given ID.
+
+    As a side effect, the TOTP token is stored in the database if it is still only
+    available in the session, and possibly already verified IVAs are reset.
+    """
     if session.state == SessionState.NEW_TOTP_TOKEN:
         # get not yet verified TOTP token from the session
         user = user_token = None
@@ -94,7 +98,8 @@ async def verify_totp(  # noqa: C901, PLR0912, PLR0913
             detail="Too many failed attempts" if limit else "Invalid TOTP code",
         )
     if session.state == SessionState.NEW_TOTP_TOKEN and totp_token:
-        # TODO: This operation must also reset all IVAs of the user.
+        # reset all already verified IVAs
+        await user_registry.reset_verified_ivas(user_id)
         # store token in the database
         user_token = UserToken(
             user_id=user_id,
