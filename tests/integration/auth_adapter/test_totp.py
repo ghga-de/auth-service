@@ -28,6 +28,7 @@ from ghga_service_commons.utils.utc_dates import now_as_utc
 from pytest import mark
 
 from auth_service.auth_adapter.core.session_store import SessionState
+from auth_service.user_management.user_registry.models.ivas import IvaState
 from auth_service.user_management.user_registry.models.users import UserStatus
 
 from ...fixtures.utils import (  # noqa: F401
@@ -197,7 +198,7 @@ async def test_verify_totp_without_csrf_token(
 
 async def test_verify_totp(client_with_session: ClientWithSession):
     """Test verification of TOTP tokens."""
-    client, session, _user_dao, user_token_dao = client_with_session
+    client, session, user_registry, user_token_dao = client_with_session
     headers = headers_for_session(session)
     user_id = "john@ghga.de"
     assert session.state is SessionState.REGISTERED
@@ -213,6 +214,9 @@ async def test_verify_totp(client_with_session: ClientWithSession):
     # make sure the backend state is now as expected
     session = await query_new_session(client, session)
     assert session.state is SessionState.NEW_TOTP_TOKEN
+    # add a verified TOTP token to the user
+    user_registry.add_dummy_iva(state=IvaState.VERIFIED)
+
     # try to verify with invalid TOTP code
     response = await client.post(
         "/rpc/verify-totp",
@@ -221,6 +225,8 @@ async def test_verify_totp(client_with_session: ClientWithSession):
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.json() == {"detail": "Invalid TOTP code"}
+    # check that the state of the IVA has not been reset
+    assert user_registry.dummy_ivas[0].state is IvaState.VERIFIED
     # verify with valid TOTP code
     response = await client.post(
         "/rpc/verify-totp",
@@ -241,6 +247,8 @@ async def test_verify_totp(client_with_session: ClientWithSession):
     assert len(totp_token.encrypted_secret) == 96
     assert totp_token.last_counter
     assert totp_token.counter_attempts == -1  # verified
+    # check that the state of the IVA has been reset
+    assert user_registry.dummy_ivas[0].state is IvaState.UNVERIFIED
 
     # decrease the TOTP counter so that we can re-login without waiting
     totp_token.last_counter -= 1
@@ -279,7 +287,7 @@ async def test_rate_limiting_totp(
     client_with_session: ClientWithSession,
 ):
     """Test that the rate limiting for code verification works."""
-    client, session, _user_dao, user_token_dao = client_with_session
+    client, session, user_registry, user_token_dao = client_with_session
     headers = headers_for_session(session)
     user_id = "john@ghga.de"
     assert session.state is SessionState.REGISTERED
@@ -332,10 +340,10 @@ async def test_rate_limiting_totp(
 
 async def test_total_limit_totp(client_with_session: ClientWithSession):
     """Test that there is a total limit for code verification."""
-    client, session, user_dao, user_token_dao = client_with_session
+    client, session, user_registry, user_token_dao = client_with_session
     headers = headers_for_session(session)
 
-    user = user_dao.user
+    user = user_registry.dummy_user
     assert user
     user_id = user.id
     assert user_id == "john@ghga.de"
@@ -389,7 +397,7 @@ async def test_total_limit_totp(client_with_session: ClientWithSession):
     assert response.json() == {"detail": "Too many failed attempts"}
 
     # check that the user account has been disabled
-    user = user_dao.user
+    user = user_registry.dummy_user
     assert user
     assert user.status is UserStatus.INACTIVE
     status_change = user.status_change

@@ -24,7 +24,7 @@ from typing import Any, Optional, Union, cast
 
 from fastapi import Request
 from ghga_service_commons.api import ApiConfigBase
-from ghga_service_commons.utils.utc_dates import now_as_utc, utc_datetime
+from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc, utc_datetime
 from hexkit.config import config_from_yaml
 from hexkit.protocols.dao import NoHitsFoundError, ResourceNotFoundError
 from jwcrypto import jwk, jwt
@@ -43,7 +43,12 @@ from auth_service.user_management.user_registry.core.registry import (
     UserRegistry,
     UserRegistryConfig,
 )
-from auth_service.user_management.user_registry.models.ivas import Iva, IvaFullData
+from auth_service.user_management.user_registry.models.ivas import (
+    Iva,
+    IvaFullData,
+    IvaState,
+    IvaType,
+)
 from auth_service.user_management.user_registry.models.users import User, UserData
 
 BASE_DIR = Path(__file__).parent.resolve()
@@ -435,3 +440,30 @@ class DummyUserRegistry(UserRegistry):
     def dummy_ivas(self) -> list[Iva]:
         """Get the dummy IVAs."""
         return self.dummy_iva_dao.ivas
+
+    def add_dummy_iva(
+        self,
+        id_: Optional[str] = None,
+        user_id: Optional[str] = None,
+        type_: IvaType = IvaType.PHONE,
+        value: str = "123456",
+        state: IvaState = IvaState.UNVERIFIED,
+        verification_code_hash: Optional[str] = None,
+        verification_attempts: int = 0,
+        created: Optional[UTCDatetime] = None,
+        changed: Optional[UTCDatetime] = None,
+    ):
+        """Add a dummy IVA with the specified data."""
+        self.dummy_ivas.append(
+            Iva(
+                id=id_ or f"iva-id-{len(self.dummy_ivas) + 1}",
+                state=state,
+                type=type_,
+                value=value,
+                user_id=user_id or self.dummy_user.id,
+                verification_code_hash=verification_code_hash,
+                verification_attempts=verification_attempts,
+                created=created or now_as_utc(),
+                changed=changed or now_as_utc(),
+            )
+        )

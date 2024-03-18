@@ -31,11 +31,7 @@ from auth_service.auth_adapter.core.totp import TOTPHandler
 from auth_service.auth_adapter.core.verify_totp import verify_totp
 from auth_service.auth_adapter.ports.dao import UserToken, UserTokenDao
 from auth_service.config import Config
-from auth_service.user_management.user_registry.models.ivas import (
-    Iva,
-    IvaState,
-    IvaType,
-)
+from auth_service.user_management.user_registry.models.ivas import IvaState
 from auth_service.user_management.user_registry.models.users import UserStatus
 
 from ...fixtures.utils import (
@@ -106,17 +102,7 @@ async def test_verify_totp(session_state: SessionState, totp_code: str):  # noqa
         assert totp_token
         await user_token_dao.upsert(UserToken(user_id=user_id, totp_token=totp_token))
 
-    iva_dao.ivas.append(
-        Iva(
-            id="some-iva-id",
-            state=IvaState.VERIFIED,
-            type=IvaType.POSTAL_ADDRESS,
-            value="Home",
-            user_id=user_id,
-            created=now_as_utc(),
-            changed=now_as_utc(),
-        )
-    )
+    user_registry.add_dummy_iva(state=IvaState.VERIFIED)
 
     if totp_token:
         if totp_code == "423715":

@@ -46,7 +46,6 @@ from ...fixtures.utils import (
     RE_USER_INFO_URL,
     USER_INFO,
     DummyClaimDao,
-    DummyUserDao,
     DummyUserRegistry,
     DummyUserTokenDao,
     create_access_token,
@@ -77,7 +76,7 @@ class ClientWithSession(NamedTuple):
 
     client: AsyncTestClient
     session: Session
-    user_dao: DummyUserDao
+    user_registry: DummyUserRegistry
     user_token_dao: DummyUserTokenDao
 
 
@@ -169,7 +168,7 @@ async def fixture_client_with_session(
 
     session = await query_new_session(client)
 
-    yield ClientWithSession(client, session, user_dao, user_token_dao)
+    yield ClientWithSession(client, session, user_registry, user_token_dao)
 
 
 @fixture(name="with_basic_auth")
