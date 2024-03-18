@@ -18,7 +18,7 @@
 
 from datetime import datetime
 from random import randint
-from typing import Optional
+from typing import Optional, cast
 from urllib.parse import parse_qs, urlparse
 
 import pyotp
@@ -53,14 +53,14 @@ def get_valid_totp_code(
 ) -> str:
     """Generate a valid TOTP code for the given secret."""
     if not when:
-        when = now_as_utc()
+        when = cast(datetime, now_as_utc())
     return pyotp.TOTP(secret).at(when, offset)
 
 
 def get_invalid_totp_code(secret: str, when: Optional[datetime] = None) -> str:
     """Generate an invalid TOTP code for the given secret."""
     if not when:
-        when = now_as_utc()
+        when = cast(datetime, now_as_utc())
     # get the time codes for the tolerance interval
     # plus one more for possible timecode increment during the test
     valid_codes = {get_valid_totp_code(secret, when, offset) for offset in range(-1, 3)}
