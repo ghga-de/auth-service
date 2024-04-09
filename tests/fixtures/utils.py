@@ -268,13 +268,16 @@ class DummyUserDao:
     async def find_all(self, *, mapping: Mapping[str, Any]) -> AsyncIterator[User]:
         """Find all dummy users with given ID(s)."""
         mapping = json.loads(json.dumps(mapping))
-        ids = mapping.get("id")
-        if ids:
-            if isinstance(ids, str):
-                ids = [ids]
-            ids = set(ids)
         for user in self.users:
-            if not ids or user.id in ids:
+            data = user.model_dump()
+            for key, value in mapping.items():
+                if isinstance(value, dict) and "$in" in value:
+                    value = value["$in"]
+                    if data[key] not in value:
+                        break
+                elif data[key] != value:
+                    break
+            else:
                 yield user
 
     async def insert(self, dto: UserData) -> User:
@@ -323,9 +326,12 @@ class DummyIvaDao:
         mapping = json.loads(json.dumps(mapping))
         for iva in self.ivas:
             data = iva.model_dump()
-            data["id_"] = data.pop("id")
-            for key in mapping:
-                if mapping[key] != data[key]:
+            for key, value in mapping.items():
+                if isinstance(value, dict) and "$in" in value:
+                    value = value["$in"]
+                    if data[key] not in value:
+                        break
+                elif data[key] != value:
                     break
             else:
                 yield iva

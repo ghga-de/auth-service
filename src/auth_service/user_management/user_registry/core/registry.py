@@ -275,9 +275,12 @@ class UserRegistry(UserRegistryPort):
         user_ids = list({iva.user_id for iva in ivas})
         users: dict[str, User] = {}
         try:
+            # Note: Here we rely on "$in" being supported by the DAO.
             users = {
                 user.id: user
-                async for user in self.user_dao.find_all(mapping={"id": user_ids})
+                async for user in self.user_dao.find_all(
+                    mapping={"id": {"$in": user_ids}}
+                )
             }
         except Exception as error:
             log.error("Could not retrieve users for IVAs: %s", error)

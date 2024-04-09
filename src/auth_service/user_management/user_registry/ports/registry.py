@@ -230,7 +230,7 @@ class UserRegistryPort(ABC):
 
     @abstractmethod
     async def get_ivas_with_users(
-        self, *, user_id: str | None, state: IvaState | None
+        self, *, user_id: str | None = None, state: IvaState | None = None
     ) -> list[IvaAndUserData]:
         """Get all IVAs with user information filtered by the given parameters.
 
