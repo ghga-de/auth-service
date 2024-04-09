@@ -495,7 +495,7 @@ components:
           title: User Email
           type: string
         user_id:
-          description: The internal ID if the associated user
+          description: The internal ID of the associated user
           title: User Id
           type: string
         user_name:
