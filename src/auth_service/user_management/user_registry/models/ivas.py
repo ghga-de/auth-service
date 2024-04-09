@@ -129,7 +129,7 @@ class IvaAndUserData(IvaData):
     """IVA with all external data and user information."""
 
     user_id: str = Field(
-        default=..., description="The internal ID if the associated user"
+        default=..., description="The internal ID of the associated user"
     )
     user_name: str = Field(default=..., description="The full name of the user")
     user_title: Optional[str] = Field(
