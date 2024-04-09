@@ -336,18 +336,18 @@ class DummyIvaDao:
             else:
                 yield iva
 
-    async def insert(self, iva: IvaFullData) -> Iva:
+    async def insert(self, dto: IvaFullData) -> Iva:
         """Insert a dummy IVA."""
-        iva = Iva(id="new-iva", **iva.model_dump())
-        self.ivas.append(iva)
-        return iva
+        dto = Iva(id="new-iva", **dto.model_dump())
+        self.ivas.append(dto)
+        return dto
 
-    async def update(self, iva: Iva) -> None:
+    async def update(self, dto: Iva) -> None:
         """Update a dummy IVA."""
-        iva_id = iva.id
-        for index, iva_at_index in enumerate(self.ivas):
-            if iva_at_index.id == iva_id:
-                self.ivas[index] = iva
+        iva_id = dto.id
+        for index, iva in enumerate(self.ivas):
+            if iva.id == iva_id:
+                self.ivas[index] = dto
                 break
         else:
             raise ResourceNotFoundError(id_=iva_id)
