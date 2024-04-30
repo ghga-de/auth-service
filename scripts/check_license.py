@@ -180,13 +180,13 @@ def get_target_files(
     """Get target files that are not match the exclude conditions.
     Args:
         target_dir (pathlib.Path): The target dir to search.
-        exclude (List[str], optional):
+        exclude (list[str], optional):
             Overwrite default list of file/dir paths relative to
             the target dir that shall be excluded.
-        exclude_endings (List[str], optional):
+        exclude_endings (list[str], optional):
             Overwrite default list of file endings that shall
             be excluded.
-        exclude_pattern (List[str], optional):
+        exclude_pattern (list[str], optional):
             Overwrite default list of regex patterns match file path
             for exclusion.
     """
@@ -406,13 +406,13 @@ def check_file_headers(
             The author that shall be included in the license header.
             It will replace any appearance of "{author}" in the license
             header. This defaults to an author info for GHGA.
-        exclude (List[str], optional):
+        exclude (list[str], optional):
             Overwrite default list of file/dir paths relative to
             the target dir that shall be excluded.
-        exclude_endings (List[str], optional):
+        exclude_endings (list[str], optional):
             Overwrite default list of file endings that shall
             be excluded.
-        exclude_pattern (List[str], optional):
+        exclude_pattern (list[str], optional):
             Overwrite default list of regex patterns match file path
             for exclusion.
     """
