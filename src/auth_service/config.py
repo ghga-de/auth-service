@@ -61,7 +61,7 @@ class Config(
 
     run_auth_adapter: bool = Field(default=False, description="Run as auth adapter")
 
-    auth_key: str | None = Field(
+    auth_key: str | None = Field(  # type: ignore
         default=None,
         description="internal public key for user management"
         " (key pair for auth adapter)",
@@ -145,4 +145,4 @@ class Config(
     )
 
 
-CONFIG = Config()  # pyright: ignore
+CONFIG = Config()  # type: ignore

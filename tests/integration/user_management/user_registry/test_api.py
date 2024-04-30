@@ -16,7 +16,6 @@
 """Test the REST API"""
 
 from datetime import datetime
-from typing import cast
 
 from fastapi import status
 from ghga_service_commons.api.testing import AsyncTestClient
@@ -55,8 +54,7 @@ VERIFICATION_CODE_SIZE = 6  # the expected size of verification codes
 def seconds_passed(date_string: str) -> float:
     """Get number of seconds that have passed since the given date string."""
     return (
-        cast(datetime, now_as_utc())
-        - datetime.fromisoformat(date_string.replace("Z", "+00:00"))
+        now_as_utc() - datetime.fromisoformat(date_string.replace("Z", "+00:00"))
     ).total_seconds()
 
 

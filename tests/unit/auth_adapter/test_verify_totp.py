@@ -49,7 +49,7 @@ SESSION_ARGS = {
 
 config = Config(
     totp_encryption_key=SecretStr(TOTPHandler.random_encryption_key()),
-)  # pyright: ignore
+)  # type: ignore
 
 
 @mark.parametrize(

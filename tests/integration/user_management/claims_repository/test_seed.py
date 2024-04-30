@@ -43,7 +43,7 @@ def test_add_non_existing_data_steward(caplog):
                 },
                 "id-of-jane-roe@ls.org",
             ],
-        )  # pyright: ignore
+        )  # type: ignore
 
         caplog.set_level(logging.INFO)
         caplog.clear()

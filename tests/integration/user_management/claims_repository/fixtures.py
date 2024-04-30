@@ -36,7 +36,7 @@ async def fixture_client() -> AsyncGenerator[AsyncTestClient, None]:
     """Get a test client for the claims repository."""
     config = Config(
         include_apis=["claims"],
-    )  # pyright: ignore
+    )  # type: ignore
     app.dependency_overrides[get_config] = lambda: config
     async with lifespan(app):
         async with AsyncTestClient(app) as client:

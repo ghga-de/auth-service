@@ -82,7 +82,7 @@ class SigningKeys:
     external_jwk: jwk.JWK | None
 
     def __init__(self):
-        config = AdditionalConfig()  # pyright: ignore
+        config = AdditionalConfig()  # type: ignore
         self.internal_jwk = jwk.JWK.from_json(config.auth_key)
         self.external_jwk = (
             jwk.JWKSet.from_json(config.auth_ext_keys).get_key("test")

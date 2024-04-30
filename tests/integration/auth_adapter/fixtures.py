@@ -68,7 +68,7 @@ async def fixture_client() -> AsyncGenerator[AsyncTestClient, None]:
 
     config_with_totp_encryption_key = Config(
         totp_encryption_key=SecretStr(totp_encryption_key),
-    )  # pyright: ignore
+    )  # type: ignore
     main.app.dependency_overrides[get_config] = lambda: config_with_totp_encryption_key
 
     async with AsyncTestClient(main.app) as client:
@@ -126,12 +126,13 @@ async def query_new_session(
     response = await client.post(f"{AUTH_PATH}/rpc/login", headers=headers)
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert "X-CSRF-Token" not in response.headers
+    session_id: str | None
     if session:
         assert "session" not in response.cookies
         session_id = session.session_id
     else:
         session_id = response.cookies.get("session")
-        assert session_id
+    assert session_id
     session_header = response.headers.get("X-Session")
     assert session_header
     session_dict = json.loads(session_header)
