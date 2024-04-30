@@ -346,7 +346,7 @@ async def test_get_all_ivas_with_user():
         update={
             "id": "jane@ghga.de",
             "name": "Jane Roe",
-            "title": "Prof.",
+            "title": AcademicTitle.PROF,
             "email": "jane@home.org",
         }
     )
