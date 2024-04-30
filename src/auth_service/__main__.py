@@ -32,7 +32,7 @@ from auth_service.user_management.claims_repository.deps import (
     ClaimDao,
     get_claim_dao_factory,
 )
-from auth_service.user_management.claims_repository.translators.akafka import (
+from auth_service.user_management.claims_repository.translators.event_sub import (
     EventSubTranslator,
 )
 
