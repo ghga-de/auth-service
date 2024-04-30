@@ -1,16 +1,23 @@
-name: Check if the readme is up to date.
+name: Check if the README file is up to date
 
 on: push
 
 jobs:
   static-code-analysis:
+    name: Check README file
+
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        id: checkout
+        uses: actions/checkout@v4
 
-      - id: common
-        uses: ghga-de/gh-action-common@v4
+      - name: Common steps
+        id: common
+        uses: ghga-de/gh-action-common@v6
 
-      - name: Check readme
+      - name: Check README
+        id: check-readme
         run: |
           ./scripts/update_readme.py --check

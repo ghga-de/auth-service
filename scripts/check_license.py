@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2021 - 2023 Universität Tübingen, DKFZ, EMBL, and Universität zu Köln
+# Copyright 2021 - 2024 Universität Tübingen, DKFZ, EMBL, and Universität zu Köln
 # for the German Human Genome-Phenome Archive (GHGA)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,6 @@ import re
 import sys
 from datetime import date
 from pathlib import Path
-from typing import Optional, Union
 
 # root directory of the package:
 ROOT_DIR = Path(__file__).parent.parent.resolve()
@@ -34,42 +33,45 @@ GLOBAL_COPYRIGHT_FILE_PATH = ROOT_DIR / ".devcontainer" / "license_header.txt"
 
 # exclude files and dirs from license header check:
 EXCLUDE = [
-    ".devcontainer",
-    "eggs",
-    ".eggs",
-    "dist",
-    "build",
-    "develop-eggs",
-    "lib",
-    "lib62",
-    "parts",
-    "sdist",
-    "wheels",
-    "pip-wheel-metadata",
     ".coveragerc",
+    ".devcontainer",
+    ".editorconfig",
+    ".eggs",
     ".git",
     ".github",
     ".flake8",
-    ".gitignore",
-    ".pylintrc",
-    ".ruff.toml",
-    ".ruff_cache",
-    "example_config.yaml",
-    "config_schema.json",
-    "LICENSE",  # is checked but not for the license header
-    ".pre-commit-config.yaml",
-    "docs",
-    ".vscode",
+    ".gitignore" ".pre-commit-config.yaml",
     ".mypy_cache",
     ".mypy.ini",
+    ".pylintrc",
     ".pytest_cache",
-    ".editorconfig",
+    ".ruff.toml",
+    ".ruff_cache",
     ".template/.static_files.txt",
     ".template/.static_files_ignore.txt",
     ".template/.mandatory_files.txt",
     ".template/.mandatory_files_ignore.txt",
     ".template/.deprecated_files.txt",
     ".template/.deprecated_files_ignore.txt",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "eggs",
+    "build",
+    "config_schema.json",
+    "dist",
+    "docs",
+    "develop-eggs",
+    "example_config.yaml",
+    "htmlcov",
+    "lib",
+    "lib62",
+    "parts",
+    "pip-wheel-metadata",
+    "sdist",
+    "venv",
+    "wheels",
+    "LICENSE",  # is checked but not for the license header
 ]
 
 # exclude file by file ending from license header check:
@@ -82,6 +84,8 @@ EXCLUDE_ENDINGS = [
     "md",
     "pub",
     "pyc",
+    "pyd",
+    "typed",
     "sec",
     "toml",
     "txt",
@@ -135,11 +139,11 @@ class GlobalCopyrightNotice:
     """
 
     def __init__(self):
-        self._text: Optional[str] = None
-        self._n_lines: Optional[int] = None
+        self._text: str | None = None
+        self._n_lines: int | None = None
 
     @property
-    def text(self) -> Optional[str]:
+    def text(self) -> str | None:
         return self._text
 
     @text.setter
@@ -162,7 +166,7 @@ class GlobalCopyrightNotice:
 class UnexpectedBinaryFileError(RuntimeError):
     """Thrown when trying to read a binary file."""
 
-    def __init__(self, file_path: Union[str, Path]):
+    def __init__(self, file_path: str | Path):
         message = f"The file could not be read because it is binary: {str(file_path)}"
         super().__init__(message)
 
@@ -176,13 +180,13 @@ def get_target_files(
     """Get target files that are not match the exclude conditions.
     Args:
         target_dir (pathlib.Path): The target dir to search.
-        exclude (List[str], optional):
+        exclude (list[str], optional):
             Overwrite default list of file/dir paths relative to
             the target dir that shall be excluded.
-        exclude_endings (List[str], optional):
+        exclude_endings (list[str], optional):
             Overwrite default list of file endings that shall
             be excluded.
-        exclude_pattern (List[str], optional):
+        exclude_pattern (list[str], optional):
             Overwrite default list of regex patterns match file path
             for exclusion.
     """
@@ -291,8 +295,8 @@ def validate_year_string(year_string: str, min_year: int = MIN_YEAR) -> bool:
     if year_string.isnumeric():
         return int(year_string) == current_year
 
-    # Otherwise, a range (e.g. 2021 - 2023) is expected:
-    match = re.match("(\d+) - (\d+)", year_string)
+    # Otherwise, a range (e.g. 2021 - 2024) is expected:
+    match = re.match(r"(\d+) - (\d+)", year_string)
 
     if not match:
         return False
@@ -402,13 +406,13 @@ def check_file_headers(
             The author that shall be included in the license header.
             It will replace any appearance of "{author}" in the license
             header. This defaults to an author info for GHGA.
-        exclude (List[str], optional):
+        exclude (list[str], optional):
             Overwrite default list of file/dir paths relative to
             the target dir that shall be excluded.
-        exclude_endings (List[str], optional):
+        exclude_endings (list[str], optional):
             Overwrite default list of file endings that shall
             be excluded.
-        exclude_pattern (List[str], optional):
+        exclude_pattern (list[str], optional):
             Overwrite default list of regex patterns match file path
             for exclusion.
     """
