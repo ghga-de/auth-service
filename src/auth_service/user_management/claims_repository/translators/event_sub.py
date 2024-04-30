@@ -54,7 +54,7 @@ class EventSubTranslator(EventSubscriberProtocol):
         self._handler = handler
 
     async def _consume_validated(
-        self, *, payload: JsonObject, type_: Ascii, topic: Ascii
+        self, *, payload: JsonObject, type_: Ascii, topic: Ascii, key: Ascii
     ) -> None:
         """Consume an event which concerns the deletion of a dataset."""
         dataset = get_validated_payload(payload=payload, schema=MetadataDatasetID)
