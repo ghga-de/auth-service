@@ -48,7 +48,7 @@ def test_add_non_existing_data_steward(caplog):
         caplog.set_level(logging.INFO)
         caplog.clear()
         asyncio.run(seed_data_steward_claims(config))
-        records = caplog.records
+        records = [record for record in caplog.records if record.module == "seed"]
         log_messages = [record.message for record in records]
         num_warnings = sum(record.levelno >= logging.WARNING for record in records)
 
