@@ -16,7 +16,7 @@
 
 """Routes for managing users and IVAs"""
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Path, Query, Response
 from fastapi.exceptions import HTTPException
@@ -692,13 +692,13 @@ async def get_all_ivas(
     user_registry: Annotated[UserRegistryPort, Depends(get_user_registry)],
     _auth_context: StewardAuthContext,
     user_id: Annotated[
-        Optional[str],
+        str | None,
         Query(
             description="Filter for the internal user ID",
         ),
     ] = None,
     state: Annotated[
-        Optional[IvaState],
+        IvaState | None,
         Query(
             description="Filter for the state of the IVA",
         ),

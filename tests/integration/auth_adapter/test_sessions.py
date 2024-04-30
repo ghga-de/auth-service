@@ -17,7 +17,6 @@
 """Test handling user sessions in the auth adapter."""
 
 import json
-from typing import Union
 
 from fastapi import status
 from ghga_service_commons.api.testing import AsyncTestClient
@@ -68,9 +67,7 @@ def setup_daos(**user_args: str) -> None:
     main.app.dependency_overrides[get_claim_dao] = lambda: claim_dao
 
 
-def assert_session_header(
-    response: Response, expected: dict[str, Union[str, int]]
-) -> None:
+def assert_session_header(response: Response, expected: dict[str, str | int]) -> None:
     """Assert that the response session header is as expected."""
     session_header = response.headers.get("X-Session")
     assert session_header

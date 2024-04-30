@@ -17,9 +17,9 @@
 """DAOs that are used as part of the outbound port for the user management."""
 
 from abc import ABC, abstractmethod
+from typing import TypeAlias
 
 from hexkit.protocols.dao import DaoSurrogateId
-from typing_extensions import TypeAlias  # in typing only since Python 3.10
 
 from ..models.claims import Claim as ClaimDto
 from ..models.claims import ClaimFullCreation as ClaimCreationDto

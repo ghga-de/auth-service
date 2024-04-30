@@ -20,7 +20,7 @@ from collections.abc import AsyncGenerator, Generator
 from datetime import timedelta
 from importlib import reload
 from os import environ
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from fastapi import status
 from ghga_service_commons.api.testing import AsyncTestClient
@@ -95,9 +95,7 @@ _map_session_dict_to_object = {
 }
 
 
-def session_from_response(
-    response: Response, session_id: Optional[str] = None
-) -> Session:
+def session_from_response(response: Response, session_id: str | None = None) -> Session:
     """Get a session object from the response."""
     if not session_id:
         session_id = response.cookies.get("session")
@@ -117,7 +115,7 @@ def session_from_response(
 
 
 async def query_new_session(
-    client: AsyncTestClient, session: Optional[Session] = None
+    client: AsyncTestClient, session: Session | None = None
 ) -> Session:
     """Query the current backend session."""
     if session:

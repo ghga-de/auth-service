@@ -17,10 +17,10 @@
 """DAOs that are used as part of the outbound port for the auth adapter."""
 
 from abc import ABC, abstractmethod
+from typing import TypeAlias
 
 from hexkit.protocols.dao import DaoNaturalId
 from pydantic import BaseModel, ConfigDict, Field
-from typing_extensions import TypeAlias  # in typing only since Python 3.10
 
 from ..core.totp import TOTPToken
 

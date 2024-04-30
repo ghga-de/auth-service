@@ -18,7 +18,7 @@
 
 from datetime import datetime
 from random import randint
-from typing import Optional, cast
+from typing import cast
 from urllib.parse import parse_qs, urlparse
 
 import pyotp
@@ -53,7 +53,7 @@ VERIFY_TOTP_PATH = AUTH_PATH + "/rpc/verify-totp"
 
 
 def get_valid_totp_code(
-    secret: str, when: Optional[datetime] = None, offset: int = 0
+    secret: str, when: datetime | None = None, offset: int = 0
 ) -> str:
     """Generate a valid TOTP code for the given secret."""
     if not when:
@@ -61,7 +61,7 @@ def get_valid_totp_code(
     return pyotp.TOTP(secret).at(when, offset)
 
 
-def get_invalid_totp_code(secret: str, when: Optional[datetime] = None) -> str:
+def get_invalid_totp_code(secret: str, when: datetime | None = None) -> str:
     """Generate an invalid TOTP code for the given secret."""
     if not when:
         when = cast(datetime, now_as_utc())

@@ -61,11 +61,12 @@ src = [
     "examples",
     "scripts",
 ]
-target-version = "py39"
+target-version = "py312"
 
 [tool.ruff.lint]
 fixable = [
     "UP",
+    "UP007",
     "I",
     "D",
 ]
@@ -86,6 +87,7 @@ ignore = [
     "D107",
     "D206",
     "D300",
+    "UP040",
 ]
 select = [
     "C90",

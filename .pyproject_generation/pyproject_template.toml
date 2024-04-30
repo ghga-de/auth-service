@@ -58,6 +58,7 @@ ignore = [
     "D107", # missing docstring in __init__
     "D206", # indent-with-spaces (for formatter)
     "D300", # triple-single-quotes (for formatter)
+    "UP040", # type statement (not yet supported by mypy)
 ]
 select = [
     "C90", # McCabe Complexity

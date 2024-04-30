@@ -16,8 +16,6 @@
 
 """Unit tests for the request and response header utilities."""
 
-from typing import Optional
-
 import pytest
 from fastapi import Request, Response, status
 from ghga_service_commons.utils.utc_dates import now_as_utc
@@ -137,7 +135,7 @@ def test_session_to_header_with_optional_properties():
 
 
 @pytest.mark.parametrize("authorization", [None, "", "changed auth token"])
-def test_pass_auth_response_with_request_headers(authorization: Optional[str]):
+def test_pass_auth_response_with_request_headers(authorization: str | None):
     """Test that existing request headers are emptied with pass_auth_response."""
     request = Request(
         {
@@ -164,7 +162,7 @@ def test_pass_auth_response_with_request_headers(authorization: Optional[str]):
 
 
 @pytest.mark.parametrize("authorization", [None, "", "changed auth token"])
-def test_pass_auth_response_without_request_headers(authorization: Optional[str]):
+def test_pass_auth_response_without_request_headers(authorization: str | None):
     """Test that non existing headers are not emptied with pass_auth_response."""
     request = Request({"type": "http", "headers": []})
     response = pass_auth_response(request, authorization)
