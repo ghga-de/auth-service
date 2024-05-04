@@ -27,6 +27,7 @@ import pytest_asyncio
 from fastapi import status
 from ghga_service_commons.api.testing import AsyncTestClient as BareClient
 from ghga_service_commons.utils.utc_dates import now_as_utc
+from hexkit.providers.testing.eventpub import InMemEventPublisher
 from httpx import Response
 from pydantic import SecretStr
 from pytest_httpx import HTTPXMock
@@ -37,6 +38,7 @@ from auth_service.auth_adapter.deps import get_user_token_dao
 from auth_service.deps import CONFIG, Config, get_config
 from auth_service.user_management.claims_repository.deps import get_claim_dao
 from auth_service.user_management.user_registry.deps import (
+    get_event_publisher,
     get_iva_dao,
     get_user_dao,
     get_user_registry,
@@ -61,15 +63,15 @@ totp_encryption_key = TOTPHandler.random_encryption_key()
 
 @pytest_asyncio.fixture(name="bare_client")
 async def fixture_bare_client() -> AsyncGenerator[BareClient, None]:
-    """Get test client for the auth adapter without a database connection."""
+    """Get a test client for the user registry without database and event store."""
     from auth_service.auth_adapter.api import main
 
     reload(main)
 
-    config_with_totp_encryption_key = Config(
+    main.app.dependency_overrides[get_config] = lambda: Config(
         totp_encryption_key=SecretStr(totp_encryption_key),
     )  # type: ignore
-    main.app.dependency_overrides[get_config] = lambda: config_with_totp_encryption_key
+    main.app.dependency_overrides[get_event_publisher] = lambda: InMemEventPublisher()
 
     async with BareClient(main.app) as client:
         yield client
