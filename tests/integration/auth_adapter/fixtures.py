@@ -22,13 +22,13 @@ from importlib import reload
 from os import environ
 from typing import NamedTuple
 
+import pytest
+import pytest_asyncio
 from fastapi import status
-from ghga_service_commons.api.testing import AsyncTestClient
+from ghga_service_commons.api.testing import AsyncTestClient as BareClient
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from httpx import Response
 from pydantic import SecretStr
-from pytest import fixture
-from pytest_asyncio import fixture as async_fixture
 from pytest_httpx import HTTPXMock
 
 from auth_service.auth_adapter.core.session_store import Session
@@ -59,9 +59,9 @@ if AUTH_PATH:
 totp_encryption_key = TOTPHandler.random_encryption_key()
 
 
-@async_fixture(name="client")
-async def fixture_client() -> AsyncGenerator[AsyncTestClient, None]:
-    """Get test client for the auth adapter"""
+@pytest_asyncio.fixture(name="bare_client")
+async def fixture_bare_client() -> AsyncGenerator[BareClient, None]:
+    """Get test client for the auth adapter without a database connection."""
     from auth_service.auth_adapter.api import main
 
     reload(main)
@@ -71,14 +71,14 @@ async def fixture_client() -> AsyncGenerator[AsyncTestClient, None]:
     )  # type: ignore
     main.app.dependency_overrides[get_config] = lambda: config_with_totp_encryption_key
 
-    async with AsyncTestClient(main.app) as client:
+    async with BareClient(main.app) as client:
         yield client
 
 
 class ClientWithSession(NamedTuple):
     """A test client with a client session."""
 
-    client: AsyncTestClient
+    bare_client: BareClient
     session: Session
     user_registry: DummyUserRegistry
     user_token_dao: DummyUserTokenDao
@@ -115,7 +115,7 @@ def session_from_response(response: Response, session_id: str | None = None) -> 
 
 
 async def query_new_session(
-    client: AsyncTestClient, session: Session | None = None
+    bare_client: BareClient, session: Session | None = None
 ) -> Session:
     """Query the current backend session."""
     if session:
@@ -123,7 +123,7 @@ async def query_new_session(
     else:
         auth = f"Bearer {create_access_token()}"
         headers = {"Authorization": auth}
-    response = await client.post(f"{AUTH_PATH}/rpc/login", headers=headers)
+    response = await bare_client.post(f"{AUTH_PATH}/rpc/login", headers=headers)
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert "X-CSRF-Token" not in response.headers
     session_id: str | None
@@ -147,9 +147,9 @@ async def query_new_session(
     return session
 
 
-@async_fixture(name="client_with_session")
-async def fixture_client_with_session(
-    client: AsyncTestClient, httpx_mock: HTTPXMock
+@pytest_asyncio.fixture(name="client_with_session")
+async def fixture_bare_client_with_session(
+    bare_client: BareClient, httpx_mock: HTTPXMock
 ) -> AsyncGenerator[ClientWithSession, None]:
     """Get test client for the auth adapter with a logged in user"""
     from auth_service.auth_adapter.api import main
@@ -169,12 +169,12 @@ async def fixture_client_with_session(
     overrides[get_user_token_dao] = lambda: user_token_dao
     overrides[get_claim_dao] = lambda: claim_dao
 
-    session = await query_new_session(client)
+    session = await query_new_session(bare_client)
 
-    yield ClientWithSession(client, session, user_registry, user_token_dao)
+    yield ClientWithSession(bare_client, session, user_registry, user_token_dao)
 
 
-@fixture(name="with_basic_auth")
+@pytest.fixture(name="with_basic_auth")
 def fixture_with_basic_auth() -> Generator[str, None, None]:
     """Run test with Basic authentication"""
     from auth_service import config
