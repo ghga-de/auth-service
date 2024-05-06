@@ -364,6 +364,7 @@ async def ext_auth(
     If a user session exists and is two-factor-authenticated, then an internal
     authentication token will be added to the response.
     """
+    print("Endpoint ext_auth")
     if session:
         await session_store.save_session(session)
         if session.state is SessionState.AUTHENTICATED:
