@@ -119,12 +119,15 @@ async def login(  # noqa: C901, PLR0913
     x_authorization: Annotated[str | None, Header()] = None,
 ) -> Response:
     """Create a new or get an existing user session."""
+    print("Trying to log in.")
     if session:
         session_created = False
     else:
         access_token = get_bearer_token(authorization, x_authorization)
+        print(access_token)
         try:
             ext_id, user_name, user_email = get_user_info(access_token)
+            print(ext_id, user_name, user_email)
         except UserInfoError as error:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail=str(error)
