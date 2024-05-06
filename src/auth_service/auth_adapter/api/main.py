@@ -20,6 +20,7 @@ then this must be also specified in the config setting api_root_path.
 """
 
 from typing import Annotated
+import logging
 
 from fastapi import FastAPI, Header, HTTPException, Path, Request, Response, status
 from ghga_service_commons.api import configure_app
@@ -59,6 +60,8 @@ from ..deps import (
 from .basic import get_basic_auth_dependency
 from .dto import CreateTOTPToken, TOTPTokenResponse, VerifyTOTP
 from .headers import get_bearer_token, pass_auth_response, session_to_header
+
+log = logging.getLogger(__name__)
 
 app = FastAPI(title=TITLE, description=DESCRIPTION, version=VERSION)
 configure_app(app, config=CONFIG)
@@ -120,6 +123,7 @@ async def login(  # noqa: C901, PLR0913
 ) -> Response:
     """Create a new or get an existing user session."""
     print("Trying to log in.")
+    log.info("Trying to log in.")
     if session:
         session_created = False
     else:
@@ -364,6 +368,7 @@ async def ext_auth(
     If a user session exists and is two-factor-authenticated, then an internal
     authentication token will be added to the response.
     """
+    log.info("Endpoint ext_auth")
     print("Endpoint ext_auth")
     if session:
         await session_store.save_session(session)
