@@ -71,6 +71,7 @@ def pass_auth_response(request: Request, authorization: str | None = None) -> Re
     All other headers that exist in the request and that should not be forwarded
     to the backend, because they are only relevant for the auth adapter, are emptied.
     """
+    print("Create a response for ExtAuth")
     headers: dict[str, str] = {}
     for header in "Authorization", "X-Authorization", "Cookie", "X-CSRF-Token":
         value = request.headers.get(header)
@@ -78,4 +79,5 @@ def pass_auth_response(request: Request, authorization: str | None = None) -> Re
             headers[header] = ""
     if authorization:
         headers["Authorization"] = authorization
+    print(headers)
     return Response(status_code=status.HTTP_200_OK, headers=headers)
