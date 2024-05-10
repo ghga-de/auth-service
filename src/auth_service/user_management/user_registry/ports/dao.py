@@ -19,18 +19,16 @@
 from abc import ABC, abstractmethod
 from typing import TypeAlias  # in typing only since Python 3.10
 
-from hexkit.protocols.dao import DaoSurrogateId
+from hexkit.protocols.daopub import DaoPublisher
 
 from ..models.ivas import Iva as IvaDto
-from ..models.ivas import IvaFullData as IvaCreationDto
 from ..models.users import User as UserDto
-from ..models.users import UserData as UserCreationDto
 
 __all__ = ["IvaDao", "UserDao", "UserDaoPublisherFactoryPort"]
 
 
-UserDao: TypeAlias = DaoSurrogateId[UserDto, UserCreationDto]
-IvaDao: TypeAlias = DaoSurrogateId[IvaDto, IvaCreationDto]
+UserDao: TypeAlias = DaoPublisher[UserDto]
+IvaDao: TypeAlias = DaoPublisher[IvaDto]
 
 
 class UserDaoPublisherFactoryPort(ABC):
