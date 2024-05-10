@@ -41,13 +41,13 @@ def get_config() -> Config:
 def get_mongodb_dao_factory(
     config: Annotated[MongoDbConfig, Depends(get_config)],
 ) -> MongoDbDaoFactory:
-    """Get MongoDB DAO factory."""
+    """Get a MongoDB DAO factory."""
     return MongoDbDaoFactory(config=config)
 
 
 async def get_mongo_kafka_dao_factory(
     config: Annotated[MongoKafkaConfig, Depends(get_config)],
 ) -> AsyncGenerator[MongoKafkaDaoPublisherFactory, None]:
-    """Get MongoDB DAO factory."""
+    """Get a MongoDB DAO publisher factory."""
     async with MongoKafkaDaoPublisherFactory.construct(config=config) as factory:
         yield factory
