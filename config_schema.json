@@ -44,6 +44,36 @@
       "title": "Dataset Deletion Event Type",
       "type": "string"
     },
+    "claims_collection": {
+      "default": "claims",
+      "description": "Name of the collection for user claims",
+      "title": "Claims Collection",
+      "type": "string"
+    },
+    "users_collection": {
+      "default": "users",
+      "description": "Name of the collection for users",
+      "title": "Users Collection",
+      "type": "string"
+    },
+    "user_tokens_collection": {
+      "default": "user_tokens",
+      "description": "Name of the collection for user tokens",
+      "title": "User Tokens Collection",
+      "type": "string"
+    },
+    "ivas_collection": {
+      "default": "ivas",
+      "description": "Name of the collection for IVAs",
+      "title": "Ivas Collection",
+      "type": "string"
+    },
+    "event_topic": {
+      "default": "users",
+      "description": "The name of the topic for user related events",
+      "title": "Event Topic",
+      "type": "string"
+    },
     "service_name": {
       "default": "auth_service",
       "description": "Short name of this service",
@@ -116,30 +146,6 @@
       ],
       "title": "Generate Correlation Id",
       "type": "boolean"
-    },
-    "claims_collection": {
-      "default": "claims",
-      "description": "Name of the collection for user claims",
-      "title": "Claims Collection",
-      "type": "string"
-    },
-    "users_collection": {
-      "default": "users",
-      "description": "Name of the collection for users",
-      "title": "Users Collection",
-      "type": "string"
-    },
-    "user_tokens_collection": {
-      "default": "user_tokens",
-      "description": "Name of the collection for user tokens",
-      "title": "User Tokens Collection",
-      "type": "string"
-    },
-    "ivas_collection": {
-      "default": "ivas",
-      "description": "Name of the collection for IVAs",
-      "title": "Ivas Collection",
-      "type": "string"
     },
     "db_connection_str": {
       "description": "MongoDB connection string. Might include credentials. For more information see: https://naiveskill.com/mongodb-connection-string/",

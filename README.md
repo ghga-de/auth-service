@@ -104,6 +104,16 @@ The service requires the following configuration parameters:
 
 - **`dataset_deletion_event_type`** *(string)*: the type of the event announcing dataset deletions. Default: `"dataset_deleted"`.
 
+- **`claims_collection`** *(string)*: Name of the collection for user claims. Default: `"claims"`.
+
+- **`users_collection`** *(string)*: Name of the collection for users. Default: `"users"`.
+
+- **`user_tokens_collection`** *(string)*: Name of the collection for user tokens. Default: `"user_tokens"`.
+
+- **`ivas_collection`** *(string)*: Name of the collection for IVAs. Default: `"ivas"`.
+
+- **`event_topic`** *(string)*: The name of the topic for user related events. Default: `"users"`.
+
 - **`service_name`** *(string)*: Short name of this service. Default: `"auth_service"`.
 
 - **`service_instance_id`** *(string)*: A string that uniquely identifies this instance across all instances of this service. This is included in log messages.
@@ -154,14 +164,6 @@ The service requires the following configuration parameters:
   false
   ```
 
-
-- **`claims_collection`** *(string)*: Name of the collection for user claims. Default: `"claims"`.
-
-- **`users_collection`** *(string)*: Name of the collection for users. Default: `"users"`.
-
-- **`user_tokens_collection`** *(string)*: Name of the collection for user tokens. Default: `"user_tokens"`.
-
-- **`ivas_collection`** *(string)*: Name of the collection for IVAs. Default: `"ivas"`.
 
 - **`db_connection_str`** *(string, format: password)*: MongoDB connection string. Might include credentials. For more information see: https://naiveskill.com/mongodb-connection-string/.
 
