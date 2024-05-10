@@ -88,7 +88,7 @@ async def test_user_crud(
         user_dto = await user_dao.get_by_id(user.id)
         assert user_dto == changed_user
 
-        user_dto = await user_dao.delete(user.id)
+        await user_dao.delete(user.id)
         with pytest.raises(ResourceNotFoundError):
             await user_dao.get_by_id(user.id)
 
@@ -148,7 +148,7 @@ async def test_iva_crud(
         iva_dto = await iva_dao.get_by_id(iva.id)
         assert iva_dto == changed_iva
 
-        iva_dto = await iva_dao.delete(iva.id)
+        await iva_dao.delete(iva.id)
         with pytest.raises(ResourceNotFoundError):
             await iva_dao.get_by_id(iva.id)
 
