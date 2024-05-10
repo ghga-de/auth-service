@@ -21,15 +21,10 @@ from ghga_service_commons.utils.utc_dates import utc_datetime
 from hexkit.providers.mongodb.testutils import MongoDbFixture
 
 from auth_service.user_management.user_registry.core.registry import UserRegistry
-from auth_service.user_management.user_registry.deps import (
-    get_config,
-    get_user_dao_factory,
-)
 from auth_service.user_management.user_registry.models.users import (
     AcademicTitle,
     StatusChange,
     User,
-    UserData,
     UserStatus,
 )
 
@@ -37,12 +32,11 @@ from auth_service.user_management.user_registry.models.users import (
 @pytest.mark.asyncio()
 async def test_user_creation(mongodb: MongoDbFixture):
     """Test creating a new user"""
-    user_dao_factory = get_user_dao_factory(
-        config=get_config(), dao_factory=mongodb.dao_factory
+    user_dao = await mongodb.dao_factory.get_dao(
+        name="users", dto_model=User, id_field="id"
     )
-    user_dao = await user_dao_factory.get_user_dao()
 
-    user_data = UserData(
+    user = User(
         ext_id="max@ls.org",
         status=UserStatus.ACTIVE,
         name="Max Headroom",
@@ -55,18 +49,17 @@ async def test_user_creation(mongodb: MongoDbFixture):
     )
 
     for insert in True, False:
-        user = await (
-            user_dao.insert(user_data)
-            if insert
-            else user_dao.find_one(mapping={"ext_id": user_data.ext_id})
-        )
+        if insert:
+            await user_dao.insert(user)
+        else:
+            user = await user_dao.find_one(mapping={"ext_id": user.ext_id})
 
         assert user and isinstance(user, User)
-        assert user.ext_id == user_data.ext_id
-        assert user.status == user_data.status
-        assert user.name == user_data.name
-        assert user.title == user_data.title
-        assert user.email == user_data.email
-        assert user.registration_date == user_data.registration_date
+        assert user.ext_id == user.ext_id
+        assert user.status == user.status
+        assert user.name == user.name
+        assert user.title == user.title
+        assert user.email == user.email
+        assert user.registration_date == user.registration_date
         assert UserRegistry.is_internal_user_id(user.id)
-        assert user.status_change == user_data.status_change
+        assert user.status_change == user.status_change

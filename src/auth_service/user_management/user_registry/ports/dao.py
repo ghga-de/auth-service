@@ -26,15 +26,18 @@ from ..models.ivas import IvaFullData as IvaCreationDto
 from ..models.users import User as UserDto
 from ..models.users import UserData as UserCreationDto
 
-__all__ = ["IvaDao", "UserDao", "UserDaoFactoryPort"]
+__all__ = ["IvaDao", "UserDao", "UserDaoPublisherFactoryPort"]
 
 
 UserDao: TypeAlias = DaoSurrogateId[UserDto, UserCreationDto]
 IvaDao: TypeAlias = DaoSurrogateId[IvaDto, IvaCreationDto]
 
 
-class UserDaoFactoryPort(ABC):
-    """Port that provides a factory for user related data access objects."""
+class UserDaoPublisherFactoryPort(ABC):
+    """Port that provides a factory for user related data access objects.
+
+    These objects will also publish changes according to the outbox pattern.
+    """
 
     @abstractmethod
     async def get_user_dao(self) -> UserDao:

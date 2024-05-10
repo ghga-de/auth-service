@@ -15,10 +15,12 @@
 
 """FastAPI dependencies (used with the `Depends` feature)"""
 
+from collections.abc import AsyncGenerator
 from typing import Annotated
 
 from fastapi import Depends
 from hexkit.providers.mongodb import MongoDbConfig, MongoDbDaoFactory
+from hexkit.providers.mongokafka import MongoKafkaConfig, MongoKafkaDaoPublisherFactory
 
 from .config import CONFIG, Config
 
@@ -26,6 +28,7 @@ __all__ = [
     "Depends",
     "get_config",
     "get_mongodb_dao_factory",
+    "get_mongo_kafka_dao_factory",
     "Config",
 ]
 
@@ -40,3 +43,11 @@ def get_mongodb_dao_factory(
 ) -> MongoDbDaoFactory:
     """Get MongoDB DAO factory."""
     return MongoDbDaoFactory(config=config)
+
+
+async def get_mongo_kafka_dao_factory(
+    config: Annotated[MongoKafkaConfig, Depends(get_config)],
+) -> AsyncGenerator[MongoKafkaDaoPublisherFactory, None]:
+    """Get MongoDB DAO factory."""
+    async with MongoKafkaDaoPublisherFactory.construct(config=config) as factory:
+        yield factory
