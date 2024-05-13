@@ -80,25 +80,9 @@ auth_service --help
 ### Parameters
 
 The service requires the following configuration parameters:
-- **`iva_events_topic`** *(string)*: The topic used for events related to IVAs. Default: `"ivas"`.
-
-
-  Examples:
-
-  ```json
-  "ivas"
-  ```
-
+- **`iva_events_topic`** *(string)*: The name of the topic for IVA related events. Default: `"ivas"`.
 
 - **`iva_state_changed_event_type`** *(string)*: The event type for IVA state changes. Default: `"iva_state_changed"`.
-
-
-  Examples:
-
-  ```json
-  "iva_state_changed"
-  ```
-
 
 - **`dataset_deletion_event_topic`** *(string)*: the topic of the event announcing dataset deletions. Default: `"metadata_datasets"`.
 
