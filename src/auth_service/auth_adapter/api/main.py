@@ -66,7 +66,7 @@ from ..deps import (
     get_user_token_dao,
 )
 from .basic import get_basic_auth_dependency
-from .dto import TOTPTokenResponse, VerifyTOTP
+from .dto import TOTPTokenResponse
 from .headers import get_bearer_token, pass_auth_response, session_to_header
 
 app = FastAPI(title=TITLE, description=DESCRIPTION, version=VERSION)
@@ -325,26 +325,38 @@ async def create_new_totp_token(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def rpc_verify_totp(  # noqa: PLR0913
-    verification_info: VerifyTOTP,
     session_store: SessionStoreDependency,
     session: SessionDependency,
     totp_handler: TOTPHandlerDependency,
     user_registry: Annotated[UserRegistryPort, Depends(get_user_registry)],
     token_dao: Annotated[UserTokenDao, Depends(get_user_token_dao)],
+    x_authorization: Annotated[
+        str | None, Header(title="the TOTP code to verify")
+    ] = None,
 ) -> Response:
-    """Verify a TOTP token."""
+    """Verify a TOTP token.
+
+    The TOTP code is expected to be passed like a bearer token
+    in the "X-Authorization" header.
+
+    Note: Since this endpoint is used via the ExtAuth protocol,
+    the request body cannot be used to pass the TOTP code.
+    """
     if not session:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in"
         )
-    if not session.user_id or session.user_id != verification_info.user_id:
+
+    totp = get_bearer_token(x_authorization)
+    if totp:
+        totp = totp.removeprefix("TOTP:")
+    if not totp:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not registered"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="No TOTP code provided"
         )
 
     await verify_totp(
-        verification_info.totp,
-        verification_info.user_id,
+        totp,
         session_store=session_store,
         session=session,
         totp_handler=totp_handler,
