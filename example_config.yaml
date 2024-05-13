@@ -33,7 +33,6 @@ dataset_deletion_event_type: dataset_deleted
 db_connection_str: '**********'
 db_name: dev-db
 docs_url: /docs
-event_topic: users
 generate_correlation_id: true
 host: 0.0.0.0
 include_apis:
@@ -73,6 +72,7 @@ totp_issuer: GHGA
 totp_max_failed_attempts: 10
 totp_secret_size: 32
 totp_tolerance: 1
+user_events_topic: users
 user_tokens_collection: user_tokens
 users_collection: users
 workers: 1

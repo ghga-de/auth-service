@@ -112,7 +112,7 @@ The service requires the following configuration parameters:
 
 - **`ivas_collection`** *(string)*: Name of the collection for IVAs. Default: `"ivas"`.
 
-- **`event_topic`** *(string)*: The name of the topic for user related events. Default: `"users"`.
+- **`user_events_topic`** *(string)*: The name of the topic for user related events. Default: `"users"`.
 
 - **`service_name`** *(string)*: Short name of this service. Default: `"auth_service"`.
 

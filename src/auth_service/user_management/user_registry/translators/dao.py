@@ -40,7 +40,7 @@ class UserDaoConfig(BaseSettings):
     ivas_collection: str = Field(
         default="ivas", description="Name of the collection for IVAs"
     )
-    event_topic: str = Field(
+    user_events_topic: str = Field(
         default="users",
         description="The name of the topic for user related events",
     )
@@ -58,7 +58,7 @@ class UserDaoPublisherFactory(UserDaoPublisherFactoryPort):
         """Configure with provider for the DaoFactoryProtocol"""
         self._users_collection = config.users_collection
         self._ivas_collection = config.ivas_collection
-        self._event_topic = config.event_topic
+        self._event_topic = config.user_events_topic
         self._dao_publisher_factory = dao_publisher_factory
 
     @staticmethod

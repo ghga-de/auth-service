@@ -68,10 +68,10 @@
       "title": "Ivas Collection",
       "type": "string"
     },
-    "event_topic": {
+    "user_events_topic": {
       "default": "users",
       "description": "The name of the topic for user related events",
-      "title": "Event Topic",
+      "title": "User Events Topic",
       "type": "string"
     },
     "service_name": {
