@@ -44,6 +44,10 @@ class UserDaoConfig(BaseSettings):
         default="users",
         description="The name of the topic for user related events",
     )
+    iva_events_topic: str = Field(
+        default="ivas",
+        description="The name of the topic for IVA related events",
+    )
 
 
 class UserDaoPublisherFactory(UserDaoPublisherFactoryPort):
@@ -58,7 +62,8 @@ class UserDaoPublisherFactory(UserDaoPublisherFactoryPort):
         """Configure with provider for the DaoFactoryProtocol"""
         self._users_collection = config.users_collection
         self._ivas_collection = config.ivas_collection
-        self._event_topic = config.user_events_topic
+        self._user_events_topic = config.user_events_topic
+        self._iva_events_topic = config.iva_events_topic
         self._dao_publisher_factory = dao_publisher_factory
 
     @staticmethod
@@ -81,7 +86,7 @@ class UserDaoPublisherFactory(UserDaoPublisherFactoryPort):
             dto_model=UserDto,
             id_field="id",
             dto_to_event=self._user_to_event,
-            event_topic=self._event_topic,
+            event_topic=self._user_events_topic,
             autopublish=True,
         )
 
@@ -107,6 +112,6 @@ class UserDaoPublisherFactory(UserDaoPublisherFactoryPort):
             dto_model=IvaDto,
             id_field="id",
             dto_to_event=self._iva_to_event,
-            event_topic=self._event_topic,
+            event_topic=self._iva_events_topic,
             autopublish=False,
         )
