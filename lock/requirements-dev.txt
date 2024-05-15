@@ -215,6 +215,7 @@ click==8.1.7 \
     --hash=sha256:ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28 \
     --hash=sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de
     # via
+    #   -r lock/requirements-dev-template.in
     #   typer
     #   uvicorn
 coverage==7.5.1 \
@@ -342,9 +343,11 @@ filelock==3.14.0 \
 ghga-event-schemas==3.3.0 \
     --hash=sha256:852a04ebadf311e1e04d9b95a6286716a2e80f1e6c135795c3f207fc58011290 \
     --hash=sha256:d98b82d3fb92698a7ee0505740ed2469d62c4577c651b5f98d561720a27db8cf
+    # via auth-service (pyproject.toml)
 ghga-service-commons==3.1.4 \
     --hash=sha256:63450bed2f0ca7431f064b640d35e15a29f93b7f4c67b5fd3b812afc8ced5151 \
     --hash=sha256:eb78042aeb17bb70e17f7c7185fbcf87a54968a410de99f968a7e944cd0f6f78
+    # via auth-service (pyproject.toml)
 h11==0.14.0 \
     --hash=sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d \
     --hash=sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761
@@ -354,7 +357,9 @@ h11==0.14.0 \
 hexkit==3.1.0 \
     --hash=sha256:3f96ede959b4d81a6b78637ebf47019787e5d3321bd01f9abe82cb8118bada66 \
     --hash=sha256:b922c048091f622798ccf25a767fe3d64ff8ee000d1c3cf18967b6b6de8f2592
-    # via ghga-service-commons
+    # via
+    #   auth-service (pyproject.toml)
+    #   ghga-service-commons
 httpcore==1.0.5 \
     --hash=sha256:34a38e2f9291467ee3b44e89dd52615370e152954ba21721378a87b2960f7a61 \
     --hash=sha256:421f18bac248b25d310f3cacd198d55b8e6125c107797b609ff9b7a6ba7991b5
@@ -401,6 +406,8 @@ httpx==0.27.0 \
     --hash=sha256:71d5465162c13681bff01ad59b2cc68dd838ea1f10e51574bac27103f00c91a5 \
     --hash=sha256:a0cb88a46f32dc874e04ee956e4c2764aba2aa228f650b06788ba6bda2962ab5
     # via
+    #   -r lock/requirements-dev-template.in
+    #   auth-service (pyproject.toml)
     #   fastapi
     #   pytest-httpx
 identify==2.5.36 \
@@ -436,6 +443,7 @@ jsonschema-specifications==2023.12.1 \
 jsonschema2md==1.1.0 \
     --hash=sha256:2386fc4d119330686db3989ea497ab96a4defb6388386fc0ceff756b5c1a66a7 \
     --hash=sha256:e89edf2de1bc7fc3e842915c7c29b7b70888555a87002eccc06350c0412a1458
+    # via -r lock/requirements-dev-template.in
 jwcrypto==1.5.6 \
     --hash=sha256:150d2b0ebbdb8f40b77f543fb44ffd2baeff48788be71f67f03566692fd55789 \
     --hash=sha256:771a87762a0c081ae6166958a954f80848820b2ab066937dc8b8379d65b1b039
@@ -443,6 +451,7 @@ jwcrypto==1.5.6 \
 logot==1.3.0 \
     --hash=sha256:bb2e8cf8ca949015e1e096e45023095ebd5df06ea4627f5df47d53dcdf62b74e \
     --hash=sha256:de392d182308828a0a9a442120e25e4ad2258fef52c4ed275e012aaffb0514a5
+    # via -r lock/requirements-dev-template.in
 markdown-it-py==3.0.0 \
     --hash=sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1 \
     --hash=sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb
@@ -545,10 +554,13 @@ mypy==1.10.0 \
     --hash=sha256:f90cff89eea89273727d8783fef5d4a934be2fdca11b47def50cf5d311aff727 \
     --hash=sha256:fa7ef5244615a2523b56c034becde4e9e3f9b034854c93639adb667ec9ec2976 \
     --hash=sha256:fcfc70599efde5c67862a07a1aaf50e55bce629ace26bb19dc17cece5dd31ca4
+    # via -r lock/requirements-dev-template.in
 mypy-extensions==1.0.0 \
     --hash=sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d \
     --hash=sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782
-    # via mypy
+    # via
+    #   -r lock/requirements-dev-template.in
+    #   mypy
 nodeenv==1.8.0 \
     --hash=sha256:d51e0c37e64fbf47d017feac3145cdbb58836d7eee8c6f6d3b6880c5456227d2 \
     --hash=sha256:df865724bb3c3adc86b3876fa209771517b0cfe596beff01a92700e0e8be4cec
@@ -619,6 +631,7 @@ pluggy==1.5.0 \
 pre-commit==3.7.1 \
     --hash=sha256:8ca3ad567bc78a4972a3f1a477e94a79d4597e8140a6e0b651c5e33899c3654a \
     --hash=sha256:fae36fd1d7ad7d6a5a1c0b0d5adb2ed1a3bda5a21bf6c3e5372073d7a11cd4c5
+    # via -r lock/requirements-dev-template.in
 pycparser==2.22 \
     --hash=sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6 \
     --hash=sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc
@@ -794,25 +807,31 @@ pynacl==1.5.0 \
     --hash=sha256:a36d4a9dda1f19ce6e03c9a784a2921a4b726b02e1c736600ca9c22029474394 \
     --hash=sha256:a422368fc821589c228f4c49438a368831cb5bbc0eab5ebe1d7fac9dded6567b \
     --hash=sha256:e46dae94e34b085175f8abb3b0aaa7da40767865ac82c928eeb9e57e1ea8a543
+    # via auth-service (pyproject.toml)
 pyotp==2.9.0 \
     --hash=sha256:346b6642e0dbdde3b4ff5a930b664ca82abfa116356ed48cc42c7d6590d36f63 \
     --hash=sha256:81c2e5865b8ac55e825b0358e496e1d9387c811e85bb40e71a3b29b288963612
+    # via auth-service (pyproject.toml)
 pytest==8.2.0 \
     --hash=sha256:1733f0620f6cda4095bbf0d9ff8022486e91892245bb9e7d5542c018f612f233 \
     --hash=sha256:d507d4482197eac0ba2bae2e9babf0672eb333017bcedaa5fb1a3d42c1174b3f
     # via
+    #   -r lock/requirements-dev-template.in
     #   pytest-asyncio
     #   pytest-cov
     #   pytest-httpx
 pytest-asyncio==0.23.6 \
     --hash=sha256:68516fdd1018ac57b846c9846b954f0393b26f094764a28c955eabb0536a4e8a \
     --hash=sha256:ffe523a89c1c222598c76856e76852b787504ddb72dd5d9b6617ffa8aa2cde5f
+    # via -r lock/requirements-dev-template.in
 pytest-cov==5.0.0 \
     --hash=sha256:4f0764a1219df53214206bf1feea4633c3b558a2925c8b59f144f682861ce652 \
     --hash=sha256:5837b58e9f6ebd335b0f8060eecce69b662415b16dc503883a02f45dfeb14857
+    # via -r lock/requirements-dev-template.in
 pytest-httpx==0.30.0 \
     --hash=sha256:6d47849691faf11d2532565d0c8e0e02b9f4ee730da31687feae315581d7520c \
     --hash=sha256:755b8edca87c974dd4f3605c374fda11db84631de3d163b99c0df5807023a19a
+    # via -r lock/requirements-dev-template.in
 python-dotenv==1.0.1 \
     --hash=sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca \
     --hash=sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a
@@ -889,7 +908,9 @@ referencing==0.35.1 \
 requests==2.31.0 \
     --hash=sha256:58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f \
     --hash=sha256:942c5a758f98d790eaed1a29cb6eefc7ffb0d1cf7af05c3d2791656dbd6ad1e1
-    # via docker
+    # via
+    #   -r lock/requirements-dev-template.in
+    #   docker
 rich==13.7.1 \
     --hash=sha256:4edbae314f59eb482f54e9e30bf00d33350aaa94f4bfcd4e9e3110e64d0d7222 \
     --hash=sha256:9be308cb1fe2f1f57d67ce99e95af38a1e2bc71ad9813b0e247cf7ffbcc3a432
@@ -1015,10 +1036,13 @@ ruff==0.4.4 \
     --hash=sha256:c51c928a14f9f0a871082603e25a1588059b7e08a920f2f9fa7157b5bf08cfe9 \
     --hash=sha256:cb53473849f011bca6e754f2cdf47cafc9c4f4ff4570003a0dad0b9b6890e876 \
     --hash=sha256:f87ea42d5cdebdc6a69761a9d0bc83ae9b3b30d0ad78952005ba6568d6c022af
+    # via -r lock/requirements-dev-template.in
 setuptools==69.5.1 \
     --hash=sha256:6c1fccdac05a97e598fb0ae3bbed5904ccb317337a51139dcd51453611bbb987 \
     --hash=sha256:c636ac361bc47580504644275c9ad802c50415c7522212252c033bd15f301f32
-    # via nodeenv
+    # via
+    #   -r lock/requirements-dev-template.in
+    #   nodeenv
 shellingham==1.5.4 \
     --hash=sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686 \
     --hash=sha256:8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de
@@ -1026,6 +1050,7 @@ shellingham==1.5.4 \
 snakeviz==2.2.0 \
     --hash=sha256:569e2d71c47f80a886aa6e70d6405cb6d30aa3520969ad956b06f824c5f02b8e \
     --hash=sha256:7bfd00be7ae147eb4a170a471578e1cd3f41f803238958b6b8efcf2c698a6aa9
+    # via -r lock/requirements-dev-template.in
 sniffio==1.3.1 \
     --hash=sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2 \
     --hash=sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc
@@ -1038,12 +1063,15 @@ starlette==0.37.2 \
     # via fastapi
 stringcase==1.2.0 \
     --hash=sha256:48a06980661908efe8d9d34eab2b6c13aefa2163b3ced26972902e3bdfd87008
+    # via -r lock/requirements-dev-template.in
 testcontainers==4.4.1 \
     --hash=sha256:0ab41538d363576c30dcb9064bf50736d310da4ff99a8ab4f58bee9ac9e44cc6 \
     --hash=sha256:fdc9e6cfb6f4b2d4ecf1f7ff286c76283cd5fe0f91f71baf9817f505fa14575d
+    # via -r lock/requirements-dev.in
 tomli-w==1.0.0 \
     --hash=sha256:9f2a07e8be30a0729e533ec968016807069991ae2fd921a78d42f429ae5f4463 \
     --hash=sha256:f463434305e0336248cac9c2dc8076b707d8a12d019dd349f5c1e382dd1ae1b9
+    # via -r lock/requirements-dev-template.in
 tornado==6.4 \
     --hash=sha256:02ccefc7d8211e5a7f9e8bc3f9e5b0ad6262ba2fbb683a6443ecc804e5224ce0 \
     --hash=sha256:10aeaa8006333433da48dec9fe417877f8bcc21f48dda8d661ae79da357b2a63 \
@@ -1060,7 +1088,9 @@ tornado==6.4 \
 typer==0.12.3 \
     --hash=sha256:070d7ca53f785acbccba8e7d28b08dcd88f79f1fbda035ade0aecec71ca5c914 \
     --hash=sha256:49e73131481d804288ef62598d97a1ceef3058905aa536a1134f90891ba35482
-    # via fastapi-cli
+    # via
+    #   -r lock/requirements-dev-template.in
+    #   fastapi-cli
 typing-extensions==4.11.0 \
     --hash=sha256:83f085bd5ca59c80295fc2a82ab5dac679cbe02b9f33f7d83af68e241bea51b0 \
     --hash=sha256:c1f94d72897edaf4ce775bb7558d5b79d8126906a14ea5ed1635921406c0387a
@@ -1156,6 +1186,7 @@ urllib3==2.2.1 \
     --hash=sha256:450b20ec296a467077128bff42b73080516e71b56ff59a60a02bef2232c4fa9d \
     --hash=sha256:d0570876c61ab9e520d776c38acbbb5b05a776d3f9ff98a5c8fd5162a444cf19
     # via
+    #   -r lock/requirements-dev-template.in
     #   docker
     #   requests
     #   testcontainers
@@ -1177,6 +1208,7 @@ uv==0.1.44 \
     --hash=sha256:d82c7338f8bcb0551672e759e4115c035246321059692416ee03ebe08629b913 \
     --hash=sha256:e247dca0d8d42d71032ac99ef3d72a4fcbad4ae3114ef5979878a81a40fed274 \
     --hash=sha256:e8cb1047b8f81ef09e15ec8d1b8dfc371594232e2e4f3ef3acf8991fcda20a57
+    # via -r lock/requirements-dev-template.in
 uvicorn==0.29.0 \
     --hash=sha256:2c2aac7ff4f4365c206fd773a39bf4ebd1047c238f8b8268ad996829323473de \
     --hash=sha256:6a69214c0b6a087462412670b3ef21224fa48cae0e452b5883e8e8bdfdd11dd0
