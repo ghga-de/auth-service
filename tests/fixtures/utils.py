@@ -452,8 +452,12 @@ class DummyEventPublisher(EventPublisherPort):
     """User registry event publisher for testing."""
 
     def __init__(self):
-        """Initialize the dummy event pulisher."""
+        """Initialize the dummy event publisher."""
         self.published_events = []
+
+    async def publish_2fa_recreated(self, *, user_id: str) -> None:
+        """Publish an event relaying that the 2nd factor of a user was recreated."""
+        self.published_events.append(("2fa_recreation", user_id))
 
     async def publish_iva_state_changed(self, *, iva: Iva) -> None:
         """Publish an event relaying that the state of a user IVA has been changed."""

@@ -28,9 +28,6 @@ from pydantic import Field, HttpUrl
 
 from auth_service.auth_adapter.core.session_store import SessionConfig
 from auth_service.auth_adapter.core.totp import TOTPConfig
-from auth_service.auth_adapter.translators.event_pub import (
-    EventPubTranslatorConfig as AuthEventPubTranslatorConfig,
-)
 from auth_service.user_management.claims_repository.translators.dao import (
     ClaimDaoConfig,
 )
@@ -40,7 +37,7 @@ from auth_service.user_management.claims_repository.translators.event_sub import
 from auth_service.user_management.user_registry.core.registry import UserRegistryConfig
 from auth_service.user_management.user_registry.translators.dao import UserDaoConfig
 from auth_service.user_management.user_registry.translators.event_pub import (
-    EventPubTranslatorConfig as UserEventPubTranslatorConfig,
+    EventPubTranslatorConfig,
 )
 
 SERVICE_NAME = "auth_service"
@@ -60,8 +57,7 @@ class Config(
     UserDaoConfig,
     ClaimDaoConfig,
     EventSubTranslatorConfig,
-    AuthEventPubTranslatorConfig,
-    UserEventPubTranslatorConfig,
+    EventPubTranslatorConfig,
 ):
     """Config parameters and their defaults."""
 

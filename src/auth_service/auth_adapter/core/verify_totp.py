@@ -103,6 +103,8 @@ async def verify_totp(  # noqa: C901, PLR0912, PLR0913
             detail="Too many failed attempts" if limit else "Invalid TOTP code",
         )
     if session.state == SessionState.NEW_TOTP_TOKEN and totp_token:
+        # notify about the recreation of the TOTP token
+        await user_registry.notify_2fa_recreation(user_id)
         # reset all already verified IVAs
         await user_registry.reset_verified_ivas(user_id)
         # store token in the database
