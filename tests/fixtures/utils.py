@@ -372,7 +372,7 @@ class DummyUserTokenDao:
         self.user_tokens = {}
 
     async def get_by_id(self, id_: str) -> UserToken:
-        """Get the user token via the ID."""
+        """Get the user token via the (user) ID."""
         try:
             return self.user_tokens[id_]
         except KeyError as error:
