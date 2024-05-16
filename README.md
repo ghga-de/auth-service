@@ -418,9 +418,9 @@ The service requires the following configuration parameters:
 
       - *object*
 
-- **`oidc_authority_url`** *(string, format: uri)*: external OIDC authority URL used by the auth adapter. Default: `"https://proxy.aai.lifescience-ri.eu"`.
+- **`oidc_authority_url`** *(string, format: uri)*: external OIDC authority URL used by the auth adapter. Default: `"https://login.aai.lifescience-ri.eu/oidc/"`.
 
-- **`oidc_userinfo_endpoint`**: external OIDC userinfo endpoint used by the auth adapter. Default: `"https://proxy.aai.lifescience-ri.eu/OIDC/userinfo"`.
+- **`oidc_userinfo_endpoint`**: external OIDC userinfo endpoint used by the auth adapter. Default: `"https://login.aai.lifescience-ri.eu/oidc/userinfo"`.
 
   - **Any of**
 
