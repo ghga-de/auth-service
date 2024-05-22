@@ -74,7 +74,7 @@ class UserDaoPublisherFactory(UserDaoPublisherFactoryPort):
             user_id=user.id,
             name=user.name,
             email=user.email,
-            title=user.title.value if user.title else None,  # type: ignore
+            title=user.title.value if user.title else None,
         )
         return validated_user.model_dump()
 
