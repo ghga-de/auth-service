@@ -21,7 +21,8 @@ from functools import partial
 from typing import Annotated
 
 from fastapi import Depends, Security
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer as DefaultHTTPBearer
 from ghga_service_commons.auth.ghga import (
     AuthContext,
     GHGAAuthContextProvider,
@@ -42,7 +43,7 @@ log = logging.getLogger(__name__)
 auth_provider = GHGAAuthContextProvider(config=CONFIG, context_class=AuthContext)
 
 
-class LogHTTPBearer(HTTPBearer):
+class HTTPBearer(DefaultHTTPBearer):
     """HTTPBearer with logging."""
 
     async def __call__(self, request: Request) -> HTTPAuthorizationCredentials | None:
@@ -53,7 +54,7 @@ class LogHTTPBearer(HTTPBearer):
 
 async def require_auth_context(
     credentials: Annotated[
-        HTTPAuthorizationCredentials, Depends(LogHTTPBearer(auto_error=True))
+        HTTPAuthorizationCredentials, Depends(HTTPBearer(auto_error=True))
     ],
 ) -> AuthContext:
     """Require a GHGA authentication and authorization context."""
@@ -65,7 +66,7 @@ is_steward = partial(has_role, role="data_steward")
 
 async def require_steward_context(
     credentials: Annotated[
-        HTTPAuthorizationCredentials, Depends(LogHTTPBearer(auto_error=True))
+        HTTPAuthorizationCredentials, Depends(HTTPBearer(auto_error=True))
     ],
 ) -> AuthContext:
     """Require a GHGA auth context with data steward role."""
