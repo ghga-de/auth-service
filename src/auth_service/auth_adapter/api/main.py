@@ -132,6 +132,7 @@ async def login(  # noqa: C901, PLR0913
     x_authorization: Annotated[str | None, Header()] = None,
 ) -> Response:
     """Create a new or get an existing user session."""
+    log.debug("Calling the user login endpoint with session=%r", session)
     if session:
         session_created = False
     else:
@@ -210,6 +211,7 @@ async def logout(
     session: SessionDependency,
 ) -> Response:
     """End the user session."""
+    log.debug("Calling the user logout endpoint with session=%r", session)
     if session:
         await session_store.delete_session(session.session_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -229,13 +231,12 @@ async def post_user(
     session: SessionDependency,
 ) -> Response:
     """Register a user."""
-    log.debug("Calling the user registration endpoint.")
+    log.debug("Calling the user registration endpoint with session=%r", session)
     if not session:
         log.debug("User registration attempt without login.")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in"
         )
-    log.debug("User registration attempt with session=%r", session)
     await session_store.save_session(session)
     internal_token = internal_token_from_session(session)
     log.debug("User registration attempt yields internal token %s", internal_token)
