@@ -19,6 +19,7 @@ Note: If a path_prefix is used for the Emissary AuthService,
 then this must be also specified in the config setting api_root_path.
 """
 
+import logging
 from typing import Annotated
 
 from fastapi import (
@@ -69,6 +70,8 @@ from .basic import get_basic_auth_dependency
 from .dto import TOTPTokenResponse
 from .headers import get_bearer_token, pass_auth_response, session_to_header
 
+log = logging.getLogger(__name__)
+
 app = FastAPI(title=TITLE, description=DESCRIPTION, version=VERSION)
 configure_app(app, config=CONFIG)
 
@@ -96,6 +99,7 @@ def add_allowed_route(route: str, write: bool = False):
         authorization: Annotated[str | None, Header()] = None,
     ) -> Response:
         """Unprotected route."""
+        log.debug("Unprotected route: %s", route)
         return pass_auth_response(request, authorization)
 
 
@@ -225,12 +229,16 @@ async def post_user(
     session: SessionDependency,
 ) -> Response:
     """Register a user."""
+    log.debug("Calling the user registration endpoint.")
     if not session:
+        log.debug("User registration attempt without login.")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in"
         )
+    log.debug("User registration attempt with session=%r", session)
     await session_store.save_session(session)
     internal_token = internal_token_from_session(session)
+    log.debug("User registration attempt yields internal token %s", internal_token)
     return pass_auth_response(request, f"Bearer {internal_token}")
 
 
