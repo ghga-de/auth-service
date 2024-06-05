@@ -395,9 +395,12 @@ async def ext_auth(
     If a user session exists and is two-factor-authenticated, then an internal
     authentication token will be added to the response.
     """
+    log.debug("ExtAuth general route: %s", request.url.path)
     if session:
+        log.debug("ExtAuth with session=%s", session)
         await session_store.save_session(session)
         if session.state is SessionState.AUTHENTICATED:
             internal_token = internal_token_from_session(session)
             return pass_auth_response(request, f"Bearer {internal_token}")
+    log.debug("ExtAuth without session")
     return pass_auth_response(request)
