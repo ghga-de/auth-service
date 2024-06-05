@@ -53,7 +53,7 @@ class LogHTTPBearer(HTTPBearer):
 
 async def require_auth_context(
     credentials: Annotated[
-        HTTPAuthorizationCredentials, Depends(HTTPBearer(auto_error=True))
+        HTTPAuthorizationCredentials, Depends(LogHTTPBearer(auto_error=True))
     ],
 ) -> AuthContext:
     """Require a GHGA authentication and authorization context."""
@@ -65,7 +65,7 @@ is_steward = partial(has_role, role="data_steward")
 
 async def require_steward_context(
     credentials: Annotated[
-        HTTPAuthorizationCredentials, Depends(HTTPBearer(auto_error=True))
+        HTTPAuthorizationCredentials, Depends(LogHTTPBearer(auto_error=True))
     ],
 ) -> AuthContext:
     """Require a GHGA auth context with data steward role."""
