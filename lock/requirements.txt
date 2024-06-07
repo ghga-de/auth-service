@@ -213,9 +213,9 @@ h11==0.14.0 \
     #   -c lock/requirements-dev.txt
     #   httpcore
     #   uvicorn
-hexkit==3.1.0 \
-    --hash=sha256:3f96ede959b4d81a6b78637ebf47019787e5d3321bd01f9abe82cb8118bada66 \
-    --hash=sha256:b922c048091f622798ccf25a767fe3d64ff8ee000d1c3cf18967b6b6de8f2592
+hexkit==3.2.0 \
+    --hash=sha256:2937ead0e0b365761e211cbed583b556f5f16cfe097a9a997a6711d81744db7b \
+    --hash=sha256:6e4beb42a5a702527838bd37406ef8e631bcb3e2b05e611ef456d5dff074ec27
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)
