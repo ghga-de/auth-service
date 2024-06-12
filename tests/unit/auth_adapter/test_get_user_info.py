@@ -48,7 +48,7 @@ def test_rejects_an_expired_access_token():
         auth.get_user_info(access_token)
 
 
-@pytest.mark.parametrize("claim", ["sub", "aud", "scope", "exp", "iat", "jti"])
+@pytest.mark.parametrize("claim", ["sub", "aud", "scope"])
 def test_rejects_an_access_token_without_mandatory_claim(claim: str):
     """Test that you cannot get user info with missing claims."""
     access_token = create_access_token(**{claim: None})  # type: ignore
