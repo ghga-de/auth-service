@@ -160,10 +160,11 @@ class Config(
     @field_validator("oidc_issuer")
     @classmethod
     def check_http_url(cls, v: str) -> str:
-        """Make sure the string value is actually a valid URL."""
-        url = AnyUrl(url=v)
-        if url.scheme not in ("http", "https"):
-            raise ValueError(f"Invalid URL scheme: {url.scheme}")
+        """Make sure the string is a valid URL if specified."""
+        if v:
+            url = AnyUrl(url=v)
+            if url.scheme not in ("http", "https"):
+                raise ValueError(f"Invalid URL scheme: {url.scheme}")
         return v
 
 
