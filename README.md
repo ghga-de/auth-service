@@ -420,13 +420,7 @@ The service requires the following configuration parameters:
 
 - **`oidc_authority_url`** *(string, format: uri)*: external OIDC authority URL used by the auth adapter. Default: `"https://login.aai.lifescience-ri.eu/oidc/"`.
 
-- **`oidc_issuer`**: external OIDC issuer for access tokens used by the auth adapter (determined using OIDC discovery if None). Default: `"https://login.aai.lifescience-ri.eu/oidc/"`.
-
-  - **Any of**
-
-    - *string, format: uri*
-
-    - *null*
+- **`oidc_issuer`** *(string)*: external OIDC issuer for access tokens used by the auth adapter (URL format with or without end slash, determined using OIDC discovery if empty). Default: `"https://login.aai.lifescience-ri.eu/oidc/"`.
 
 - **`oidc_userinfo_endpoint`**: external OIDC userinfo endpoint used by the auth adapter (determined using OIDC discovery if None). Default: `"https://login.aai.lifescience-ri.eu/oidc/userinfo"`.
 
