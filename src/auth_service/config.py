@@ -24,7 +24,7 @@ from hexkit.log import LoggingConfig
 from hexkit.providers.akafka import KafkaConfig
 from hexkit.providers.mongodb import MongoDbConfig
 from hexkit.providers.mongokafka import MongoKafkaConfig
-from pydantic import Field, HttpUrl
+from pydantic import AnyUrl, Field, HttpUrl, field_validator
 
 from auth_service.auth_adapter.core.session_store import SessionConfig
 from auth_service.auth_adapter.core.totp import TOTPConfig
@@ -127,7 +127,6 @@ class Config(
         default="https://login.aai.lifescience-ri.eu/oidc/",
         description="external OIDC issuer for access tokens used by the auth adapter"
         " (URL format with or without end slash, determined using OIDC discovery if empty)",
-        # we are not using HttpUrl here to retain use of end slashes
     )
     oidc_userinfo_endpoint: HttpUrl | None = Field(
         default="https://login.aai.lifescience-ri.eu/oidc/userinfo",
@@ -157,6 +156,15 @@ class Config(
         default="dataset_deleted",
         description="the type of the event announcing dataset deletions",
     )
+
+    @field_validator("oidc_issuer")
+    @classmethod
+    def check_http_url(cls, v: str) -> str:
+        """Make sure the string value is actually a valid URL."""
+        url = AnyUrl(url=v)
+        if url.scheme not in ("http", "https"):
+            raise ValueError(f"Invalid URL scheme: {url.scheme}")
+        return v
 
 
 CONFIG = Config()  # type: ignore
