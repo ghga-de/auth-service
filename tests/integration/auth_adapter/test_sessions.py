@@ -330,7 +330,7 @@ async def test_login_without_access_token_and_basic_auth(
 
     assert SESSION_COOKIE not in response.cookies
     assert "X-Session" not in response.headers
-    assert "WWWW-Authenticate" not in response.headers
+    assert "WWW-Authenticate" not in response.headers
 
 
 async def test_login_with_invalid_access_token(bare_client: BareClient):
