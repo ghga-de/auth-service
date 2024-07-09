@@ -237,6 +237,7 @@ def _fetch_user_info(access_token: str) -> dict[str, Any]:
     response = httpx.get(
         get_jwt_config().userinfo_endpoint,
         headers={"Authorization": f"Bearer {access_token}"},
+        timeout=TIMEOUT,
     )
     if response.status_code != status.HTTP_200_OK:
         raise UserInfoError(f"Cannot request userinfo: {response.reason_phrase}")
