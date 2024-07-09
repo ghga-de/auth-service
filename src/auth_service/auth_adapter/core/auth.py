@@ -367,7 +367,8 @@ def internal_token_from_session(session: Session) -> str:
 def log_auth_info(request: Request, session: Session) -> None:
     """Log additional authorization info.
 
-    The timestamp,
+    Other info such as timestamp and correlation ID are already
+    logged by default using the hexkit logging setup.
     """
     log.info(
         "User authorized",
