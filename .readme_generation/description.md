@@ -2,11 +2,11 @@
 
 This repository contains two services for the management, authentication and authorization of users of the GHGA data portal.
 
-These two services are described in the following sections. The setting `run_auth_adapter` can be used to determine which of the two services will be started.
+These two services are described in the following sections. The setting `provide_apis` can be used to determine which of the services will be started and which APIs these services should provide. The setting `run_consumer` should be set for the service instance that runs as an event consumer.
 
 ### Auth Adapter
 
-The `auth_adapter` sub-package contains the authentication service used by the API gateway via the ExtAuth protocol.
+The `auth_adapter` sub-package contains the authentication service used by the API gateway via the ExtAuth protocol. It is started when `provide_apis` contains the value `ext_auth`. No other APIs can be provided in that case.
 
 If a `path_prefix` has been configured for the AuthService in the API gateway, then the `api_root_path` must be set accordingly.
 
@@ -29,6 +29,6 @@ The `x-authorization` header is only needed when an additional HTTP Basic Auth i
 
 ### User Management
 
-The `user_management` sub-package contains the user data management service.
+The `user_management` sub-package contains the user data management service which is run when `provide_apis` does not contain `ext_auth`.
 
-The user management contains two APIs, the `users` API for the user registry, and the `claims` API for the claims repository. The setting `include_apis` can be used to specify which of the two APIs should be provided. For testing purposes, both APIs can be provided at the same time, but this is not recommended in production.
+The user management services can provide two APIs, the (public) `users` API for the user registry, and the (internal) `claims` API for the claims repository. The setting `provide_apis` can be used to specify which of the two APIs should be provided. For testing purposes, both APIs can be provided at the same time, but this is not recommended in production. If no API is specified, then only an health endpoint is provided.

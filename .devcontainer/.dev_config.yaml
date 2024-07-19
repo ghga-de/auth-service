@@ -3,11 +3,14 @@
 auto_reload: true
 
 host: 0.0.0.0
+port: 8080
 
 db_connection_str: mongodb://mongodb:27017/
 db_name: "dev-db"
 
 log_level: DEBUG
+
+provide_apis: ["users"]
 
 service_instance_id: "1"
 kafka_servers: ["kafka:9092"]
