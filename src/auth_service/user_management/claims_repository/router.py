@@ -37,7 +37,7 @@ from .core.claims import (
     has_download_access_for_dataset,
     is_valid_claim,
 )
-from .core.utils import iva_exists, iva_is_verified, user_exists
+from .core.utils import iva_exists, iva_is_verified, user_exists, user_is_active
 from .deps import ClaimDao, Depends, get_claim_dao
 from .models.claims import (
     Claim,
@@ -310,6 +310,7 @@ async def grant_download_access(  # noqa: PLR0913
     """Grant download access permission for a dataset to a user with the given IVA.
 
     Note that at this point the IVA needs to exist, but does not need to be verified.
+    We check whether the user exists but we do not check whether the user is active.
     We also do not check here whether the dataset actually exists.
     """
     if not await iva_exists(user_id, iva_id=iva_id, user_dao=user_dao, iva_dao=iva_dao):
@@ -336,7 +337,7 @@ async def grant_download_access(  # noqa: PLR0913
     " can be downloaded by the given user. For internal use only.",
     responses={
         200: {"description": "Download access has been checked."},
-        404: {"description": "The user was not found."},
+        404: {"description": "The user was not found or is inactive."},
         422: {"description": "Validation error in submitted user IDs."},
     },
     status_code=200,
@@ -365,10 +366,11 @@ async def check_download_access(
 ) -> bool:
     """Check download access permission for a given dataset by a given user.
 
-    Note that at this point we also check whether the corresponding IVA is verified.
+    Note that at this point we also check whether the corresponding IVA is verified
+    and whether the user is currently active.
     However, we do not check here whether the dataset actually exists.
     """
-    if not await user_exists(user_id, user_dao=user_dao):
+    if not await user_is_active(user_id, user_dao=user_dao):
         raise user_not_found_error
 
     # run through all controlled access grants for the user
@@ -401,7 +403,7 @@ async def check_download_access(
         200: {
             "description": "Dataset IDs with download access have been retrieved.",
         },
-        404: {"description": "The user was not found."},
+        404: {"description": "The user was not found or is inactive."},
         422: {"description": "Validation error in submitted user IDs."},
     },
     status_code=200,
@@ -422,10 +424,11 @@ async def get_datasets_with_download_access(
 ) -> list[str]:
     """Get list of all dataset IDs with download access permission for a given user.
 
-    Note that at this point we also check whether the corresponding IVA is verified.
+    Note that at this point we also check whether the corresponding IVA is verified
+    and whether the user is currently active.
     However, we do not check here whether the datasets actually exist.
     """
-    if not await user_exists(user_id, user_dao=user_dao):
+    if not await user_is_active(user_id, user_dao=user_dao):
         raise user_not_found_error
 
     # fetch all valid controlled access grants for the user

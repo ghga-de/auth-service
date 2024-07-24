@@ -171,6 +171,7 @@ async def login(  # noqa: C901, PLR0913
 
     async def _is_data_steward(user: User) -> bool:
         """Check whether the given user is a data steward."""
+        # if the user exists, the account is active at this point
         return await is_data_steward(user.id, claim_dao=claim_dao)
 
     async def _has_totp_token(user: User) -> bool:

@@ -29,6 +29,7 @@ from auth_service.user_management.user_registry.models.ivas import (
     IvaState,
     IvaType,
 )
+from auth_service.user_management.user_registry.models.users import UserStatus
 
 from ....fixtures.utils import DummyIvaDao, DummyUserDao
 from .fixtures import FullClient, fixture_full_client  # noqa: F401
@@ -498,6 +499,17 @@ async def test_check_download_access(full_client: FullClient):
     assert response.status_code == status.HTTP_200_OK
     assert response.json() is False
 
+    # check again after user was inactivated
+
+    user_dao.users[0] = user_dao.users[0].model_copy(
+        update={"status": UserStatus.INACTIVE}
+    )
+    response = await full_client.get(
+        "/download-access/users/john@ghga.de/datasets/some-dataset-id"
+    )
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "The user was not found."
+
 
 async def test_check_download_access_with_unverified_iva(full_client: FullClient):
     """Test checking download access for a single dataset with an unverified IVA."""
@@ -699,6 +711,14 @@ async def test_get_datasets_with_download_access(full_client: FullClient):
 
     assert isinstance(dataset_ids, list)
     assert sorted(dataset_ids) == ["another-dataset-id", "some-dataset-id"]
+
+    # check again after user was inactivated
+    user_dao.users[0] = user_dao.users[0].model_copy(
+        update={"status": UserStatus.INACTIVE}
+    )
+    response = await full_client.get("/download-access/users/john@ghga.de/datasets")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "The user was not found."
 
 
 async def test_get_claims_for_seeded_data_steward(full_client: FullClient):
