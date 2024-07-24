@@ -37,9 +37,15 @@ from .core.claims import (
     has_download_access_for_dataset,
     is_valid_claim,
 )
-from .core.utils import iva_exists, iva_is_verified, user_exists, user_is_active
+from .core.utils import (
+    iva_exists,
+    iva_is_verified,
+    user_exists,
+    user_is_active,
+)
 from .deps import ClaimDao, Depends, get_claim_dao
 from .models.claims import (
+    Accession,
     Claim,
     ClaimCreation,
     ClaimFullCreation,
@@ -295,7 +301,7 @@ async def grant_download_access(  # noqa: PLR0913
         ),
     ],
     dataset_id: Annotated[
-        str,
+        Accession,
         Path(
             ...,
             alias="dataset_id",
@@ -311,7 +317,8 @@ async def grant_download_access(  # noqa: PLR0913
 
     Note that at this point the IVA needs to exist, but does not need to be verified.
     We check whether the user exists but we do not check whether the user is active.
-    We also do not check here whether the dataset actually exists.
+    We also do not check here whether the dataset actually exists,
+    but we check that the dataset_id looks like an accession.
     """
     if not await iva_exists(user_id, iva_id=iva_id, user_dao=user_dao, iva_dao=iva_dao):
         raise iva_not_found_error
@@ -352,7 +359,7 @@ async def check_download_access(
         ),
     ],
     dataset_id: Annotated[
-        str,
+        Accession,
         Path(
             ...,
             alias="dataset_id",
@@ -368,7 +375,8 @@ async def check_download_access(
 
     Note that at this point we also check whether the corresponding IVA is verified
     and whether the user is currently active.
-    However, we do not check here whether the dataset actually exists.
+    However, we do not check here whether the dataset actually exists,
+    only that the dataset_id looks like an accession.
     """
     if not await user_is_active(user_id, user_dao=user_dao):
         raise user_not_found_error
