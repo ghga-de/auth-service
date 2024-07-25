@@ -437,22 +437,34 @@ async def test_login_with_cookie_and_registered_data_steward(bare_client: BareCl
     )
 
 
-async def test_login_with_cookie_and_invalid_csrf_token(bare_client: BareClient):
-    """Test login request with session cookie and invalid CSRF token."""
-    store = await get_session_store(config=CONFIG)
-    session = await store.create_session(
-        ext_id="john@aai.org", user_name="John Doe", user_email="john@home.org"
-    )
-    original_session = session.model_copy()
-    assert await store.get_session(session.session_id)
-    headers = headers_for_session(session)
-    headers["X-CSRF-Token"] += "-invalidated"
-    response = await bare_client.post(LOGIN_PATH, headers=headers)
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert "X-CSRF-Token" not in response.headers
-    assert response.json() == {"detail": "Invalid or missing CSRF token"}
+async def test_login_with_cookie_but_without_csrf_token(bare_client: BareClient):
+    """Test login request with session cookie but no CSRF token.
 
-    assert await store.get_session(session.session_id) == original_session
+    It should be possible to login from a new browser tab using the session cookie.
+    """
+    setup_daos()
+
+    store = await get_session_store(config=CONFIG)
+    session_dict = await store.create_session(
+        ext_id="john@aai.org",
+        user_id="john@ghga.de",
+        user_name="John Doe",
+        user_email="john@home.org",
+    )
+    assert await store.get_session(session_dict.session_id)
+    headers = headers_for_session(session_dict)
+    del headers["X-CSRF-Token"]
+    response = await bare_client.post(LOGIN_PATH, headers=headers)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
 
     assert SESSION_COOKIE not in response.cookies
-    assert "X-Session" not in response.headers
+    assert_session_header(
+        response,
+        {
+            "id": "john@ghga.de",
+            "ext_id": "john@aai.org",
+            "name": "John Doe",
+            "email": "john@home.org",
+            "state": "Registered",
+        },
+    )
