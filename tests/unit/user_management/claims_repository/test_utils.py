@@ -23,10 +23,10 @@ from ghga_service_commons.utils.utc_dates import now_as_utc
 
 from auth_service.user_management.claims_repository.core.utils import (
     is_data_steward,
-    iva_exists,
     iva_is_verified,
     user_exists,
     user_is_active,
+    user_with_iva_exists,
 )
 from auth_service.user_management.claims_repository.ports.dao import ClaimDao
 from auth_service.user_management.user_registry.models.ivas import (
@@ -79,13 +79,13 @@ async def test_iva_exists():
         "iva_dao": DummyIvaDao([iva]),
     }
 
-    assert await iva_exists(None, None, **kwargs) is False  # type: ignore
-    assert await iva_exists(None, iva_id, **kwargs) is False  # type: ignore
-    assert await iva_exists(user_id, None, **kwargs) is False  # type: ignore
-    assert await iva_exists("other-user-id", iva_id, **kwargs) is False  # type: ignore
-    assert await iva_exists(user_id, "other-iva-id", **kwargs) is False  # type: ignore
+    assert await user_with_iva_exists(None, None, **kwargs) is False  # type: ignore
+    assert await user_with_iva_exists(None, iva_id, **kwargs) is False  # type: ignore
+    assert await user_with_iva_exists(user_id, None, **kwargs) is False  # type: ignore
+    assert await user_with_iva_exists("other-user-id", iva_id, **kwargs) is False  # type: ignore
+    assert await user_with_iva_exists(user_id, "other-iva-id", **kwargs) is False  # type: ignore
 
-    assert await iva_exists(user_id, iva_id, **kwargs) is True  # type: ignore
+    assert await user_with_iva_exists(user_id, iva_id, **kwargs) is True  # type: ignore
 
 
 async def test_iva_exists_when_it_belongs_to_a_different_user():
@@ -105,8 +105,8 @@ async def test_iva_exists_when_it_belongs_to_a_different_user():
         "iva_dao": DummyIvaDao([iva]),
     }
 
-    assert await iva_exists(user_id, iva_id, **kwargs) is False  # type: ignore
-    assert await iva_exists("other-user-id", iva_id, **kwargs) is False  # type: ignore
+    assert await user_with_iva_exists(user_id, iva_id, **kwargs) is False  # type: ignore
+    assert await user_with_iva_exists("other-user-id", iva_id, **kwargs) is False  # type: ignore
 
 
 @pytest.mark.parametrize("state", IvaState.__members__.values())

@@ -29,7 +29,7 @@ from ..deps import ClaimDao
 from ..models.claims import VisaType
 from .claims import is_data_steward_claim, is_valid_claim
 
-__all__ = ["user_exists", "iva_exists", "is_data_steward"]
+__all__ = ["user_exists", "user_with_iva_exists", "is_data_steward"]
 
 
 async def user_exists(user_id: str, *, user_dao: UserDao) -> bool:
@@ -54,7 +54,7 @@ async def user_is_active(user_id: str, *, user_dao: UserDao) -> bool:
     return user.status == UserStatus.ACTIVE
 
 
-async def iva_exists(
+async def user_with_iva_exists(
     user_id: str, iva_id: str, *, user_dao: UserDao, iva_dao: IvaDao
 ) -> bool:
     """Check whether the specified user exists and has the specified IVA.

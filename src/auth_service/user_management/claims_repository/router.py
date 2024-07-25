@@ -38,10 +38,10 @@ from .core.claims import (
     is_valid_claim,
 )
 from .core.utils import (
-    iva_exists,
     iva_is_verified,
     user_exists,
     user_is_active,
+    user_with_iva_exists,
 )
 from .deps import ClaimDao, Depends, get_claim_dao
 from .models.claims import (
@@ -320,7 +320,9 @@ async def grant_download_access(  # noqa: PLR0913
     We also do not check here whether the dataset actually exists,
     but we check that the dataset_id looks like an accession.
     """
-    if not await iva_exists(user_id, iva_id=iva_id, user_dao=user_dao, iva_dao=iva_dao):
+    if not await user_with_iva_exists(
+        user_id, iva_id=iva_id, user_dao=user_dao, iva_dao=iva_dao
+    ):
         raise iva_not_found_error
 
     claim = create_controlled_access_claim(
