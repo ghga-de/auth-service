@@ -109,8 +109,9 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
-  "germany-bw-instance-001"
+  ```yaml
+  germany-bw-instance-001
+  ...
   ```
 
 
@@ -121,10 +122,8 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
-  [
-      "localhost:9092"
-  ]
+  ```yaml
+  - localhost:9092
   ```
 
 
@@ -143,13 +142,15 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
+  ```yaml
   true
+  ...
   ```
 
 
-  ```json
+  ```yaml
   false
+  ...
   ```
 
 
@@ -158,13 +159,15 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
+  ```yaml
   1048576
+  ...
   ```
 
 
-  ```json
+  ```yaml
   16777216
+  ...
   ```
 
 
@@ -173,8 +176,9 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
-  "mongodb://localhost:27017"
+  ```yaml
+  mongodb://localhost:27017
+  ...
   ```
 
 
@@ -183,18 +187,21 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
-  "auth-db"
+  ```yaml
+  auth-db
+  ...
   ```
 
 
-  ```json
-  "user-management"
+  ```yaml
+  user-management
+  ...
   ```
 
 
-  ```json
-  "users-and-claims"
+  ```yaml
+  users-and-claims
+  ...
   ```
 
 
@@ -211,13 +218,13 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
-  "%(timestamp)s - %(service)s - %(level)s - %(message)s"
+  ```yaml
+  '%(timestamp)s - %(service)s - %(level)s - %(message)s'
   ```
 
 
-  ```json
-  "%(asctime)s - Severity: %(levelno)s - %(msg)s"
+  ```yaml
+  '%(asctime)s - Severity: %(levelno)s - %(msg)s'
   ```
 
 
@@ -238,8 +245,9 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
-  "https://www.ghga.de/logo.png"
+  ```yaml
+  https://www.ghga.de/logo.png
+  ...
   ```
 
 
@@ -322,11 +330,9 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
-  [
-      "https://example.org",
-      "https://www.example.org"
-  ]
+  ```yaml
+  - https://example.org
+  - https://www.example.org
   ```
 
 
@@ -341,11 +347,9 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
-  [
-      "https://example.org",
-      "https://www.example.org"
-  ]
+  ```yaml
+  - https://example.org
+  - https://www.example.org
   ```
 
 
@@ -362,10 +366,8 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
-  [
-      "*"
-  ]
+  ```yaml
+  - '*'
   ```
 
 
@@ -382,7 +384,7 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
+  ```yaml
   []
   ```
 
@@ -426,18 +428,18 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
-  "[\"ext_auth\"]"
+  ```yaml
+  '["ext_auth"]'
   ```
 
 
-  ```json
-  "[\"users\"]"
+  ```yaml
+  '["users"]'
   ```
 
 
-  ```json
-  "[\"claims\"]"
+  ```yaml
+  '["claims"]'
   ```
 
 
@@ -446,25 +448,19 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```json
-  "false"
+  ```yaml
+  'false'
   ```
 
 
-  ```json
-  "true"
+  ```yaml
+  'true'
   ```
 
 
-- **`add_as_data_stewards`** *(array)*: a list of external IDs of data stewards or user objects to seed the claims repository with, all other data steward claims will be removed (only used with claims API). Default: `[]`.
+- **`add_as_data_stewards`** *(array)*: A list of of data stewards to seed the claims repository with. All other data steward claims will be removed. This is only used with the claims API. Default: `[]`.
 
-  - **Items**
-
-    - **Any of**
-
-      - *string*
-
-      - *object*
+  - **Items**: Refer to *[#/$defs/DataStewardInfo](#%24defs/DataStewardInfo)*.
 
 - **`oidc_authority_url`** *(string, format: uri)*: external OIDC authority URL used by the auth adapter. Default: `"https://login.aai.lifescience-ri.eu/oidc/"`.
 
@@ -484,6 +480,24 @@ The service requires the following configuration parameters:
 
 ## Definitions
 
+
+- <a id="%24defs/DataStewardInfo"></a>**`DataStewardInfo`** *(object)*: Data steward with external ID and associated IVA. Cannot contain additional properties.
+
+  - **`ext_id`** *(string, required)*: The external ID of the data steward.
+
+  - **`name`** *(string, required)*: The full name of the data steward.
+
+  - **`email`** *(string, required)*: The email address of the data steward.
+
+  - **`iva_type`**: The type of the data steward validation address.
+
+    - **All of**
+
+      - : Refer to *[#/$defs/IvaType](#%24defs/IvaType)*.
+
+  - **`iva_value`** *(string, required)*: The actual validation address of the data steward.
+
+- <a id="%24defs/IvaType"></a>**`IvaType`** *(string)*: The type of IVA. Must be one of: `["Phone", "Fax", "PostalAddress", "InPerson"]`.
 
 - <a id="%24defs/TOTPAlgorithm"></a>**`TOTPAlgorithm`** *(string)*: Hash algorithm used for TOTP code generation. Must be one of: `["sha1", "sha256", "sha512"]`.
 

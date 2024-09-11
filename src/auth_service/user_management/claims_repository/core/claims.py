@@ -63,8 +63,10 @@ def is_internal_claim(claim: Claim, visa_type: VisaType) -> bool:
 # Data Steward Claims
 
 
-def create_data_steward_claim(user_id: str, valid_days=365) -> ClaimFullCreation:
-    """Create a claim for a data steward."""
+def create_data_steward_claim(
+    user_id: str, iva_id: str | None = None, valid_days=365
+) -> ClaimFullCreation:
+    """Create a claim for a data steward with the given IVA."""
     valid_from = now_as_utc()
     valid_until = now_as_utc() + timedelta(days=valid_days)
     return ClaimFullCreation(
@@ -80,6 +82,7 @@ def create_data_steward_claim(user_id: str, valid_days=365) -> ClaimFullCreation
         user_id=user_id,
         creation_date=valid_from,
         revocation_date=None,
+        iva_id=iva_id,
     )
 
 

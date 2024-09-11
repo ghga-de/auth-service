@@ -151,11 +151,11 @@ def read_design_description() -> str:
 
 
 def generate_config_docs() -> str:
-    """Generate markdown-formatted documentation for the configration parameters
+    """Generate markdown-formatted documentation for the configuration parameters
     listed in the config schema."""
 
     parser = jsonschema2md.Parser(
-        examples_as_yaml=False,
+        examples_as_yaml=True,
         show_examples="all",
     )
     with open(CONFIG_SCHEMA_PATH, encoding="utf-8") as json_file:

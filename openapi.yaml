@@ -509,7 +509,7 @@ components:
           description: The academic title of the user
           title: User Title
         value:
-          description: The actual address
+          description: The actual validation address
           title: Value
           type: string
       required:
@@ -531,7 +531,7 @@ components:
           - $ref: '#/components/schemas/IvaType'
           description: The type of the IVA
         value:
-          description: The actual address
+          description: The actual validation address
           title: Value
           type: string
       required:
@@ -567,7 +567,7 @@ components:
           - $ref: '#/components/schemas/IvaType'
           description: The type of the IVA
         value:
-          description: The actual address
+          description: The actual validation address
           title: Value
           type: string
       required:
