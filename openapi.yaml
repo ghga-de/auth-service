@@ -108,8 +108,7 @@ components:
           title: Valid Until
           type: string
         visa_type:
-          allOf:
-          - $ref: '#/components/schemas/VisaType'
+          $ref: '#/components/schemas/VisaType'
           examples:
           - AffiliationAndRole
         visa_value:
@@ -226,8 +225,7 @@ components:
           title: Valid Until
           type: string
         visa_type:
-          allOf:
-          - $ref: '#/components/schemas/VisaType'
+          $ref: '#/components/schemas/VisaType'
           examples:
           - AffiliationAndRole
         visa_value:
@@ -321,8 +319,7 @@ components:
           title: Valid Until
           type: string
         visa_type:
-          allOf:
-          - $ref: '#/components/schemas/VisaType'
+          $ref: '#/components/schemas/VisaType'
           examples:
           - AffiliationAndRole
         visa_value:
@@ -482,13 +479,11 @@ components:
           title: Id
           type: string
         state:
-          allOf:
-          - $ref: '#/components/schemas/IvaState'
+          $ref: '#/components/schemas/IvaState'
           default: Unverified
           description: The state of the IVA
         type:
-          allOf:
-          - $ref: '#/components/schemas/IvaType'
+          $ref: '#/components/schemas/IvaType'
           description: The type of the IVA
         user_email:
           description: The email address of the user
@@ -527,8 +522,7 @@ components:
       description: Basic IVA data
       properties:
         type:
-          allOf:
-          - $ref: '#/components/schemas/IvaType'
+          $ref: '#/components/schemas/IvaType'
           description: The type of the IVA
         value:
           description: The actual validation address
@@ -558,13 +552,11 @@ components:
           title: Id
           type: string
         state:
-          allOf:
-          - $ref: '#/components/schemas/IvaState'
+          $ref: '#/components/schemas/IvaState'
           default: Unverified
           description: The state of the IVA
         type:
-          allOf:
-          - $ref: '#/components/schemas/IvaType'
+          $ref: '#/components/schemas/IvaType'
           description: The type of the IVA
         value:
           description: The actual validation address
@@ -714,8 +706,7 @@ components:
           title: Registration Date
           type: string
         status:
-          allOf:
-          - $ref: '#/components/schemas/UserStatus'
+          $ref: '#/components/schemas/UserStatus'
           description: Registration status of the user
         status_change:
           anyOf:
@@ -785,8 +776,7 @@ components:
           title: Registration Date
           type: string
         status:
-          allOf:
-          - $ref: '#/components/schemas/UserStatus'
+          $ref: '#/components/schemas/UserStatus'
           description: Registration status of the user
         status_change:
           anyOf:

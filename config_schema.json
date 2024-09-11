@@ -20,11 +20,7 @@
           "type": "string"
         },
         "iva_type": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/IvaType"
-            }
-          ],
+          "$ref": "#/$defs/IvaType",
           "description": "The type of the data steward validation address"
         },
         "iva_value": {
@@ -307,13 +303,8 @@
       "title": "Totp Image"
     },
     "totp_algorithm": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/TOTPAlgorithm"
-        }
-      ],
-      "default": "sha1",
-      "description": "Hash algorithm used for TOTP code generation"
+      "$ref": "#/$defs/TOTPAlgorithm",
+      "default": "sha1"
     },
     "totp_digits": {
       "default": 6,

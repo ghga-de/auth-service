@@ -109,9 +109,8 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
-  germany-bw-instance-001
-  ...
+  ```json
+  "germany-bw-instance-001"
   ```
 
 
@@ -122,8 +121,10 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
-  - localhost:9092
+  ```json
+  [
+      "localhost:9092"
+  ]
   ```
 
 
@@ -142,15 +143,13 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
+  ```json
   true
-  ...
   ```
 
 
-  ```yaml
+  ```json
   false
-  ...
   ```
 
 
@@ -159,15 +158,13 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
+  ```json
   1048576
-  ...
   ```
 
 
-  ```yaml
+  ```json
   16777216
-  ...
   ```
 
 
@@ -176,9 +173,8 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
-  mongodb://localhost:27017
-  ...
+  ```json
+  "mongodb://localhost:27017"
   ```
 
 
@@ -187,21 +183,18 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
-  auth-db
-  ...
+  ```json
+  "auth-db"
   ```
 
 
-  ```yaml
-  user-management
-  ...
+  ```json
+  "user-management"
   ```
 
 
-  ```yaml
-  users-and-claims
-  ...
+  ```json
+  "users-and-claims"
   ```
 
 
@@ -218,13 +211,13 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
-  '%(timestamp)s - %(service)s - %(level)s - %(message)s'
+  ```json
+  "%(timestamp)s - %(service)s - %(level)s - %(message)s"
   ```
 
 
-  ```yaml
-  '%(asctime)s - Severity: %(levelno)s - %(msg)s'
+  ```json
+  "%(asctime)s - Severity: %(levelno)s - %(msg)s"
   ```
 
 
@@ -245,17 +238,12 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
-  https://www.ghga.de/logo.png
-  ...
+  ```json
+  "https://www.ghga.de/logo.png"
   ```
 
 
-- **`totp_algorithm`**: Hash algorithm used for TOTP code generation. Default: `"sha1"`.
-
-  - **All of**
-
-    - : Refer to *[#/$defs/TOTPAlgorithm](#%24defs/TOTPAlgorithm)*.
+- **`totp_algorithm`**: Refer to *[#/$defs/TOTPAlgorithm](#%24defs/TOTPAlgorithm)*. Default: `"sha1"`.
 
 - **`totp_digits`** *(integer)*: Number of digits used for the TOTP code. Minimum: `6`. Maximum: `12`. Default: `6`.
 
@@ -330,9 +318,11 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
-  - https://example.org
-  - https://www.example.org
+  ```json
+  [
+      "https://example.org",
+      "https://www.example.org"
+  ]
   ```
 
 
@@ -347,9 +337,11 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
-  - https://example.org
-  - https://www.example.org
+  ```json
+  [
+      "https://example.org",
+      "https://www.example.org"
+  ]
   ```
 
 
@@ -366,8 +358,10 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
-  - '*'
+  ```json
+  [
+      "*"
+  ]
   ```
 
 
@@ -384,7 +378,7 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
+  ```json
   []
   ```
 
@@ -428,18 +422,18 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
-  '["ext_auth"]'
+  ```json
+  "[\"ext_auth\"]"
   ```
 
 
-  ```yaml
-  '["users"]'
+  ```json
+  "[\"users\"]"
   ```
 
 
-  ```yaml
-  '["claims"]'
+  ```json
+  "[\"claims\"]"
   ```
 
 
@@ -448,13 +442,13 @@ The service requires the following configuration parameters:
 
   Examples:
 
-  ```yaml
-  'false'
+  ```json
+  "false"
   ```
 
 
-  ```yaml
-  'true'
+  ```json
+  "true"
   ```
 
 
@@ -489,11 +483,7 @@ The service requires the following configuration parameters:
 
   - **`email`** *(string, required)*: The email address of the data steward.
 
-  - **`iva_type`**: The type of the data steward validation address.
-
-    - **All of**
-
-      - : Refer to *[#/$defs/IvaType](#%24defs/IvaType)*.
+  - **`iva_type`**: The type of the data steward validation address. Refer to *[#/$defs/IvaType](#%24defs/IvaType)*.
 
   - **`iva_value`** *(string, required)*: The actual validation address of the data steward.
 

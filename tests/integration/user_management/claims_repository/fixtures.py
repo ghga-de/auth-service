@@ -84,8 +84,8 @@ async def fixture_full_client(
         service_name=kafka.config.service_name,
         service_instance_id=kafka.config.service_instance_id,
         provide_apis=["claims"],
-        add_as_data_stewards=add_as_data_stewards,  # type: ignore
-    )  # pyright: ignore
+        add_as_data_stewards=add_as_data_stewards,
+    )
     await seed_database(config)
     app.dependency_overrides[get_config] = lambda: config
     async with lifespan(app), FullClient(app) as client:
