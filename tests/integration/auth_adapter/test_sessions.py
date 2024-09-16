@@ -32,13 +32,14 @@ from auth_service.auth_adapter.deps import (
 )
 from auth_service.config import CONFIG
 from auth_service.user_management.claims_repository.deps import get_claim_dao
-from auth_service.user_management.user_registry.deps import get_user_dao
+from auth_service.user_management.user_registry.deps import get_iva_dao, get_user_dao
 from auth_service.user_management.user_registry.models.users import UserStatus
 
 from ...fixtures.utils import (
     RE_USER_INFO_URL,
     USER_INFO,
     DummyClaimDao,
+    DummyIvaDao,
     DummyUserDao,
     DummyUserTokenDao,
     create_access_token,
@@ -69,6 +70,8 @@ def setup_daos(**user_args: str) -> None:
     main.app.dependency_overrides[get_user_dao] = lambda: user_dao
     user_token_dao = DummyUserTokenDao()
     main.app.dependency_overrides[get_user_token_dao] = lambda: user_token_dao
+    iva_dao = DummyIvaDao()
+    main.app.dependency_overrides[get_iva_dao] = lambda: iva_dao
     claim_dao = DummyClaimDao()
     main.app.dependency_overrides[get_claim_dao] = lambda: claim_dao
 
