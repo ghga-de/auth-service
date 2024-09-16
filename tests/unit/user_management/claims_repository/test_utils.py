@@ -40,7 +40,7 @@ from auth_service.user_management.user_registry.ports.dao import IvaDao, UserDao
 
 from ....fixtures.utils import DummyClaimDao, DummyIvaDao, DummyUserDao
 
-pytestmark = pytest.mark.asyncio(scope="module")
+pytestmark = pytest.mark.asyncio(loop_scope="module")
 
 
 @pytest.mark.parametrize("status", [UserStatus.ACTIVE, UserStatus.INACTIVE])
@@ -130,7 +130,7 @@ async def test_iva_is_verified(state: IvaState):
 
     assert await iva_is_verified(None, None, **kwargs) is False  # type: ignore
     assert await iva_is_verified(None, iva_id, **kwargs) is False  # type: ignore
-    assert await iva_is_verified(user_id, None, **kwargs) is False  # type: ignore
+    assert await iva_is_verified(user_id, None, **kwargs) is False
     assert await iva_is_verified("other-user-id", iva_id, **kwargs) is False
     assert await iva_is_verified(user_id, "other-iva-id", **kwargs) is False
     expected_verified = state == IvaState.VERIFIED
