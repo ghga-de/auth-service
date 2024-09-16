@@ -315,7 +315,7 @@ class DummyIvaDao:
 
     ivas: list[Iva]
 
-    def __init__(self, ivas: list[Iva] | None = None):
+    def __init__(self, ivas: list[Iva] | None = None, state=IvaState.VERIFIED):
         """Initialize the DummyIvaDao."""
         if ivas is None:
             now = now_as_utc()
@@ -325,7 +325,7 @@ class DummyIvaDao:
                     user_id="james@ghga.de",
                     value="Nice to meet you",
                     type=IvaType.IN_PERSON,
-                    state=IvaState.VERIFIED,
+                    state=state,
                     created=now,
                     changed=now,
                 ),
@@ -334,7 +334,7 @@ class DummyIvaDao:
                     user_id="john@ghga.de",
                     value="123/456",
                     type=IvaType.PHONE,
-                    state=IvaState.VERIFIED,
+                    state=state,
                     created=now,
                     changed=now,
                 ),
