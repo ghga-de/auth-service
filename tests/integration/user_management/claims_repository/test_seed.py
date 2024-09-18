@@ -16,7 +16,6 @@
 
 """Test seeding the database with data stewards."""
 
-import asyncio
 import logging
 from datetime import datetime
 from typing import Any
@@ -36,7 +35,8 @@ from auth_service.user_management.claims_repository.models.config import (
 )
 
 
-def test_add_data_steward(
+@pytest.mark.asyncio()
+async def test_add_data_steward(
     mongodb: MongoDbFixture, kafka: KafkaFixture, caplog: pytest.LogCaptureFixture
 ):
     """Test that existing and non-existing data stewards can be added."""
@@ -62,7 +62,7 @@ def test_add_data_steward(
 
     caplog.set_level(logging.INFO)
     caplog.clear()
-    asyncio.run(seed_data_steward_claims(config))
+    await seed_data_steward_claims(config)
     records = [record for record in caplog.records if record.module == "seed"]
 
     log_messages = [record.message for record in records]
@@ -130,7 +130,7 @@ def test_add_data_steward(
     # add existing data steward
 
     caplog.clear()
-    asyncio.run(seed_data_steward_claims(config))
+    await seed_data_steward_claims(config)
     records = [record for record in caplog.records if record.module == "seed"]
 
     log_messages = [record.message for record in records]
@@ -165,7 +165,7 @@ def test_add_data_steward(
         match="Configured data steward with external ID id-of-john-doe@ls.org"
         " has the name 'Jane Roe', expected was 'John Doe'",
     ):
-        asyncio.run(seed_data_steward_claims(config))
+        await seed_data_steward_claims(config)
 
     # add data steward with different email address
 
@@ -178,4 +178,4 @@ def test_add_data_steward(
         match="Configured data steward with external ID id-of-john-doe@ls.org"
         " has the email address <jane@home.org>, expected was <john@home.org>",
     ):
-        asyncio.run(seed_data_steward_claims(config))
+        await seed_data_steward_claims(config)
