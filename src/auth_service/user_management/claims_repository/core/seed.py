@@ -98,7 +98,7 @@ async def _add_iva_for_user(user_id: str, data: IvaBasicData, iva_dao: IvaDao) -
     return iva_dto
 
 
-async def _add_configured_data_steward_claims(  # noqa: C901
+async def _add_configured_data_steward_claims(
     data_stewards: list[DataStewardInfo],
     user_dao: UserDao,
     iva_dao: IvaDao,
@@ -111,18 +111,17 @@ async def _add_configured_data_steward_claims(  # noqa: C901
         try:
             user = await user_dao.find_one(mapping={"ext_id": ext_id})
         except MultipleHitsFoundError:
-            log.warning("External ID %r is not unique in the user registry.", ext_id)
-            continue
+            log.error("External ID %r is not unique in the user registry.", ext_id)
+            raise
         except NoHitsFoundError:
             try:
                 user = await _add_user_with_ext_id(data_steward, user_dao=user_dao)
             except Exception as error:
-                log.warning(
+                log.error(
                     "Could not add new user with external ID %r: %s", ext_id, error
                 )
-                continue
-            else:
-                log.warning("Added missing data steward with external ID %r.", ext_id)
+                raise
+            log.warning("Added missing data steward with external ID %r.", ext_id)
         else:
             _check_data_steward_info(data_steward, user)
         # add the IVA of the data steward
@@ -138,27 +137,26 @@ async def _add_configured_data_steward_claims(  # noqa: C901
                 }
             )
         except MultipleHitsFoundError:
-            log.warning(
+            log.error(
                 "IVA %s: %r is not unique for user with external ID %r.",
                 iva_data.type,
                 iva_data.value,
                 ext_id,
             )
-            continue
+            raise
         except NoHitsFoundError:
             try:
                 iva = await _add_iva_for_user(user.id, iva_data, iva_dao=iva_dao)
             except Exception as error:
-                log.warning(
+                log.error(
                     "Could not add new IVA for user with external ID %r: %s",
                     ext_id,
                     error,
                 )
-                continue
-            else:
-                log.warning(
-                    "Added missing IVA for data steward with external ID %r.", ext_id
-                )
+                raise
+            log.warning(
+                "Added missing IVA for data steward with external ID %r.", ext_id
+            )
         # add the data steward claim for that user and that IVA
         claim = create_data_steward_claim(user.id, iva.id)
         await claim_dao.insert(claim)
