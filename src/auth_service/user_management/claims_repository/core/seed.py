@@ -40,7 +40,7 @@ from auth_service.user_management.user_registry.models.ivas import Iva, IvaBasic
 from auth_service.user_management.user_registry.models.users import User, UserStatus
 
 from ..models.claims import VisaType
-from ..models.config import DataStewardInfo
+from ..models.config import UserWithIVA
 from .claims import create_data_steward_claim
 from .utils import is_data_steward_claim
 
@@ -59,7 +59,7 @@ async def _remove_existing_data_steward_claims(claim_dao: ClaimDao) -> None:
     log.info("Removed %d existing data steward claim(s).", num_removed_claims)
 
 
-async def _add_user_with_ext_id(info: DataStewardInfo, user_dao: UserDao) -> User:
+async def _add_user_with_ext_id(info: UserWithIVA, user_dao: UserDao) -> User:
     """Add a new user with the given external ID to the database."""
     user_dto = User(
         ext_id=info.ext_id,
@@ -73,7 +73,7 @@ async def _add_user_with_ext_id(info: DataStewardInfo, user_dao: UserDao) -> Use
     return user_dto
 
 
-def _check_data_steward_info(info: DataStewardInfo, user: User) -> None:
+def _check_data_steward_info(info: UserWithIVA, user: User) -> None:
     """Verify that the data steward has the given name and email address.
 
     This serves as a security check to ensure that the right user is configured.
@@ -99,7 +99,7 @@ async def _add_iva_for_user(user_id: str, data: IvaBasicData, iva_dao: IvaDao) -
 
 
 async def _add_configured_data_steward_claims(
-    data_stewards: list[DataStewardInfo],
+    data_stewards: list[UserWithIVA],
     user_dao: UserDao,
     iva_dao: IvaDao,
     claim_dao: ClaimDao,

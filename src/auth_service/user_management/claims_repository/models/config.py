@@ -21,18 +21,18 @@ from auth_service.user_management.user_registry.models.ivas import IvaType
 
 from . import BaseDto
 
-__all__ = ["DataStewardInfo", "IvaType"]
+__all__ = ["UserWithIVA", "IvaType"]
 
 
-class DataStewardInfo(BaseDto):
-    """Data steward with external ID and associated IVA."""
+class UserWithIVA(BaseDto):
+    """User with external ID and associated IVA."""
 
-    ext_id: str = Field(default=..., description="The external ID of the data steward")
-    name: str = Field(default=..., description="The full name of the data steward")
-    email: str = Field(default=..., description="The email address of the data steward")
+    ext_id: str = Field(default=..., description="The external ID of the user")
+    name: str = Field(default=..., description="The full name of the user")
+    email: str = Field(default=..., description="The email address of the user")
     iva_type: IvaType = Field(
-        default=..., description="The type of the data steward validation address"
+        default=..., description="The type of the validation address of the user"
     )
     iva_value: str = Field(
-        default=..., description="The actual validation address of the data steward"
+        default=..., description="The actual validation address of the user"
     )

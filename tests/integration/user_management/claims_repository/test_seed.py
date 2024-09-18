@@ -30,8 +30,8 @@ from auth_service.user_management.claims_repository.core.seed import (
     seed_data_steward_claims,
 )
 from auth_service.user_management.claims_repository.models.config import (
-    DataStewardInfo,
     IvaType,
+    UserWithIVA,
 )
 
 
@@ -48,7 +48,7 @@ async def test_add_data_steward(
         service_instance_id=kafka.config.service_instance_id,
         provide_apis=["claims"],
         add_as_data_stewards=[
-            DataStewardInfo(
+            UserWithIVA(
                 ext_id="id-of-john-doe@ls.org",
                 name="John Doe",
                 email="john@home.org",

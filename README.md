@@ -454,7 +454,7 @@ The service requires the following configuration parameters:
 
 - **`add_as_data_stewards`** *(array)*: A list of of data stewards to seed the claims repository with. All other data steward claims will be removed. This is only used with the claims API. Default: `[]`.
 
-  - **Items**: Refer to *[#/$defs/DataStewardInfo](#%24defs/DataStewardInfo)*.
+  - **Items**: Refer to *[#/$defs/UserWithIVA](#%24defs/UserWithIVA)*.
 
 - **`oidc_authority_url`** *(string, format: uri)*: external OIDC authority URL used by the auth adapter. Default: `"https://login.aai.lifescience-ri.eu/oidc/"`.
 
@@ -475,21 +475,21 @@ The service requires the following configuration parameters:
 ## Definitions
 
 
-- <a id="%24defs/DataStewardInfo"></a>**`DataStewardInfo`** *(object)*: Data steward with external ID and associated IVA. Cannot contain additional properties.
-
-  - **`ext_id`** *(string, required)*: The external ID of the data steward.
-
-  - **`name`** *(string, required)*: The full name of the data steward.
-
-  - **`email`** *(string, required)*: The email address of the data steward.
-
-  - **`iva_type`**: The type of the data steward validation address. Refer to *[#/$defs/IvaType](#%24defs/IvaType)*.
-
-  - **`iva_value`** *(string, required)*: The actual validation address of the data steward.
-
 - <a id="%24defs/IvaType"></a>**`IvaType`** *(string)*: The type of IVA. Must be one of: `["Phone", "Fax", "PostalAddress", "InPerson"]`.
 
 - <a id="%24defs/TOTPAlgorithm"></a>**`TOTPAlgorithm`** *(string)*: Hash algorithm used for TOTP code generation. Must be one of: `["sha1", "sha256", "sha512"]`.
+
+- <a id="%24defs/UserWithIVA"></a>**`UserWithIVA`** *(object)*: User with external ID and associated IVA. Cannot contain additional properties.
+
+  - **`ext_id`** *(string, required)*: The external ID of the user.
+
+  - **`name`** *(string, required)*: The full name of the user.
+
+  - **`email`** *(string, required)*: The email address of the user.
+
+  - **`iva_type`**: The type of the validation address of the user. Refer to *[#/$defs/IvaType](#%24defs/IvaType)*.
+
+  - **`iva_value`** *(string, required)*: The actual validation address of the user.
 
 
 ### Usage:
