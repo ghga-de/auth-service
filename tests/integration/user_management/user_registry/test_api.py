@@ -854,7 +854,7 @@ async def test_delete_users_with_associated_data(
         response = await full_client.delete(f"/users/{id_}", headers=steward_headers)
         assert response.status_code == status.HTTP_204_NO_CONTENT
         bad_collections = set(collections)
-        # try a couple of times because to allow for processing
+        # try a couple of times to allow for processing time
         for _tries in range(100):
             for collection in list(bad_collections):
                 if num_documents(collection) == len(user_ids):
