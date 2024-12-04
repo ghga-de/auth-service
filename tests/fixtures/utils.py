@@ -426,7 +426,7 @@ class DummyClaimDao:
                 iva_id="data-steward-iva-id",
                 visa_type=VisaType.GHGA_ROLE,
                 visa_value="data_steward@some.org",
-                source="https://ghga.de",
+                source="https://ghga.de",  # type: ignore
                 assertion_date=valid_date - timedelta(14),
                 asserted_by=AuthorityLevel.SYSTEM,
                 valid_from=valid_date - timedelta(7),
@@ -439,7 +439,7 @@ class DummyClaimDao:
                 iva_id="data-access-iva-id",
                 visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
                 visa_value="https://ghga.de/datasets/DS0815",
-                source="https://ghga.de",
+                source="https://ghga.de",  # type: ignore
                 assertion_date=valid_date - timedelta(14),
                 asserted_by=AuthorityLevel.DAC,
                 valid_from=valid_date - timedelta(7),

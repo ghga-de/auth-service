@@ -47,7 +47,7 @@ def test_is_valid_claim():
         user_id="user-id",
         visa_type=VisaType.RESEARCHER_STATUS,
         visa_value="https://home.org",
-        source="https://home.org",
+        source="https://home.org",  # type: ignore
         assertion_date=utc_datetime(2022, 11, 1),
         valid_from=utc_datetime(2022, 11, 15),
         valid_until=utc_datetime(2022, 11, 20),
@@ -163,7 +163,7 @@ def test_has_download_access_for_dataset():
         user_id="user-id",
         visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
         visa_value=f"{ORG_URL}/datasets/DS0815",  # pyright: ignore
-        source=ORG_URL,
+        source=ORG_URL,  # type: ignore[arg-type]
         sub_source=None,
         assertion_date=utc_datetime(2022, 11, 1),
         asserted_by=AuthorityLevel.SYSTEM,
@@ -196,7 +196,7 @@ def test_dateset_id_when_download_access():
         user_id="user-id",
         visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
         visa_value=f"{ORG_URL}/datasets/DS0815",  # pyright: ignore
-        source=ORG_URL,
+        source=ORG_URL,  # type: ignore[arg-type]
         sub_source=None,
         assertion_date=utc_datetime(2022, 11, 1),
         asserted_by=AuthorityLevel.SYSTEM,

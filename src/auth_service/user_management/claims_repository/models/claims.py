@@ -20,7 +20,6 @@ from typing import Annotated, Any
 
 from ghga_service_commons.utils.utc_dates import UTCDatetime
 from pydantic import (
-    AnyUrl,
     EmailStr,
     Field,
     HttpUrl,
@@ -165,7 +164,7 @@ class ClaimCreation(ClaimValidity):
         examples=["2022-11-30T12:00:00Z"],
     )
 
-    source: str = Field(
+    source: HttpUrl = Field(
         default=..., description="Asserting organization", examples=["https://home.org"]
     )  # organization making the assertion
     sub_source: HttpUrl | None = Field(
@@ -189,16 +188,6 @@ class ClaimCreation(ClaimValidity):
             if value.startswith(("http://", "https://")) and value.count("/") == 3:
                 value = value.rstrip("/")
         return value
-
-    @field_validator("source")
-    @classmethod
-    def check_http_url(cls, v: str) -> str:
-        """Make sure the string is a valid URL if specified."""
-        if v:
-            url = AnyUrl(url=v)
-            if url.scheme not in ("http", "https"):
-                raise ValueError(f"Invalid URL scheme: {url.scheme}")
-        return v
 
 
 class ClaimUpdate(BaseDto):

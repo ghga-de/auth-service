@@ -18,7 +18,6 @@
 
 from collections.abc import Callable
 from datetime import timedelta
-from urllib.parse import urlparse
 
 from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc
 
@@ -39,7 +38,7 @@ __all__ = [
 
 
 INTERNAL_SOURCE = CONFIG.organization_url
-INTERNAL_DOMAIN = urlparse(INTERNAL_SOURCE).netloc
+INTERNAL_DOMAIN = INTERNAL_SOURCE.host
 DATA_STEWARD_ROLE = "data_steward"
 DATASET_PREFIX = str(INTERNAL_SOURCE).rstrip("/") + "/datasets/"
 

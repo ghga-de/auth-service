@@ -24,7 +24,7 @@ from hexkit.log import LoggingConfig
 from hexkit.providers.akafka import KafkaConfig
 from hexkit.providers.mongodb import MongoDbConfig
 from hexkit.providers.mongokafka import MongoKafkaConfig
-from pydantic import AnyUrl, Field, field_validator
+from pydantic import AnyUrl, Field, HttpUrl, field_validator
 
 from auth_service.auth_adapter.core.session_store import SessionConfig
 from auth_service.auth_adapter.core.totp import TOTPConfig
@@ -125,7 +125,7 @@ class Config(
         " This is only used with the claims API.",
     )
 
-    oidc_authority_url: str = Field(
+    oidc_authority_url: HttpUrl = Field(
         default="https://login.aai.lifescience-ri.eu/oidc/",
         description="external OIDC authority URL used by the auth adapter",
     )
@@ -134,7 +134,7 @@ class Config(
         description="external OIDC issuer for access tokens used by the auth adapter"
         " (URL format with or without end slash, determined using OIDC discovery if empty)",
     )
-    oidc_userinfo_endpoint: str | None = Field(
+    oidc_userinfo_endpoint: HttpUrl | None = Field(
         default="https://login.aai.lifescience-ri.eu/oidc/userinfo",
         description="external OIDC userinfo endpoint used by the auth adapter"
         " (determined using OIDC discovery if None)",
@@ -143,7 +143,7 @@ class Config(
         default="ghga-data-portal", description="the registered OIDC client ID"
     )
 
-    organization_url: str = Field(
+    organization_url: HttpUrl = Field(
         default="https://ghga.de",
         description="the URL used as source for internal claims",
     )
@@ -163,12 +163,7 @@ class Config(
         description="the type of the event announcing dataset deletions",
     )
 
-    @field_validator(
-        "oidc_issuer",
-        "oidc_authority_url",
-        "oidc_userinfo_endpoint",
-        "organization_url",
-    )
+    @field_validator("oidc_issuer")
     @classmethod
     def check_http_url(cls, v: str) -> str:
         """Make sure the string is a valid URL if specified."""

@@ -39,7 +39,7 @@ def test_good_visa_type():
         assertion_date=utc_datetime(2022, 9, 1, 12, 0),
         valid_from=utc_datetime(2022, 10, 1, 0, 0),
         valid_until=utc_datetime(2022, 10, 31, 23, 59),
-        source="https://foo-bar.org",
+        source="https://foo-bar.org",  # type: ignore
     )
 
 
@@ -52,7 +52,7 @@ def test_bas_visa_type():
             assertion_date=utc_datetime(2022, 9, 1, 12, 0),
             valid_from=utc_datetime(2022, 10, 1, 0, 0),
             valid_until=utc_datetime(2022, 10, 31, 23, 59),
-            source="https://foo-bar.org",
+            source="https://foo-bar.org",  # type: ignore
         )
 
 
@@ -72,7 +72,7 @@ def test_good_visa_values(value):
         assertion_date=utc_datetime(2022, 9, 1, 12, 0),
         valid_from=utc_datetime(2022, 10, 1, 0, 0),
         valid_until=utc_datetime(2022, 10, 31, 23, 59),
-        source="https://foo-bar.org",
+        source="https://foo-bar.org",  # type: ignore
     )
 
 
@@ -97,7 +97,7 @@ def test_bad_visa_values(value):
             assertion_date=utc_datetime(2022, 9, 1, 12, 0),
             valid_from=utc_datetime(2022, 10, 1, 0, 0),
             valid_until=utc_datetime(2022, 10, 31, 23, 59),
-            source="https://foo-bar.org",
+            source="https://foo-bar.org",  # type: ignore
         )
 
 
@@ -109,7 +109,7 @@ def test_conditions():
         assertion_date=utc_datetime(2022, 9, 1, 12, 0),
         valid_from=utc_datetime(2022, 10, 1, 0, 0),
         valid_until=utc_datetime(2022, 10, 31, 23, 59),
-        source="https://foo-bar.org",
+        source="https://foo-bar.org",  # type: ignore
         sub_source="https://baz.foo-bar.org",  # type: ignore
         asserted_by=AuthorityLevel.DAC,
         conditions=[
@@ -194,7 +194,7 @@ def test_validator_period(valid_from, valid_until):
         assertion_date=utc_datetime(2022, 9, 1, 12, 0),
         valid_from=valid_from,
         valid_until=valid_until,
-        source="https://foo.org",
+        source="https://foo.org",  # type: ignore
     )
 
     with pytest.raises(
@@ -206,7 +206,7 @@ def test_validator_period(valid_from, valid_until):
             assertion_date=utc_datetime(2022, 9, 1, 12, 0),
             valid_from=utc_datetime(2022, 10, 1),
             valid_until=valid_from,
-            source="https://foo.org",
+            source="https://foo.org",  # type: ignore
         )
 
     with pytest.raises(
@@ -218,26 +218,5 @@ def test_validator_period(valid_from, valid_until):
             assertion_date=utc_datetime(2022, 9, 1, 12, 0),
             valid_from=valid_from,
             valid_until=valid_from,
-            source="https://foo.org",
-        )
-
-
-@pytest.mark.parametrize(
-    "value",
-    [
-        "foo.org",
-        "foo@bar.org",
-        "www.foo.org",
-    ],
-)
-def test_bad_source_values(value):
-    """Test creating an invalid source URL"""
-    with pytest.raises(ValueError):
-        ClaimCreation(
-            visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
-            visa_value="foo@bar.org",
-            assertion_date=utc_datetime(2022, 9, 1, 12, 0),
-            valid_from=utc_datetime(2022, 10, 1, 0, 0),
-            valid_until=utc_datetime(2022, 10, 31, 23, 59),
-            source=value,
+            source="https://foo.org",  # type: ignore
         )
