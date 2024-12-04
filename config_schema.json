@@ -673,9 +673,6 @@
     "oidc_authority_url": {
       "default": "https://login.aai.lifescience-ri.eu/oidc/",
       "description": "external OIDC authority URL used by the auth adapter",
-      "format": "uri",
-      "maxLength": 2083,
-      "minLength": 1,
       "title": "Oidc Authority Url",
       "type": "string"
     },
@@ -688,9 +685,6 @@
     "oidc_userinfo_endpoint": {
       "anyOf": [
         {
-          "format": "uri",
-          "maxLength": 2083,
-          "minLength": 1,
           "type": "string"
         },
         {
@@ -710,9 +704,6 @@
     "organization_url": {
       "default": "https://ghga.de",
       "description": "the URL used as source for internal claims",
-      "format": "uri",
-      "maxLength": 2083,
-      "minLength": 1,
       "title": "Organization Url",
       "type": "string"
     }

@@ -70,14 +70,13 @@ components:
           description: If revoked, date of revocation
           title: Revocation Date
         source:
+          anyOf:
+          - type: string
+          - type: 'null'
           description: Asserting organization
           examples:
           - https://home.org
-          format: uri
-          maxLength: 2083
-          minLength: 1
           title: Source
-          type: string
         sub_source:
           anyOf:
           - type: string
@@ -168,9 +167,6 @@ components:
           description: Asserting organization
           examples:
           - https://home.org
-          format: uri
-          maxLength: 2083
-          minLength: 1
           title: Source
           type: string
         sub_source:
