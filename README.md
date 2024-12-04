@@ -456,7 +456,7 @@ The service requires the following configuration parameters:
 
   - **Items**: Refer to *[#/$defs/UserWithIVA](#%24defs/UserWithIVA)*.
 
-- **`oidc_authority_url`** *(string, format: uri)*: external OIDC authority URL used by the auth adapter. Default: `"https://login.aai.lifescience-ri.eu/oidc/"`.
+- **`oidc_authority_url`** *(string)*: external OIDC authority URL used by the auth adapter. Default: `"https://login.aai.lifescience-ri.eu/oidc/"`.
 
 - **`oidc_issuer`** *(string)*: external OIDC issuer for access tokens used by the auth adapter (URL format with or without end slash, determined using OIDC discovery if empty). Default: `"https://login.aai.lifescience-ri.eu/oidc/"`.
 
@@ -464,13 +464,13 @@ The service requires the following configuration parameters:
 
   - **Any of**
 
-    - *string, format: uri*
+    - *string*
 
     - *null*
 
 - **`oidc_client_id`** *(string)*: the registered OIDC client ID. Default: `"ghga-data-portal"`.
 
-- **`organization_url`** *(string, format: uri)*: the URL used as source for internal claims. Default: `"https://ghga.de"`.
+- **`organization_url`** *(string)*: the URL used as source for internal claims. Default: `"https://ghga.de"`.
 
 ## Definitions
 
