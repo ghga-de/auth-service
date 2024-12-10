@@ -16,6 +16,7 @@
 """Entrypoint of the package"""
 
 import asyncio
+import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -38,6 +39,8 @@ from auth_service.user_management.claims_repository.translators.event_sub import
 )
 
 from .config import CONFIG, Config
+
+log = logging.getLogger(__name__)
 
 
 async def get_claim_dao(
@@ -108,7 +111,7 @@ def run(config: Config = CONFIG):
         components.append("event consumer")
     if not components:
         raise ValueError("must specify an API or run as event consumer")
-    print(f"Starting {service} service with {' and '.join(components)}")
+    log.info(f"Starting {service} service with {' and '.join(components)}")
     asyncio.run(run_parallel(service, run_consumer, config=config))
 
 
