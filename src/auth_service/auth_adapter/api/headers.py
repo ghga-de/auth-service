@@ -19,6 +19,7 @@ import json
 from collections.abc import Callable
 
 from fastapi import Request, Response, status
+from hexkit.correlation import get_correlation_id
 
 from ..core.session_store import Session
 
@@ -66,7 +67,7 @@ def session_to_header(
 def pass_auth_response(request: Request, authorization: str | None = None) -> Response:
     """Create a response for ExtAuth that signals that the request is authorized.
 
-    The Authorization header is set as specified.
+    The Authorization header is set as specified and a correlation ID is added.
 
     All other headers that exist in the request and that should not be forwarded
     to the backend, because they are only relevant for the auth adapter, are emptied.
@@ -78,4 +79,5 @@ def pass_auth_response(request: Request, authorization: str | None = None) -> Re
             headers[header] = ""
     if authorization:
         headers["Authorization"] = authorization
+    headers["X-Request-Id"] = get_correlation_id()
     return Response(status_code=status.HTTP_200_OK, headers=headers)

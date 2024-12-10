@@ -24,6 +24,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from fastapi import status
 from ghga_service_commons.utils.utc_dates import now_as_utc
+from hexkit.correlation import validate_correlation_id
 from pytest_httpx import HTTPXMock
 
 from auth_service.auth_adapter.api import main
@@ -68,7 +69,12 @@ def non_mocked_hosts() -> list:
 
 
 def assert_has_authorization_header(response, session):
-    """Check that the response contains the expected authorization header."""
+    """Check that the response contains the expected authorization header.
+
+    Also tests that the correlation ID is made available in a response header.
+    Note that only authorized requests need this, since for other requests,
+    response is directly sent back to the client, so no correlation is needed.
+    """
     assert response.status_code == status.HTTP_200_OK
 
     assert not response.text
@@ -77,6 +83,10 @@ def assert_has_authorization_header(response, session):
     assert not headers.get("X-Authorization")
     assert not headers.get("X-CSRF-Token")
     assert not headers.get("X-Session")
+
+    correlation_id = headers.get("X-Request-Id")  #
+    assert correlation_id
+    validate_correlation_id(correlation_id)
 
     authorization = headers.get("Authorization")
     assert authorization
