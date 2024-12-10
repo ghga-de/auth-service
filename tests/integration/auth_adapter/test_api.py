@@ -71,9 +71,11 @@ def non_mocked_hosts() -> list:
 def assert_has_authorization_header(response, session):
     """Check that the response contains the expected authorization header.
 
-    Also tests that the correlation ID is made available in a response header.
-    Note that only authorized requests need this, since for other requests,
-    response is directly sent back to the client, so no correlation is needed.
+    Also tests that the correlation ID is available in a response header.
+    Note that we only need to test this header for authorized requests with
+    status code 200. For all other kinds of requests (unauthorized or served by
+    the auth adapter itself), the response is sent back to the client directly,
+    so in that case no correlation across services is needed.
     """
     assert response.status_code == status.HTTP_200_OK
 
