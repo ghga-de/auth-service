@@ -19,6 +19,7 @@
 import pytest
 from fastapi import Request, Response, status
 from ghga_service_commons.utils.utc_dates import now_as_utc
+from hexkit.correlation import new_correlation_id, set_correlation_id
 
 from auth_service.auth_adapter.api.headers import (
     get_bearer_token,
@@ -135,7 +136,8 @@ def test_session_to_header_with_optional_properties():
 
 
 @pytest.mark.parametrize("authorization", [None, "", "changed auth token"])
-def test_pass_auth_response_with_request_headers(authorization: str | None):
+@pytest.mark.asyncio()
+async def test_pass_auth_response_with_request_headers(authorization: str | None):
     """Test that existing request headers are emptied with pass_auth_response."""
     request = Request(
         {
@@ -145,16 +147,19 @@ def test_pass_auth_response_with_request_headers(authorization: str | None):
                 (b"x-authorization", b"another auth token"),
                 (b"cookie", b"some cookie"),
                 (b"x-csrf-token", b"some csrf token"),
-                (b"x-extra-header", b"sommething extra"),
+                (b"x-extra-header", b"something extra"),
             ],
         }
     )
-    response = pass_auth_response(request, authorization)
+    correlation_id = new_correlation_id()
+    async with set_correlation_id(correlation_id):
+        response = pass_auth_response(request, authorization)
     assert isinstance(response, Response)
     assert response.status_code == status.HTTP_200_OK
     assert not response.body
     headers = response.headers
     assert headers["Authorization"] == (authorization or "")
+    assert headers["X-Request-Id"] == correlation_id
     assert headers["X-Authorization"] == ""
     assert headers["Cookie"] == ""
     assert headers["X-CSRF-Token"] == ""
@@ -162,10 +167,13 @@ def test_pass_auth_response_with_request_headers(authorization: str | None):
 
 
 @pytest.mark.parametrize("authorization", [None, "", "changed auth token"])
-def test_pass_auth_response_without_request_headers(authorization: str | None):
+@pytest.mark.asyncio()
+async def test_pass_auth_response_without_request_headers(authorization: str | None):
     """Test that non existing headers are not emptied with pass_auth_response."""
     request = Request({"type": "http", "headers": []})
-    response = pass_auth_response(request, authorization)
+    correlation_id = new_correlation_id()
+    async with set_correlation_id(correlation_id):
+        response = pass_auth_response(request, authorization)
     assert isinstance(response, Response)
     assert response.status_code == status.HTTP_200_OK
     assert not response.body
@@ -174,6 +182,7 @@ def test_pass_auth_response_without_request_headers(authorization: str | None):
         assert headers["Authorization"] == authorization
     else:
         assert "Authorization" not in headers
+    assert headers["X-Request-Id"] == correlation_id
     assert "X-Authorization" not in headers
     assert "Cookie" not in headers
     assert "X-CSRF-Token" not in headers
