@@ -21,11 +21,10 @@ from base64 import b64encode
 from collections.abc import Mapping
 
 import pytest
-from fastapi import status
+from fastapi import FastAPI, status
 from httpx import Response
 from pytest_httpx import HTTPXMock
 
-from auth_service.auth_adapter.api import main
 from auth_service.auth_adapter.deps import (
     SESSION_COOKIE,
     get_session_store,
@@ -71,14 +70,15 @@ def setup_daos(
     **user_args: str,
 ) -> None:
     """Setup the dummy DAOs for the tests."""
+    app = FastAPI()  # TODO
     user_dao = DummyUserDao(**user_args)
-    main.app.dependency_overrides[get_user_dao] = lambda: user_dao
+    app.dependency_overrides[get_user_dao] = lambda: user_dao
     user_token_dao = DummyUserTokenDao()
-    main.app.dependency_overrides[get_user_token_dao] = lambda: user_token_dao
+    app.dependency_overrides[get_user_token_dao] = lambda: user_token_dao
     iva_dao = DummyIvaDao(state=iva_state)
-    main.app.dependency_overrides[get_iva_dao] = lambda: iva_dao
+    app.dependency_overrides[get_iva_dao] = lambda: iva_dao
     claim_dao = DummyClaimDao()
-    main.app.dependency_overrides[get_claim_dao] = lambda: claim_dao
+    app.dependency_overrides[get_claim_dao] = lambda: claim_dao
 
 
 def assert_session_header(

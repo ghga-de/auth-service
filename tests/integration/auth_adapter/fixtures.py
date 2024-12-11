@@ -24,7 +24,7 @@ from typing import NamedTuple
 
 import pytest
 import pytest_asyncio
-from fastapi import status
+from fastapi import FastAPI, status
 from ghga_service_commons.api.testing import AsyncTestClient as BareClient
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.providers.akafka.testutils import KafkaFixture
@@ -63,10 +63,6 @@ totp_encryption_key = TOTPHandler.random_encryption_key()
 @pytest_asyncio.fixture(name="bare_client")
 async def fixture_bare_client(kafka: KafkaFixture) -> AsyncGenerator[BareClient, None]:
     """Get a test client for the user registry without database."""
-    from auth_service.auth_adapter.api import main
-
-    reload(main)
-
     config = Config(
         kafka_servers=kafka.config.kafka_servers,
         service_name=kafka.config.service_name,
@@ -74,9 +70,10 @@ async def fixture_bare_client(kafka: KafkaFixture) -> AsyncGenerator[BareClient,
         totp_encryption_key=SecretStr(totp_encryption_key),
     )  # type: ignore
 
-    main.app.dependency_overrides[get_config] = lambda: config
+    app = FastAPI()  # TODO
+    app.dependency_overrides[get_config] = lambda: config
 
-    async with BareClient(main.app) as client:
+    async with BareClient(app) as client:
         yield client
 
 
@@ -157,8 +154,6 @@ async def fixture_bare_client_with_session(
     bare_client: BareClient, httpx_mock: HTTPXMock
 ) -> AsyncGenerator[ClientWithSession, None]:
     """Get test client for the auth adapter with a logged in user"""
-    from auth_service.auth_adapter.api import main
-
     httpx_mock.add_response(url=RE_USER_INFO_URL, json=USER_INFO)
 
     user_registry = DummyUserRegistry()
@@ -167,7 +162,9 @@ async def fixture_bare_client_with_session(
     user_token_dao = DummyUserTokenDao()
     claim_dao = DummyClaimDao()
 
-    overrides = main.app.dependency_overrides
+    app = FastAPI()  # TODO: use the actual app with overrides
+
+    overrides = app.dependency_overrides
     overrides[get_user_dao] = lambda: user_dao
     overrides[get_iva_dao] = lambda: iva_dao
     overrides[get_user_registry] = lambda: user_registry
@@ -183,7 +180,7 @@ async def fixture_bare_client_with_session(
 def fixture_with_basic_auth() -> Generator[str, None, None]:
     """Run test with Basic authentication"""
     from auth_service import config
-    from auth_service.auth_adapter.api import main
+    from auth_service.auth_adapter.api import router
 
     user, pwd = "testuser", "testpwd"
     credentials = f"{user}:{pwd}"
@@ -191,10 +188,10 @@ def fixture_with_basic_auth() -> Generator[str, None, None]:
     environ["AUTH_SERVICE_ALLOW_READ_PATHS"] = '["/allowed/read/*", "/logo.png"]'
     environ["AUTH_SERVICE_ALLOW_WRITE_PATHS"] = '["/allowed/write/*"]'
     reload(config)
-    reload(main)
+    reload(router)
     yield credentials
     del environ["AUTH_SERVICE_BASIC_AUTH_CREDENTIALS"]
     del environ["AUTH_SERVICE_ALLOW_READ_PATHS"]
     del environ["AUTH_SERVICE_ALLOW_WRITE_PATHS"]
     reload(config)
-    reload(main)
+    reload(router)

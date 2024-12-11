@@ -84,9 +84,13 @@ async def run_parallel(
 
     When no API is specified, only the health endpoint will be available.
     """
-    service_runner = run_server(
-        app=f"auth_service.{service}.api.main:app", config=config
-    )
+    if service == "auth_adapter":  # TODO
+        from .auth_adapter.prepare import prepare_rest_app
+
+        app = await prepare_rest_app(config=config)
+    else:
+        app = f"auth_service.{service}.api.main:app"  # type: ignore
+    service_runner = run_server(app=app, config=config)
     if run_consumer:
         await asyncio.gather(service_runner, consume_events(config=config))
     else:

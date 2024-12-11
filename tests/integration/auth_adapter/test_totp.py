@@ -27,7 +27,8 @@ from ghga_service_commons.utils.utc_dates import now_as_utc
 from pytest_httpx import HTTPXMock
 
 from auth_service.auth_adapter.core.session_store import Session, SessionState
-from auth_service.auth_adapter.deps import get_config, get_session_store
+from auth_service.auth_adapter.deps import get_session_store  # TODO
+from auth_service.deps import get_config
 from auth_service.user_management.user_registry.models.ivas import IvaState
 from auth_service.user_management.user_registry.models.users import UserStatus
 

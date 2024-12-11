@@ -22,11 +22,10 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from fastapi import status
+from fastapi import FastAPI, status
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from pytest_httpx import HTTPXMock
 
-from auth_service.auth_adapter.api import main
 from auth_service.auth_adapter.api.headers import get_bearer_token
 from auth_service.auth_adapter.core.session_store import SessionState
 from auth_service.auth_adapter.deps import get_user_token_dao
@@ -314,7 +313,9 @@ async def test_post_user_with_session(bare_client: BareClient, httpx_mock: HTTPX
     httpx_mock.add_response(url=RE_USER_INFO_URL, json=USER_INFO)
 
     user_dao = DummyUserDao(ext_id="not.john@aai.org")
-    main.app.dependency_overrides[get_user_dao] = lambda: user_dao
+    # TODO: use prepare app with overrides
+    app = FastAPI()
+    app.dependency_overrides[get_user_dao] = lambda: user_dao
 
     session = await query_new_session(bare_client)
     assert not session.user_id
@@ -387,7 +388,9 @@ async def test_put_unregistered_user_with_session(
     httpx_mock.add_response(url=RE_USER_INFO_URL, json=USER_INFO)
 
     user_dao = DummyUserDao(ext_id="not.john@aai.org")
-    main.app.dependency_overrides[get_user_dao] = lambda: user_dao
+    # TODO: use prepare app with overrides
+    app = FastAPI()  # TODO
+    app.dependency_overrides[get_user_dao] = lambda: user_dao
 
     session = await query_new_session(bare_client)
     assert not session.user_id
@@ -405,11 +408,13 @@ async def test_put_registered_user_with_session(
     httpx_mock.add_response(url=RE_USER_INFO_URL, json=USER_INFO)
 
     user_dao = DummyUserDao()
-    main.app.dependency_overrides[get_user_dao] = lambda: user_dao
+    # TODO: use prepare app with overrides
+    app = FastAPI()  # TODO
+    app.dependency_overrides[get_user_dao] = lambda: user_dao
     user_token_dao = DummyUserTokenDao()
-    main.app.dependency_overrides[get_user_token_dao] = lambda: user_token_dao
+    app.dependency_overrides[get_user_token_dao] = lambda: user_token_dao
     claim_dao = DummyClaimDao()
-    main.app.dependency_overrides[get_claim_dao] = lambda: claim_dao
+    app.dependency_overrides[get_claim_dao] = lambda: claim_dao
 
     session = await query_new_session(bare_client)
     assert session.user_id == "john@ghga.de"
