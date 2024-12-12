@@ -126,7 +126,7 @@ async def prepare_rest_app(config: Config) -> AsyncGenerator[FastAPI, None]:
 
             event_pub = EventPubTranslator(
                 config=config,
-                event_publisher=event_publisher,  # pyright: ignore
+                event_publisher=event_publisher,  # type: ignore
             )
             user_registry = UserRegistry(
                 config=config,

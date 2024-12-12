@@ -70,7 +70,7 @@ async def fixture_bare_client(kafka: KafkaFixture) -> AsyncGenerator[BareClient,
         service_name=kafka.config.service_name,
         service_instance_id=kafka.config.service_instance_id,
         totp_encryption_key=SecretStr(totp_encryption_key),
-    )  # pyright: ignore
+    )  # type: ignore
 
     async with prepare_rest_app(config=config) as app, BareClient(app) as client:
         yield client
@@ -192,7 +192,7 @@ async def fixture_bare_client_with_basic_auth() -> (
         allow_read_paths=["/allowed/read/*", "/logo.png"],
         allow_write_paths=["/allowed/write/*"],
         totp_encryption_key=SecretStr(totp_encryption_key),
-    )  # pyright: ignore
+    )  # type: ignore
 
     # create app with the changed config
     config_module.CONFIG = config
