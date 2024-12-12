@@ -181,9 +181,9 @@ async def fixture_bare_client_with_session(
 
 
 @pytest_asyncio.fixture(name="client_with_basic_auth")
-async def fixture_bare_client_with_basic_auth() -> (
-    AsyncGenerator[ClientWithBasicAuth, None]
-):
+async def fixture_bare_client_with_basic_auth(
+    kafka: KafkaFixture,
+) -> AsyncGenerator[ClientWithBasicAuth, None]:
     """Get a test client for the user registry with Basic auth."""
     # create a config with Basic auth credentials
     credentials = "testuser:testpwd"
@@ -191,6 +191,9 @@ async def fixture_bare_client_with_basic_auth() -> (
         basic_auth_credentials=credentials,
         allow_read_paths=["/allowed/read/*", "/logo.png"],
         allow_write_paths=["/allowed/write/*"],
+        kafka_servers=kafka.config.kafka_servers,
+        service_name=kafka.config.service_name,
+        service_instance_id=kafka.config.service_instance_id,
         totp_encryption_key=SecretStr(totp_encryption_key),
     )  # type: ignore
 
