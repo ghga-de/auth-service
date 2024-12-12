@@ -16,9 +16,10 @@
 
 """Test user specific DAOs."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 
 import pytest
+import pytest_asyncio
 from ghga_service_commons.utils.utc_dates import utc_datetime
 from hexkit.correlation import correlation_id_var, new_correlation_id
 from hexkit.protocols.dao import ResourceNotFoundError
@@ -27,12 +28,6 @@ from hexkit.providers.mongodb.testutils import MongoDbFixture
 from hexkit.providers.mongokafka import MongoKafkaDaoPublisherFactory
 
 from auth_service.config import Config
-from auth_service.user_management.user_registry.deps import (
-    UserDaoPublisherFactoryPort,
-    get_iva_dao,
-    get_user_dao,
-    get_user_dao_factory,
-)
 from auth_service.user_management.user_registry.models.ivas import Iva, IvaType
 from auth_service.user_management.user_registry.models.users import (
     AcademicTitle,
@@ -40,12 +35,18 @@ from auth_service.user_management.user_registry.models.users import (
     User,
     UserStatus,
 )
+from auth_service.user_management.user_registry.ports.dao import (
+    UserDaoPublisherFactoryPort,
+)
+from auth_service.user_management.user_registry.translators.dao import (
+    UserDaoPublisherFactory,
+)
 
 
-@pytest.fixture(name="user_dao_factory")
-def fixture_user_dao(
+@pytest_asyncio.fixture(name="user_dao_publisher_factory")
+async def fixture_user_dao(
     mongodb: MongoDbFixture, kafka: KafkaFixture
-) -> Generator[UserDaoPublisherFactoryPort, None, None]:
+) -> AsyncGenerator[UserDaoPublisherFactoryPort, None]:
     """Create a user DAO factory for testing."""
     config = Config(
         db_connection_str=mongodb.config.db_connection_str,
@@ -54,22 +55,33 @@ def fixture_user_dao(
         service_name=kafka.config.service_name,
         service_instance_id=kafka.config.service_instance_id,
     )
+    async with (
+        MongoKafkaDaoPublisherFactory.construct(config=config) as dao_publisher_factory,
+    ):
+        user_dao_publisher_factory = UserDaoPublisherFactory(
+            config=config, dao_publisher_factory=dao_publisher_factory
+        )
+        yield user_dao_publisher_factory
 
-    dao_publisher_factory = MongoKafkaDaoPublisherFactory(
-        config=config, event_publisher=kafka.publisher
-    )
+
+@pytest.fixture(name="with_correlation_id")
+def fixture_with_correlation_id() -> Generator[str, None, None]:
+    """Fixture to set and reset the correlation ID."""
     correlation_id = new_correlation_id()
     token = correlation_id_var.set(correlation_id)
-    yield get_user_dao_factory(config, dao_publisher_factory)
+    yield correlation_id
     correlation_id_var.reset(token)
 
 
 @pytest.mark.asyncio()
 async def test_user_crud(
-    user_dao_factory: UserDaoPublisherFactoryPort, kafka: KafkaFixture
+    user_dao_publisher_factory: UserDaoPublisherFactoryPort,
+    kafka: KafkaFixture,
+    with_correlation_id: str,
 ):
     """Test creating, updating and deleting via the user DAO"""
-    user_dao = await get_user_dao(user_dao_factory)
+    assert with_correlation_id
+    user_dao = await user_dao_publisher_factory.get_user_dao()
     user = User(
         ext_id="max@ls.org",
         status=UserStatus.ACTIVE,
@@ -130,10 +142,13 @@ async def test_user_crud(
 
 @pytest.mark.asyncio()
 async def test_iva_crud(
-    user_dao_factory: UserDaoPublisherFactoryPort, kafka: KafkaFixture
+    user_dao_publisher_factory: UserDaoPublisherFactoryPort,
+    kafka: KafkaFixture,
+    with_correlation_id: str,
 ):
     """Test creating, updating and deleting via the user DAO"""
-    iva_dao = await get_iva_dao(user_dao_factory)
+    assert with_correlation_id
+    iva_dao = await user_dao_publisher_factory.get_iva_dao()
     iva = Iva(
         user_id="some-user-id",
         created=utc_datetime(2022, 9, 1, 12, 0),

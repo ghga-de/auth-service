@@ -19,15 +19,39 @@
 import sys
 from pathlib import Path
 
+from fastapi import FastAPI
+
+from auth_service.user_management import (
+    CONTACT,
+    DESCRIPTION,
+    LICENSE_INFO,
+    TAGS_METADATA,
+    TITLE,
+    VERSION,
+)
+
+__all__ = ["app"]
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from tests.fixtures.auth_keys import reload_auth_key_config
 
-__all__ = ["app"]
-
 reload_auth_key_config(False)
 
-from auth_service.user_management.api.main import app, claims_router, users_router
+from auth_service.user_management.prepare import (
+    base_router,
+    claims_router,
+    users_router,
+)
 
+app = FastAPI(
+    title=TITLE,
+    description=DESCRIPTION,
+    version=VERSION,
+    contact=CONTACT,
+    license_info=LICENSE_INFO,
+    openapi_tags=TAGS_METADATA,
+)
+app.include_router(base_router)
 app.include_router(users_router)
 app.include_router(claims_router)

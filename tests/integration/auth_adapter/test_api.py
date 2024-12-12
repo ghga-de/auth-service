@@ -22,13 +22,13 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from fastapi import FastAPI, status
+from fastapi import status
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from pytest_httpx import HTTPXMock
 
-from auth_service.auth_adapter.api.headers import get_bearer_token
 from auth_service.auth_adapter.core.session_store import SessionState
 from auth_service.auth_adapter.deps import get_user_token_dao
+from auth_service.auth_adapter.rest.headers import get_bearer_token
 from auth_service.user_management.claims_repository.deps import get_claim_dao
 from auth_service.user_management.user_registry.deps import get_user_dao
 
@@ -42,10 +42,11 @@ from ...fixtures.utils import (
 from .fixtures import (
     AUTH_PATH,
     BareClient,
+    ClientWithBasicAuth,
     ClientWithSession,
     fixture_bare_client,  # noqa: F401
+    fixture_bare_client_with_basic_auth,  # noqa: F401
     fixture_bare_client_with_session,  # noqa: F401
-    fixture_with_basic_auth,  # noqa: F401
     query_new_session,
 )
 from .test_totp import get_valid_totp_code
@@ -165,9 +166,11 @@ async def test_delete_to_some_path(bare_client: BareClient):
     assert "Authorization" not in response.headers
 
 
-async def test_basic_auth(with_basic_auth: str, bare_client: BareClient):
+async def test_basic_auth(client_with_basic_auth: ClientWithBasicAuth):
     """Test that the root path can be protected with basic authentication."""
-    response = await bare_client.get("/")
+    client, credentials = client_with_basic_auth
+
+    response = await client.get("/")
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.headers["WWW-Authenticate"] == 'Basic realm="GHGA Data Portal"'
@@ -175,26 +178,26 @@ async def test_basic_auth(with_basic_auth: str, bare_client: BareClient):
 
     auth = b64encode(b"bad:credentials").decode("ASCII")
     auth = f"Basic {auth}"
-    response = await bare_client.get("/", headers={"Authorization": auth})
+    response = await client.get("/", headers={"Authorization": auth})
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.headers["WWW-Authenticate"] == 'Basic realm="GHGA Data Portal"'
     assert response.text == "GHGA Data Portal: Incorrect username or password"
 
-    auth = b64encode(with_basic_auth.encode("UTF-8")).decode("ASCII")
+    auth = b64encode(credentials.encode("UTF-8")).decode("ASCII")
     auth = f"Basic {auth}"
-    response = await bare_client.get("/", headers={"Authorization": auth})
+    response = await client.get("/", headers={"Authorization": auth})
 
     assert response.status_code == status.HTTP_200_OK
     assert not response.text
     assert response.headers["Authorization"] == ""
 
 
-async def test_allowed_paths(with_basic_auth: str, bare_client: BareClient):
+async def test_allowed_paths(client_with_basic_auth: ClientWithBasicAuth):
     """Test that allowed paths are excluded from authentication."""
-    assert with_basic_auth
+    client = client_with_basic_auth.bare_client
 
-    response = await bare_client.get(
+    response = await client.get(
         "/allowed/read/some/thing", headers={"Authorization": "Bearer foo"}
     )
     # access should be allowed without basic authentication
@@ -204,58 +207,58 @@ async def test_allowed_paths(with_basic_auth: str, bare_client: BareClient):
     # and authorization headers should be passed through
     assert response.headers["Authorization"] == "Bearer foo"
 
-    response = await bare_client.head("/allowed/read/some/thing")
+    response = await client.head("/allowed/read/some/thing")
     assert response.status_code == status.HTTP_200_OK
 
-    response = await bare_client.options("/allowed/read/some/thing")
+    response = await client.options("/allowed/read/some/thing")
     assert response.status_code == status.HTTP_200_OK
 
-    response = await bare_client.post(
+    response = await client.post(
         "/allowed/write/some/thing", headers={"Authorization": "Bearer bar"}
     )
     assert response.status_code == status.HTTP_200_OK
     assert not response.text
     assert response.headers["Authorization"] == "Bearer bar"
 
-    response = await bare_client.patch("/allowed/write/some/thing")
+    response = await client.patch("/allowed/write/some/thing")
     assert response.status_code == status.HTTP_200_OK
 
-    response = await bare_client.delete("/allowed/write/some/thing")
+    response = await client.delete("/allowed/write/some/thing")
     assert response.status_code == status.HTTP_200_OK
 
-    response = await bare_client.post("/allowed/read/some/thing")
+    response = await client.post("/allowed/read/some/thing")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.text == "GHGA Data Portal: Not authenticated"
 
-    response = await bare_client.delete("/allowed/read/some/thing")
+    response = await client.delete("/allowed/read/some/thing")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    response = await bare_client.get("/allowed/write/some/thing")
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert response.text == "GHGA Data Portal: Not authenticated"
-
-    response = await bare_client.options("/allowed/write/some/thing")
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    response = await bare_client.post("/not-allowed/some/thing")
+    response = await client.get("/allowed/write/some/thing")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.text == "GHGA Data Portal: Not authenticated"
 
+    response = await client.options("/allowed/write/some/thing")
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-async def test_basic_auth_service_logo(with_basic_auth: str, bare_client: BareClient):
+    response = await client.post("/not-allowed/some/thing")
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.text == "GHGA Data Portal: Not authenticated"
+
+
+async def test_basic_auth_service_logo(client_with_basic_auth: ClientWithBasicAuth):
     """Test that fetching the service logo is excluded from authentication."""
-    assert with_basic_auth
+    client = client_with_basic_auth.bare_client
 
-    response = await bare_client.get("/logo.png")
+    response = await client.get("/logo.png")
     assert response.status_code == status.HTTP_200_OK
 
-    response = await bare_client.head("/logo.png")
+    response = await client.head("/logo.png")
     assert response.status_code == status.HTTP_200_OK
 
-    response = await bare_client.get("/image.png")
+    response = await client.get("/image.png")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    response = await bare_client.head("/image.png")
+    response = await client.head("/image.png")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -266,20 +269,20 @@ async def test_post_user_without_session(bare_client: BareClient):
 
 
 async def test_post_user_without_session_and_basic_auth(
-    with_basic_auth: str, bare_client: BareClient
+    client_with_basic_auth: ClientWithBasicAuth,
 ):
     """Test valid basic auth but missing session."""
-    assert with_basic_auth
+    client, credentials = client_with_basic_auth
 
     # no basic auth, no session
-    response = await bare_client.post(AUTH_PATH + "/users")
+    response = await client.post(AUTH_PATH + "/users")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.headers["WWW-Authenticate"] == 'Basic realm="GHGA Data Portal"'
     assert response.text == "GHGA Data Portal: Not authenticated"
 
     # invalid basic auth, no session
     auth = "Basic invalid"
-    response = await bare_client.put(
+    response = await client.put(
         AUTH_PATH + "/users/some-internal-id", headers={"Authorization": auth}
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -287,11 +290,9 @@ async def test_post_user_without_session_and_basic_auth(
     assert response.text == "GHGA Data Portal: Invalid authentication credentials"
 
     # valid basic auth, still no session
-    auth = b64encode(with_basic_auth.encode("UTF-8")).decode("ASCII")
+    auth = b64encode(credentials.encode("UTF-8")).decode("ASCII")
     auth = f"Basic {auth}"
-    response = await bare_client.post(
-        AUTH_PATH + "/users", headers={"Authorization": auth}
-    )
+    response = await client.post(AUTH_PATH + "/users", headers={"Authorization": auth})
     # should give a 403 instead of 401 to distinguish from basic access error
     assert_is_forbidden_error(response, "Not logged in")
 
@@ -312,9 +313,8 @@ async def test_post_user_with_session(bare_client: BareClient, httpx_mock: HTTPX
     """Test user registration with session and valid CSRF token."""
     httpx_mock.add_response(url=RE_USER_INFO_URL, json=USER_INFO)
 
+    app = bare_client.app
     user_dao = DummyUserDao(ext_id="not.john@aai.org")
-    # TODO: use prepare app with overrides
-    app = FastAPI()
     app.dependency_overrides[get_user_dao] = lambda: user_dao
 
     session = await query_new_session(bare_client)
@@ -387,9 +387,8 @@ async def test_put_unregistered_user_with_session(
     """Test updating an unregistered user with session."""
     httpx_mock.add_response(url=RE_USER_INFO_URL, json=USER_INFO)
 
+    app = bare_client.app
     user_dao = DummyUserDao(ext_id="not.john@aai.org")
-    # TODO: use prepare app with overrides
-    app = FastAPI()  # TODO
     app.dependency_overrides[get_user_dao] = lambda: user_dao
 
     session = await query_new_session(bare_client)
@@ -407,9 +406,8 @@ async def test_put_registered_user_with_session(
     """Test updating a registered user with session."""
     httpx_mock.add_response(url=RE_USER_INFO_URL, json=USER_INFO)
 
+    app = bare_client.app
     user_dao = DummyUserDao()
-    # TODO: use prepare app with overrides
-    app = FastAPI()  # TODO
     app.dependency_overrides[get_user_dao] = lambda: user_dao
     user_token_dao = DummyUserTokenDao()
     app.dependency_overrides[get_user_token_dao] = lambda: user_token_dao

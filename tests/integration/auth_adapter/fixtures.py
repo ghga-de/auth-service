@@ -16,15 +16,13 @@
 """Fixtures for the auth adapter integration tests"""
 
 import json
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator
 from datetime import timedelta
 from importlib import reload
-from os import environ
 from typing import NamedTuple
 
-import pytest
 import pytest_asyncio
-from fastapi import FastAPI, status
+from fastapi import status
 from ghga_service_commons.api.testing import AsyncTestClient as BareClient
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.providers.akafka.testutils import KafkaFixture
@@ -32,10 +30,14 @@ from httpx import Response
 from pydantic import SecretStr
 from pytest_httpx import HTTPXMock
 
+from auth_service import config as config_module
+from auth_service.auth_adapter import prepare as auth_adapter_prepare_module
 from auth_service.auth_adapter.core.session_store import Session
 from auth_service.auth_adapter.core.totp import TOTPHandler
 from auth_service.auth_adapter.deps import SESSION_COOKIE, get_user_token_dao
-from auth_service.deps import CONFIG, Config, get_config
+from auth_service.auth_adapter.prepare import prepare_rest_app
+from auth_service.auth_adapter.rest import router as auth_adapter_router_module
+from auth_service.config import CONFIG, Config
 from auth_service.user_management.claims_repository.deps import get_claim_dao
 from auth_service.user_management.user_registry.deps import (
     get_iva_dao,
@@ -62,19 +64,23 @@ totp_encryption_key = TOTPHandler.random_encryption_key()
 
 @pytest_asyncio.fixture(name="bare_client")
 async def fixture_bare_client(kafka: KafkaFixture) -> AsyncGenerator[BareClient, None]:
-    """Get a test client for the user registry without database."""
+    """Get a test client for the auth adapter without database."""
     config = Config(
         kafka_servers=kafka.config.kafka_servers,
         service_name=kafka.config.service_name,
         service_instance_id=kafka.config.service_instance_id,
         totp_encryption_key=SecretStr(totp_encryption_key),
-    )  # type: ignore
+    )  # pyright: ignore
 
-    app = FastAPI()  # TODO
-    app.dependency_overrides[get_config] = lambda: config
-
-    async with BareClient(app) as client:
+    async with prepare_rest_app(config=config) as app, BareClient(app) as client:
         yield client
+
+
+class ClientWithBasicAuth(NamedTuple):
+    """A test client with basic auth."""
+
+    bare_client: BareClient
+    credentials: str
 
 
 class ClientWithSession(NamedTuple):
@@ -162,9 +168,7 @@ async def fixture_bare_client_with_session(
     user_token_dao = DummyUserTokenDao()
     claim_dao = DummyClaimDao()
 
-    app = FastAPI()  # TODO: use the actual app with overrides
-
-    overrides = app.dependency_overrides
+    overrides = bare_client.app.dependency_overrides
     overrides[get_user_dao] = lambda: user_dao
     overrides[get_iva_dao] = lambda: iva_dao
     overrides[get_user_registry] = lambda: user_registry
@@ -176,22 +180,30 @@ async def fixture_bare_client_with_session(
     yield ClientWithSession(bare_client, session, user_registry, user_token_dao)
 
 
-@pytest.fixture(name="with_basic_auth")
-def fixture_with_basic_auth() -> Generator[str, None, None]:
-    """Run test with Basic authentication"""
-    from auth_service import config
-    from auth_service.auth_adapter.api import router
+@pytest_asyncio.fixture(name="client_with_basic_auth")
+async def fixture_bare_client_with_basic_auth() -> (
+    AsyncGenerator[ClientWithBasicAuth, None]
+):
+    """Get a test client for the user registry with Basic auth."""
+    # create a config with Basic auth credentials
+    credentials = "testuser:testpwd"
+    config = Config(
+        basic_auth_credentials=credentials,
+        allow_read_paths=["/allowed/read/*", "/logo.png"],
+        allow_write_paths=["/allowed/write/*"],
+        totp_encryption_key=SecretStr(totp_encryption_key),
+    )  # pyright: ignore
 
-    user, pwd = "testuser", "testpwd"
-    credentials = f"{user}:{pwd}"
-    environ["AUTH_SERVICE_BASIC_AUTH_CREDENTIALS"] = credentials
-    environ["AUTH_SERVICE_ALLOW_READ_PATHS"] = '["/allowed/read/*", "/logo.png"]'
-    environ["AUTH_SERVICE_ALLOW_WRITE_PATHS"] = '["/allowed/write/*"]'
-    reload(config)
-    reload(router)
-    yield credentials
-    del environ["AUTH_SERVICE_BASIC_AUTH_CREDENTIALS"]
-    del environ["AUTH_SERVICE_ALLOW_READ_PATHS"]
-    del environ["AUTH_SERVICE_ALLOW_WRITE_PATHS"]
-    reload(config)
-    reload(router)
+    # create app with the changed config
+    config_module.CONFIG = config
+    try:
+        # reload to make the changes affect the router
+        reload(auth_adapter_router_module)
+        reload(auth_adapter_prepare_module)
+        async with prepare_rest_app(config=config) as app, BareClient(app) as client:
+            yield ClientWithBasicAuth(client, credentials)
+
+    finally:
+        config_module.CONFIG = CONFIG
+        reload(auth_adapter_router_module)
+        reload(auth_adapter_prepare_module)

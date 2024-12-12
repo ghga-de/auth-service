@@ -14,17 +14,15 @@
 # limitations under the License.
 #
 
-"""Dependency and dependency dummies that are used in view definitions.
+"""Dependencies and dependency dummies for the auth adapter used in view definitions.
 
-The dummies to be overridden by the actual dependencies when preparing the application.
+The dummies are overridden by the actual dependencies when preparing the application.
 """
 
 from typing import Annotated
 
-from fastapi import HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, status
 from ghga_service_commons.api.di import DependencyDummy
-
-from auth_service.deps import Depends
 
 from .core.session_store import Session
 from .core.totp import TOTPToken
@@ -37,6 +35,9 @@ __all__ = [
     "SessionStoreDependency",
     "TOTPHandlerDependency",
     "UserTokenDaoDependency",
+    "get_session_store",
+    "get_totp_handler",
+    "get_user_token_dao",
 ]
 
 SESSION_COOKIE = "session"
@@ -49,8 +50,15 @@ get_totp_handler = DependencyDummy("totp_handler")
 get_user_token_dao = DependencyDummy("user_token_dao")
 
 
+SessionStoreDependency = Annotated[
+    SessionStorePort[Session], Depends(get_session_store)
+]
+TOTPHandlerDependency = Annotated[TOTPHandlerPort[TOTPToken], Depends(get_totp_handler)]
+UserTokenDaoDependency = Annotated[UserTokenDao, Depends(get_user_token_dao)]
+
+
 async def get_session(
-    store: Annotated[SessionStorePort[Session], Depends(get_session_store)],
+    store: SessionStoreDependency,
     request: Request,
 ) -> Session | None:
     """Get the current session.
@@ -74,9 +82,4 @@ async def get_session(
     return session
 
 
-SessionStoreDependency = Annotated[
-    SessionStorePort[Session], Depends(get_session_store)
-]
 SessionDependency = Annotated[Session | None, Depends(get_session)]
-TOTPHandlerDependency = Annotated[TOTPHandlerPort[TOTPToken], Depends(get_totp_handler)]
-UserTokenDaoDependency = Annotated[UserTokenDao, Depends(get_user_token_dao)]

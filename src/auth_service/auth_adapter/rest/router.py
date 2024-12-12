@@ -36,15 +36,11 @@ from pydantic import SecretStr
 
 from auth_service.config import CONFIG
 from auth_service.user_management.claims_repository.core.utils import is_data_steward
-from auth_service.user_management.claims_repository.deps import ClaimDao, get_claim_dao
+from auth_service.user_management.claims_repository.deps import ClaimDaoDependency
 from auth_service.user_management.user_registry.deps import (
-    Depends,
-    IvaDao,
-    UserDao,
-    UserRegistryPort,
-    get_iva_dao,
-    get_user_dao,
-    get_user_registry,
+    IvaDaoDependency,
+    UserDaoDependency,
+    UserRegistryDependency,
 )
 from auth_service.user_management.user_registry.models.users import (
     User,
@@ -125,10 +121,10 @@ add_allowed_routes()
 async def login(  # noqa: C901, PLR0913
     request: Request,
     session_store: SessionStoreDependency,
-    user_dao: Annotated[UserDao, Depends(get_user_dao)],
+    user_dao: UserDaoDependency,
     token_dao: UserTokenDaoDependency,
-    claim_dao: Annotated[ClaimDao, Depends(get_claim_dao)],
-    iva_dao: Annotated[IvaDao, Depends(get_iva_dao)],
+    claim_dao: ClaimDaoDependency,
+    iva_dao: IvaDaoDependency,
     authorization: Annotated[str | None, Header()] = None,
     x_authorization: Annotated[str | None, Header()] = None,
 ) -> Response:
@@ -361,7 +357,7 @@ async def rpc_verify_totp(  # noqa: PLR0913
     session_store: SessionStoreDependency,
     session: SessionDependency,
     totp_handler: TOTPHandlerDependency,
-    user_registry: Annotated[UserRegistryPort, Depends(get_user_registry)],
+    user_registry: UserRegistryDependency,
     token_dao: UserTokenDaoDependency,
     x_authorization: Annotated[
         str | None, Header(title="the TOTP code to verify")
