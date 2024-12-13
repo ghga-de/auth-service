@@ -16,7 +16,7 @@
 
 """Test user specific DAOs."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator
 
 import pytest
 import pytest_asyncio
@@ -47,7 +47,7 @@ from auth_service.user_management.user_registry.translators.dao import (
 async def fixture_user_dao(
     mongodb: MongoDbFixture, kafka: KafkaFixture
 ) -> AsyncGenerator[UserDaoPublisherFactoryPort, None]:
-    """Create a user DAO factory for testing."""
+    """Create a user DAO factory for testing and set a random correlation ID."""
     config = Config(
         db_connection_str=mongodb.config.db_connection_str,
         db_name=mongodb.config.db_name,
@@ -61,26 +61,17 @@ async def fixture_user_dao(
         user_dao_publisher_factory = UserDaoPublisherFactory(
             config=config, dao_publisher_factory=dao_publisher_factory
         )
+        correlation_id = new_correlation_id()
+        token = correlation_id_var.set(correlation_id)
         yield user_dao_publisher_factory
-
-
-@pytest.fixture(name="with_correlation_id")
-def fixture_with_correlation_id() -> Generator[str, None, None]:
-    """Fixture to set and reset the correlation ID."""
-    correlation_id = new_correlation_id()
-    token = correlation_id_var.set(correlation_id)
-    yield correlation_id
-    correlation_id_var.reset(token)
+        correlation_id_var.reset(token)
 
 
 @pytest.mark.asyncio()
 async def test_user_crud(
-    user_dao_publisher_factory: UserDaoPublisherFactoryPort,
-    kafka: KafkaFixture,
-    with_correlation_id: str,
+    user_dao_publisher_factory: UserDaoPublisherFactoryPort, kafka: KafkaFixture
 ):
     """Test creating, updating and deleting via the user DAO"""
-    assert with_correlation_id
     user_dao = await user_dao_publisher_factory.get_user_dao()
     user = User(
         ext_id="max@ls.org",
@@ -142,12 +133,9 @@ async def test_user_crud(
 
 @pytest.mark.asyncio()
 async def test_iva_crud(
-    user_dao_publisher_factory: UserDaoPublisherFactoryPort,
-    kafka: KafkaFixture,
-    with_correlation_id: str,
+    user_dao_publisher_factory: UserDaoPublisherFactoryPort, kafka: KafkaFixture
 ):
     """Test creating, updating and deleting via the user DAO"""
-    assert with_correlation_id
     iva_dao = await user_dao_publisher_factory.get_iva_dao()
     iva = Iva(
         user_id="some-user-id",
