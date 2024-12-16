@@ -21,7 +21,7 @@ from collections.abc import AsyncGenerator
 import pytest
 import pytest_asyncio
 from ghga_service_commons.utils.utc_dates import utc_datetime
-from hexkit.correlation import correlation_id_var, new_correlation_id
+from hexkit.correlation import set_new_correlation_id
 from hexkit.protocols.dao import ResourceNotFoundError
 from hexkit.providers.akafka.testutils import KafkaFixture, RecordedEvent
 from hexkit.providers.mongodb.testutils import MongoDbFixture
@@ -57,14 +57,11 @@ async def fixture_user_dao(
     )
     async with (
         MongoKafkaDaoPublisherFactory.construct(config=config) as dao_publisher_factory,
+        set_new_correlation_id(),
     ):
-        user_dao_publisher_factory = UserDaoPublisherFactory(
+        yield UserDaoPublisherFactory(
             config=config, dao_publisher_factory=dao_publisher_factory
         )
-        correlation_id = new_correlation_id()
-        token = correlation_id_var.set(correlation_id)
-        yield user_dao_publisher_factory
-        correlation_id_var.reset(token)
 
 
 @pytest.mark.asyncio()
