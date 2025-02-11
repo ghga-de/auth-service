@@ -54,9 +54,9 @@ def get_config_class():
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
     ) as process:
-        assert (
-            process.wait() == 0 and process.stdout is not None
-        ), "Failed to get package name."
+        assert process.wait() == 0 and process.stdout is not None, (
+            "Failed to get package name."
+        )
         package_name = process.stdout.read().decode("utf-8").strip("\n")
 
     # import the Config class from the microservice package:
