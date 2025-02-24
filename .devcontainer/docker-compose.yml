@@ -47,15 +47,14 @@ services:
       ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.0
+    image: confluentinc/cp-zookeeper:7.8.0
     environment:
       ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka:
-    image: confluentinc/cp-server:7.6.0
-    restart: always
+    image: confluentinc/cp-server:7.8.0
     depends_on:
       - zookeeper
     environment:
@@ -73,7 +72,6 @@ services:
 
   kafka-ui:
     image: provectuslabs/kafka-ui
-    restart: always
     depends_on:
       - kafka
       - zookeeper
