@@ -14,3 +14,7 @@ provide_apis: ["users"]
 
 service_instance_id: "1"
 kafka_servers: ["kafka:9092"]
+user_topic: users
+dataset_upsertion_type: dataset_upserted
+iva_state_changed_topic: ivas
+iva_state_changed_type: iva_state_changed
