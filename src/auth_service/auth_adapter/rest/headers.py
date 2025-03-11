@@ -55,7 +55,7 @@ def session_to_header(
         session_dict["id"] = session.user_id
     if session.user_title:
         session_dict["title"] = session.user_title
-    session_dict["roles"] = [str(role) for role in session.roles]
+    session_dict["roles"] = session.roles
     if timeouts:
         timeout_soft, timeout_hard = timeouts(session)
         session_dict["timeout"] = timeout_soft

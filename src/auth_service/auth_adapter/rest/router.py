@@ -35,10 +35,7 @@ from hexkit.protocols.dao import NoHitsFoundError, ResourceNotFoundError
 from pydantic import SecretStr
 
 from auth_service.config import CONFIG
-from auth_service.user_management.claims_repository.core.utils import (
-    Role,
-    get_active_roles,
-)
+from auth_service.user_management.claims_repository.core.utils import get_active_roles
 from auth_service.user_management.claims_repository.deps import ClaimDaoDependency
 from auth_service.user_management.user_registry.deps import (
     IvaDaoDependency,
@@ -172,7 +169,7 @@ async def login(  # noqa: C901, PLR0913
             detail="User account is disabled",
         )
 
-    async def _get_roles(user: User) -> list[Role]:
+    async def _get_roles(user: User) -> list[str]:
         """Get the active roles of the given user.
 
         This includes the check whether the corresponding IVAs have been verified.

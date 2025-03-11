@@ -23,7 +23,6 @@ import pytest
 from ghga_service_commons.utils.utc_dates import now_as_utc
 
 from auth_service.user_management.claims_repository.core.utils import (
-    Role,
     get_active_roles,
     iva_is_verified,
     user_exists,
@@ -155,7 +154,7 @@ async def test_get_active_roles_with_iva(state: IvaState):
         changed=now,
     )
     iva_dao = cast(IvaDao, DummyIvaDao([iva]))
-    expected_roles = [Role.DATA_STEWARD] if state == IvaState.VERIFIED else []
+    expected_roles = ["data_steward"] if state == IvaState.VERIFIED else []
     assert (
         await get_active_roles(
             user_id, user_dao=user_dao, iva_dao=iva_dao, claim_dao=claim_dao
@@ -202,7 +201,7 @@ async def test_get_active_roles_deduplicates_roles():
     # we should only get the 2 supported roles, and each only once
     assert await get_active_roles(
         user_id, user_dao=user_dao, iva_dao=iva_dao, claim_dao=claim_dao
-    ) == [Role.ADMIN, Role.DATA_STEWARD]
+    ) == ["admin", "data_steward"]
 
 
 async def test_get_active_roles_without_iva_id():
@@ -261,7 +260,7 @@ async def test_get_active_roles_with_expired_claim():
         iva_dao=iva_dao,
         claim_dao=claim_dao,
         now=lambda: now,
-    ) == [Role.DATA_STEWARD]
+    ) == ["data_steward"]
     assert (
         await get_active_roles(
             user_id,
@@ -296,7 +295,7 @@ async def test_get_active_roles_with_revoked_claim():
         user_dao=user_dao,
         iva_dao=iva_dao,
         claim_dao=claim_dao,
-    ) == [Role.DATA_STEWARD]
+    ) == ["data_steward"]
 
     claim = await claim_dao.get_by_id("data-steward-claim-id")
     assert claim.revocation_date is None
@@ -327,7 +326,7 @@ async def test_get_active_roles_with_non_existing_user():
         user_dao=user_dao,
         iva_dao=iva_dao,
         claim_dao=claim_dao,
-    ) == [Role.DATA_STEWARD]
+    ) == ["data_steward"]
 
     user_dao = cast(UserDao, DummyUserDao(id_="jane@ghga.de"))
     assert (
@@ -350,7 +349,7 @@ async def test_get_active_role_with_inactive_user(status: UserStatus):
 
     for status in UserStatus:
         user_dao = cast(UserDao, DummyUserDao(id_=user_id, status=status))
-        expected_roles = [Role.DATA_STEWARD] if status == UserStatus.ACTIVE else []
+        expected_roles = ["data_steward"] if status == UserStatus.ACTIVE else []
         assert (
             await get_active_roles(
                 user_id,

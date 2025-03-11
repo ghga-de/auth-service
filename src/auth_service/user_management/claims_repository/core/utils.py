@@ -27,9 +27,9 @@ from auth_service.user_management.user_registry.models.users import UserStatus
 
 from ..deps import ClaimDao
 from ..models.claims import VisaType
-from .claims import Role, get_role_from_claim, is_valid_claim
+from .claims import get_role_from_claim, is_valid_claim
 
-__all__ = ["Role", "get_active_roles", "user_exists", "user_with_iva_exists"]
+__all__ = ["get_active_roles", "user_exists", "user_with_iva_exists"]
 
 
 async def user_exists(user_id: str, *, user_dao: UserDao) -> bool:
@@ -89,7 +89,7 @@ async def get_active_roles(
     iva_dao: IvaDao,
     user_dao: UserDao | None = None,
     now: Callable[[], UTCDatetime] = now_as_utc,
-) -> list[Role]:
+) -> list[str]:
     """Get the active roles of the user with the given ID.
 
     If no User DAO is provided, the user is assumed to exist and be active,
@@ -107,5 +107,5 @@ async def get_active_roles(
         if is_valid_claim(claim, now=now):
             role = get_role_from_claim(claim)
             if role and await iva_is_verified(user_id, claim.iva_id, iva_dao=iva_dao):
-                roles.add(role)
+                roles.add(str(role))
     return sorted(roles)

@@ -28,7 +28,6 @@ from auth_service.auth_adapter.core.session_store import (
     SessionState,
     SessionStore,
 )
-from auth_service.user_management.claims_repository.core.claims import Role
 from auth_service.user_management.user_registry.models.users import (
     AcademicTitle,
     User,
@@ -301,8 +300,8 @@ async def test_update_session_with_data_steward_to_registered(
         registration_date=before,
     )
 
-    async def _get_roles(user: User) -> list[Role]:
-        return [Role.DATA_STEWARD]
+    async def _get_roles(user: User) -> list[str]:
+        return ["data_steward"]
 
     await store.save_session(session, user=user, get_roles=_get_roles)
     assert store.saved_session is session

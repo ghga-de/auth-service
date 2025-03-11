@@ -17,7 +17,7 @@
 """Managing user sessions that keep track of authentication state."""
 
 import secrets
-from enum import Enum
+from enum import StrEnum
 from typing import Protocol
 
 from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc
@@ -30,7 +30,7 @@ from ..ports.session_store import BaseSession, SessionStorePort
 from .totp import TOTPToken
 
 
-class SessionState(str, Enum):
+class SessionState(StrEnum):
     """The state of a user session."""
 
     NEEDS_REGISTRATION = "NeedsRegistration"
