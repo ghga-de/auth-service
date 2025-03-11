@@ -203,15 +203,15 @@ fastapi==0.115.11 \
     # via
     #   -c lock/requirements-dev.txt
     #   ghga-service-commons
-ghga-event-schemas==3.3.1 \
-    --hash=sha256:6b21b45efd8a1a5dbbc3b671f3d23390b728dd19669ce39a7153acb5487f1256 \
-    --hash=sha256:845e72aa8045c52fbb42a215dcd95dd8436c841788b1d8edb80794584faab09a
+ghga-event-schemas==4.1.0 \
+    --hash=sha256:4ed170215f7db058da5d9703465adbb10ac8b7118ae1413c450dab45e280a6fa \
+    --hash=sha256:87ccaed1fcc564d41c41352064b34911528ec31c12229801d4a8458ad833370a
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)
-ghga-service-commons==3.4.1 \
-    --hash=sha256:2ced19b2b0e07d7471b68a73eacb3272473eae74b7e74b7b101b0c90ea4a0170 \
-    --hash=sha256:37d9cf122e776a70fd15d3dfa355dd386d5b3426514a3b3245207875fcbce9eb
+ghga-service-commons==4.0.0 \
+    --hash=sha256:27ba3dfea1ad40398d64eb72a686952ac7e13ce01a9145018d3175fc056f61ce \
+    --hash=sha256:58ed73c298f37c785ee9eec0fb7410f69d0d3f2027c54cc8f902e1db18f15b92
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)
@@ -453,6 +453,7 @@ pydantic-settings==2.8.1 \
     --hash=sha256:d5c663dfbe9db9d5e1c646b2e161da12f0d734d422ee56f567d0ea2cee4e8585
     # via
     #   -c lock/requirements-dev.txt
+    #   ghga-event-schemas
     #   hexkit
 pymongo==4.11.2 \
     --hash=sha256:0734940f9f347904796a98481fb4100859f121017e68b756e7426b66d8b2e176 \

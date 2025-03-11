@@ -28,6 +28,7 @@ from auth_service.auth_adapter.core.session_store import (
     SessionState,
     SessionStore,
 )
+from auth_service.user_management.claims_repository.core.claims import Role
 from auth_service.user_management.user_registry.models.users import (
     AcademicTitle,
     User,
@@ -257,7 +258,7 @@ async def test_update_session_with_user_to_registered(original_state: SessionSta
     assert session.user_id == "some-user-id"
     assert session.user_name == "John Doe"
     assert session.user_title is None
-    assert session.role is None
+    assert session.roles == []
     assert session.state is SessionState.REGISTERED
 
 
@@ -300,10 +301,10 @@ async def test_update_session_with_data_steward_to_registered(
         registration_date=before,
     )
 
-    async def _is_data_steward(user: User) -> bool:
-        return True
+    async def _get_roles(user: User) -> list[Role]:
+        return [Role.DATA_STEWARD]
 
-    await store.save_session(session, user=user, is_data_steward=_is_data_steward)
+    await store.save_session(session, user=user, get_roles=_get_roles)
     assert store.saved_session is session
     assert session.created == before
     assert session.last_used == now
@@ -311,7 +312,7 @@ async def test_update_session_with_data_steward_to_registered(
     assert session.user_name == "John Doe"
     if original_state is not SessionState.REGISTERED:
         assert session.user_title == "Dr."
-        assert session.role == "data_steward"
+        assert session.roles == ["data_steward"]
     assert session.state is SessionState.REGISTERED
 
 
