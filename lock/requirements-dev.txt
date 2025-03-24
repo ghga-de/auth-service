@@ -52,6 +52,10 @@ attrs==25.1.0 \
     # via
     #   jsonschema
     #   referencing
+casefy==1.1.0 \
+    --hash=sha256:849d6e0f80506fac70ab8e18999a4ca1eb7d8f70941682383d64aa22a7497f8f \
+    --hash=sha256:a3dfcb14d85902d90702db1e9835760237f6a73ec0ae3b7e991ad767513a3cbc
+    # via -r lock/requirements-dev-template.in
 certifi==2025.1.31 \
     --hash=sha256:3d5da6925056f6f18f119200434a4780a94263f10d1c21d032a6f6b2baa20651 \
     --hash=sha256:ca78db4565a652026a4db2bcdf68f2fb589ea80d0be70e03929ed730746b84fe
@@ -999,9 +1003,6 @@ starlette==0.45.3 \
     --hash=sha256:2cbcba2a75806f8a41c722141486f37c28e30a0921c5f6fe4346cb0dcee1302f \
     --hash=sha256:dfb6d332576f136ec740296c7e8bb8c8a7125044e7c6da30744718880cdd059d
     # via fastapi
-stringcase==1.2.0 \
-    --hash=sha256:48a06980661908efe8d9d34eab2b6c13aefa2163b3ced26972902e3bdfd87008
-    # via -r lock/requirements-dev-template.in
 testcontainers==4.9.1 \
     --hash=sha256:315fb94b42a383872df530aa45319745278ef0cc18b9cfcdc231a75d14afa5a0 \
     --hash=sha256:37fe9a222549ddb788463935965b16f91809e9a8d654f437d6a59eac9b77f76f
