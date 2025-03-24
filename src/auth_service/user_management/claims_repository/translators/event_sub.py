@@ -28,8 +28,8 @@ from ..ports.deletion import DatasetDeletionPort
 class EventSubTranslatorConfig(DatasetEventsConfig):
     """Configuration for the event subscriber.
 
-    Note that the upsertion event type is not utilized for the Dataset Events
-    in this service.
+    This is only used to remove access grants for datasets
+    which have been deleted.
     """
 
 
