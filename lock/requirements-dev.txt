@@ -367,9 +367,9 @@ filelock==3.18.0 \
     --hash=sha256:adbc88eabb99d2fec8c9c1b229b171f18afa655400173ddc653d5d01501fb9f2 \
     --hash=sha256:c401f4f8377c4464e6db25fff06205fd89bdd83b65eb0488ed1b160f780e21de
     # via virtualenv
-ghga-event-schemas==4.1.0 \
-    --hash=sha256:4ed170215f7db058da5d9703465adbb10ac8b7118ae1413c450dab45e280a6fa \
-    --hash=sha256:87ccaed1fcc564d41c41352064b34911528ec31c12229801d4a8458ad833370a
+ghga-event-schemas==5.0.0 \
+    --hash=sha256:0b0622d2f724c8cc0f6bcd45b551943dafb0ce9c890d2c89bd6a303b5c21f3b8 \
+    --hash=sha256:d6c9ace06548e63defcaf2374b5c9d2f2e9d2585ecd5bee92cd896104ba1c7e7
     # via auth-service (pyproject.toml)
 ghga-service-commons==4.0.0 \
     --hash=sha256:27ba3dfea1ad40398d64eb72a686952ac7e13ce01a9145018d3175fc056f61ce \
@@ -776,9 +776,9 @@ pytest-httpx==0.35.0 \
     --hash=sha256:d619ad5d2e67734abfbb224c3d9025d64795d4b8711116b1a13f72a251ae511f \
     --hash=sha256:ee11a00ffcea94a5cbff47af2114d34c5b231c326902458deed73f9c459fd744
     # via -r lock/requirements-dev-template.in
-python-dotenv==1.0.1 \
-    --hash=sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca \
-    --hash=sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a
+python-dotenv==1.1.0 \
+    --hash=sha256:41f90bc6f5f177fb41f53e87666db362025010eb28f60a01c9143bfa33a2b2d5 \
+    --hash=sha256:d7c01d9e2293916c18baf562d95698754b0dbbb5e74d457c45d4f6561fb9d55d
     # via
     #   pydantic-settings
     #   testcontainers
