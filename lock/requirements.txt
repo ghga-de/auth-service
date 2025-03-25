@@ -193,15 +193,15 @@ email-validator==2.2.0 \
     # via
     #   -c lock/requirements-dev.txt
     #   pydantic
-fastapi==0.115.8 \
-    --hash=sha256:0ce9111231720190473e222cdf0f07f7206ad7e53ea02beb1d2dc36e2f0741e9 \
-    --hash=sha256:753a96dd7e036b34eeef8babdfcfe3f28ff79648f86551eb36bfc1b0bf4a8cbf
+fastapi==0.115.9 \
+    --hash=sha256:4a439d7923e4de796bcc88b64e9754340fcd1574673cbd865ba8a99fe0d28c56 \
+    --hash=sha256:9d7da3b196c5eed049bc769f9475cd55509a112fbe031c0ef2f53768ae68d13f
     # via
     #   -c lock/requirements-dev.txt
     #   ghga-service-commons
-ghga-event-schemas==3.3.1 \
-    --hash=sha256:6b21b45efd8a1a5dbbc3b671f3d23390b728dd19669ce39a7153acb5487f1256 \
-    --hash=sha256:845e72aa8045c52fbb42a215dcd95dd8436c841788b1d8edb80794584faab09a
+ghga-event-schemas==4.1.0 \
+    --hash=sha256:4ed170215f7db058da5d9703465adbb10ac8b7118ae1413c450dab45e280a6fa \
+    --hash=sha256:87ccaed1fcc564d41c41352064b34911528ec31c12229801d4a8458ad833370a
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)
@@ -218,9 +218,9 @@ h11==0.14.0 \
     #   -c lock/requirements-dev.txt
     #   httpcore
     #   uvicorn
-hexkit==4.0.0 \
-    --hash=sha256:35a9030ff27a45e04185cf298cc4b4630946555b5730102d533570d712bd5960 \
-    --hash=sha256:b21325e4c9194d449d4268f90b93eee6010fef7a097a5924a467ad0bad89590f
+hexkit==4.1.0 \
+    --hash=sha256:010aefa21eb6270eb3ba97ae69ff4c049e3fc40dff66848ae0235102a6867cc6 \
+    --hash=sha256:631a33821e3ce8982ebf6e2e4619370b217f3fda88ac323a42361a7e15c69695
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)
@@ -444,11 +444,12 @@ pydantic-core==2.27.2 \
     # via
     #   -c lock/requirements-dev.txt
     #   pydantic
-pydantic-settings==2.8.0 \
-    --hash=sha256:88e2ca28f6e68ea102c99c3c401d6c9078e68a5df600e97b43891c34e089500a \
-    --hash=sha256:c782c7dc3fb40e97b238e713c25d26f64314aece2e91abcff592fcac15f71820
+pydantic-settings==2.8.1 \
+    --hash=sha256:81942d5ac3d905f7f3ee1a70df5dfb62d5569c12f51a5a647defc1c3d9ee2e9c \
+    --hash=sha256:d5c663dfbe9db9d5e1c646b2e161da12f0d734d422ee56f567d0ea2cee4e8585
     # via
     #   -c lock/requirements-dev.txt
+    #   ghga-event-schemas
     #   hexkit
 pymongo==4.11.1 \
     --hash=sha256:0a8aba4818350d2a463e084ae2426d395e725525fe86bd0219240b265dc1ca52 \

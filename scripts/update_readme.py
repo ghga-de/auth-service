@@ -25,8 +25,8 @@ from pathlib import Path
 from string import Template
 
 import jsonschema2md
+from casefy import kebabcase, titlecase
 from pydantic import BaseModel, Field
-from stringcase import spinalcase, titlecase
 
 from script_utils.cli import echo_failure, echo_success, run
 
@@ -61,7 +61,7 @@ class PackageName(BaseModel):
     """The name of a package and it's different representations."""
 
     repo_name: str = Field(..., description="The name of the repo")
-    name: str = Field(..., description="The full name of the package in spinal case.")
+    name: str = Field(..., description="The full name of the package in kebab case.")
     title: str = Field(..., description="The name of the package formatted as title.")
 
 
@@ -121,7 +121,7 @@ def read_package_name() -> PackageName:
         raise RuntimeError("The name of the git origin could not be resolved.")
     git_origin_name = stdout.decode("utf-8").strip()
 
-    repo_name = spinalcase(git_origin_name)
+    repo_name = kebabcase(git_origin_name)
     name = (
         "my-microservice"
         if repo_name == "microservice-repository-template"
