@@ -381,9 +381,9 @@ h11==0.14.0 \
     # via
     #   httpcore
     #   uvicorn
-hexkit==4.1.1 \
-    --hash=sha256:b451dd398050069fccfa0108d86ef5c85b8c81b8f4e545a9a64a64995e6e2bc1 \
-    --hash=sha256:eee526a5f24fe1aa8e21bd0a37757e924bad307a8e9d8948f9a5f852cea8cc28
+hexkit==4.2.0 \
+    --hash=sha256:3f6c4e644b517d235d7ae1ea682543d0c604d3a0fbf2801b8957f95b644ad7ad \
+    --hash=sha256:7aeb3e66bd33715bd8cf0a053fb5056dee45b70abd828ce4f6b63f0242ba0d49
     # via
     #   auth-service (pyproject.toml)
     #   ghga-service-commons
