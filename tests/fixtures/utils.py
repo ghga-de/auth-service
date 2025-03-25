@@ -466,7 +466,7 @@ class DummyClaimDao:
                 yield claim
 
     async def update(self, dto: Claim) -> None:
-        """Update a summy user claim."""
+        """Update a dummy user claim."""
         for index, claim in enumerate(self.claims):
             if claim.id == dto.id:
                 self.claims[index] = dto
