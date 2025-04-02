@@ -422,7 +422,7 @@ The service requires the following configuration parameters:
 
   - <a id="properties/auth_algs/items"></a>**Items** *(string)*
 
-- <a id="properties/auth_check_claims"></a>**`auth_check_claims`** *(object)*: A dict of all GHGA internal claims that shall be verified. Default: `{"id": null, "name": null, "email": null, "iat": null, "exp": null}`.
+- <a id="properties/auth_check_claims"></a>**`auth_check_claims`** *(object)*: A dict of all GHGA internal claims that shall be verified. Can contain additional properties. Default: `{"id": null, "name": null, "email": null, "iat": null, "exp": null}`.
 
 - <a id="properties/auth_map_claims"></a>**`auth_map_claims`** *(object)*: A mapping of claims to attributes in the GHGA auth context. Can contain additional properties. Default: `{}`.
 
