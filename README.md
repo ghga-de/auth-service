@@ -80,9 +80,25 @@ auth_service --help
 ### Parameters
 
 The service requires the following configuration parameters:
-- <a id="properties/auth_events_topic"></a>**`auth_events_topic`** *(string)*: The name of the topic for authentication related events. Default: `"auth"`.
+- <a id="properties/auth_topic"></a>**`auth_topic`** *(string, required)*: The name of the topic containing auth-related events.
 
-- <a id="properties/second_factor_recreated_event_type"></a>**`second_factor_recreated_event_type`** *(string)*: The event type for recreation of the second factor for authentication. Default: `"second_factor_recreated"`.
+
+  Examples:
+
+  ```json
+  "auth-events"
+  ```
+
+
+- <a id="properties/second_factor_recreated_type"></a>**`second_factor_recreated_type`** *(string, required)*: The event type for recreation of the second factor for authentication.
+
+
+  Examples:
+
+  ```json
+  "second_factor_recreated"
+  ```
+
 
 - <a id="properties/iva_state_changed_topic"></a>**`iva_state_changed_topic`** *(string, required)*: The name of the topic containing IVA events.
 
