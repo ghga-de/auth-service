@@ -28,16 +28,16 @@ from pydantic import AnyUrl, Field, HttpUrl, field_validator
 
 from auth_service.auth_adapter.core.session_store import SessionConfig
 from auth_service.auth_adapter.core.totp import TOTPConfig
-from auth_service.user_management.claims_repository.models.config import UserWithIVA
-from auth_service.user_management.claims_repository.translators.dao import (
+from auth_service.claims_repository.models.config import UserWithIVA
+from auth_service.claims_repository.translators.dao import (
     ClaimDaoConfig,
 )
-from auth_service.user_management.claims_repository.translators.event_sub import (
+from auth_service.claims_repository.translators.event_sub import (
     EventSubTranslatorConfig,
 )
-from auth_service.user_management.user_registry.core.registry import UserRegistryConfig
-from auth_service.user_management.user_registry.translators.dao import UserDaoConfig
-from auth_service.user_management.user_registry.translators.event_pub import (
+from auth_service.user_registry.core.registry import UserRegistryConfig
+from auth_service.user_registry.translators.dao import UserDaoConfig
+from auth_service.user_registry.translators.event_pub import (
     EventPubTranslatorConfig,
 )
 
@@ -68,7 +68,7 @@ class Config(
 
     auth_key: str | None = Field(  # type: ignore
         default=None,
-        description="internal public key for user management"
+        description="internal public key for the auth service"
         " (key pair for auth adapter)",
     )
 

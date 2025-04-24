@@ -485,7 +485,7 @@
         }
       ],
       "default": null,
-      "description": "internal public key for user management (key pair for auth adapter)",
+      "description": "internal public key for the auth service (key pair for auth adapter)",
       "title": "Auth Key"
     },
     "auth_algs": {
