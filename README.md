@@ -38,7 +38,7 @@ The `x-authorization` header is only needed when an additional HTTP Basic Auth i
 
 ### User Registry and Claims Repository
 
-The Auth Service provide two APIs, the (public) `users` API for the user registry, and the (internal) `claims` API for the claims repository. The setting `provide_apis` can be used to specify which of the two APIs should be provided. For testing purposes, both APIs can be provided at the same time, but this is not recommended in production. If no API is specified, then only a health endpoint is provided.
+The Auth Service provides two APIs, the (public) `users` API for the user registry, and the (internal) `claims` API for the claims repository. The setting `provide_apis` can be used to specify which of the two APIs should be provided. For testing purposes, both APIs can be provided at the same time, but this is not recommended in production. If no API is specified, then only a health endpoint is provided.
 
 
 ## Installation
@@ -122,15 +122,7 @@ The service requires the following configuration parameters:
 
 - <a id="properties/dataset_deletion_type"></a>**`dataset_deletion_type`** *(string)*: the type of the event announcing dataset deletions. Default: `"dataset_deleted"`.
 
-- <a id="properties/dataset_upsertion_type"></a>**`dataset_upsertion_type`** *(string, required)*: Type used for events announcing a new dataset overview.
-
-
-  Examples:
-
-  ```json
-  "dataset_created"
-  ```
-
+- <a id="properties/dataset_upsertion_type"></a>**`dataset_upsertion_type`** *(string)*: the type of the event announcing dataset upsertions. Default: `"dataset_created"`.
 
 - <a id="properties/claims_collection"></a>**`claims_collection`** *(string)*: Name of the collection for user claims. Default: `"claims"`.
 

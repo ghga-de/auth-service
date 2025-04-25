@@ -162,6 +162,10 @@ class Config(
         default="dataset_deleted",
         description="the type of the event announcing dataset deletions",
     )
+    dataset_upsertion_type: str = Field(  # required, but unused
+        default="dataset_created",
+        description="the type of the event announcing dataset upsertions",
+    )
 
     @field_validator("oidc_issuer")
     @classmethod
