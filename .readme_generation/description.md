@@ -29,4 +29,4 @@ The `x-authorization` header is only needed when an additional HTTP Basic Auth i
 
 ### User Registry and Claims Repository
 
-The Auth Service provide two APIs, the (public) `users` API for the user registry, and the (internal) `claims` API for the claims repository. The setting `provide_apis` can be used to specify which of the two APIs should be provided. For testing purposes, both APIs can be provided at the same time, but this is not recommended in production. If no API is specified, then only a health endpoint is provided.
+The Auth Service provides two APIs, the (public) `users` API for the user registry, and the (internal) `claims` API for the claims repository. The setting `provide_apis` can be used to specify which of the two APIs should be provided. For testing purposes, both APIs can be provided at the same time, but this is not recommended in production. If no API is specified, then only a health endpoint is provided.
