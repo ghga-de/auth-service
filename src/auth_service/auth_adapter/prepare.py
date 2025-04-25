@@ -29,17 +29,9 @@ from auth_service.claims_repository.translators.dao import (
     ClaimDaoFactory,
 )
 from auth_service.user_registry.core.registry import UserRegistry
-from auth_service.user_registry.deps import (
-    get_iva_dao,
-    get_user_dao,
-    get_user_registry,
-)
-from auth_service.user_registry.translators.dao import (
-    UserDaoPublisherFactory,
-)
-from auth_service.user_registry.translators.event_pub import (
-    EventPubTranslator,
-)
+from auth_service.user_registry.deps import get_iva_dao, get_user_dao, get_user_registry
+from auth_service.user_registry.translators.dao import UserDaoPublisherFactory
+from auth_service.user_registry.translators.event_pub import EventPubTranslator
 
 from ..config import Config
 from . import DESCRIPTION, TITLE, VERSION
