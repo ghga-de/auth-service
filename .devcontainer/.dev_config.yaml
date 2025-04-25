@@ -17,6 +17,5 @@ kafka_servers: ["kafka:9092"]
 auth_topic: auth
 second_factor_recreated_type: second_factor_recreated
 user_topic: users
-dataset_upsertion_type: dataset_upserted
 iva_state_changed_topic: ivas
 iva_state_changed_type: iva_state_changed

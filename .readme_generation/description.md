@@ -27,8 +27,6 @@ Emissary-ingress does not forward all authorization headers by default, therefor
 
 The `x-authorization` header is only needed when an additional HTTP Basic Auth is used on top of the OIDC based authentication. Only the default `authorization` header actually needs to be modified by the Auth Adapter. However, for security purposes the Auth Adapter also empties the authorization headers that it consumes and evaluates itself and which are therefore not needed by the backend. Therefore, these are also specified as response headers.
 
-### User Management
+### User Registry and Claims Repository
 
-The `user_management` sub-package contains the user data management service which is run when `provide_apis` does not contain `ext_auth`.
-
-The user management services can provide two APIs, the (public) `users` API for the user registry, and the (internal) `claims` API for the claims repository. The setting `provide_apis` can be used to specify which of the two APIs should be provided. For testing purposes, both APIs can be provided at the same time, but this is not recommended in production. If no API is specified, then only an health endpoint is provided.
+The Auth Service provides two APIs, the (public) `users` API for the user registry, and the (internal) `claims` API for the claims repository. The setting `provide_apis` can be used to specify which of the two APIs should be provided. For testing purposes, both APIs can be provided at the same time, but this is not recommended in production. If no API is specified, then only a health endpoint is provided.

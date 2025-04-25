@@ -21,7 +21,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from auth_service.user_management import (
+from auth_service import (
     CONTACT,
     DESCRIPTION,
     LICENSE_INFO,
@@ -38,7 +38,7 @@ from tests.fixtures.auth_keys import reload_auth_key_config
 
 reload_auth_key_config(False)
 
-from auth_service.user_management.prepare import (
+from auth_service.prepare import (
     base_router,
     claims_router,
     users_router,
