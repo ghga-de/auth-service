@@ -783,12 +783,12 @@ async def test_get_datasets_with_download_access(full_client: FullClient):
     # check access for right user
     response = await full_client.get("/download-access/users/john@ghga.de/datasets")
     assert response.status_code == status.HTTP_200_OK
-    dataset_ids = response.json()
+    dataset_id_to_end_date = response.json()
 
-    assert isinstance(dataset_ids, dict)
-    assert sorted(dataset_ids) == ["DS0815", "DS0816"]
+    assert isinstance(dataset_id_to_end_date, dict)
+    assert sorted(dataset_id_to_end_date) == ["DS0815", "DS0816"]
 
-    valid_until = dataset_ids["DS0815"]
+    valid_until = dataset_id_to_end_date["DS0815"]
     assert isinstance(valid_until, str)
     # check that we get the longer validity period
     assert (

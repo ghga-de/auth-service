@@ -459,7 +459,7 @@ async def get_datasets_with_download_access(
     if not await user_is_active(user_id, user_dao=user_dao):
         raise user_not_found_error
 
-    dataset_ids: dict[str, UTCDatetime] = {}
+    dataset_id_to_end_date: dict[str, UTCDatetime] = {}
     # run through all controlled access grants for the user
     async for claim in claim_dao.find_all(
         mapping={
@@ -478,12 +478,12 @@ async def get_datasets_with_download_access(
         dataset_id = dataset_id_for_download_access(claim)
         if not dataset_id:
             continue
-        valid_until = dataset_ids.get(dataset_id)
+        valid_until = dataset_id_to_end_date.get(dataset_id)
         if valid_until and valid_until >= claim.valid_until:
             # we already found a claim with longer validity
             continue
         # map the dataset ID to the date until which the user has access
-        dataset_ids[dataset_id] = claim.valid_until
+        dataset_id_to_end_date[dataset_id] = claim.valid_until
 
     # sort the output by dataset ID to make it reproducible
-    return dict(sorted(dataset_ids.items()))
+    return dict(sorted(dataset_id_to_end_date.items()))
