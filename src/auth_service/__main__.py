@@ -24,7 +24,6 @@ from ghga_service_commons.utils.utc_dates import assert_tz_is_utc
 from hexkit.log import configure_logging
 
 from .config import CONFIG, Config
-from .otel import prepare_opentelemetry
 
 log = logging.getLogger(__name__)
 
@@ -84,7 +83,6 @@ def run(config: Config = CONFIG):
     if not components:
         raise ValueError("must specify an API or run as event consumer")
     service_name_and_components = f"{service_name} with {' and '.join(components)}"
-    prepare_opentelemetry(service_name_and_components)
     log.info(f"Starting {service_name_and_components}")
     asyncio.run(run_parallel(auth_adapter, run_consumer, config=config))
 
