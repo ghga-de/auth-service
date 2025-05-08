@@ -571,6 +571,7 @@ opentelemetry-api==1.32.1 \
     #   opentelemetry-distro
     #   opentelemetry-exporter-otlp-proto-http
     #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-aiokafka
     #   opentelemetry-instrumentation-asgi
     #   opentelemetry-instrumentation-fastapi
     #   opentelemetry-instrumentation-httpx
@@ -595,10 +596,15 @@ opentelemetry-instrumentation==0.53b1 \
     # via
     #   hexkit
     #   opentelemetry-distro
+    #   opentelemetry-instrumentation-aiokafka
     #   opentelemetry-instrumentation-asgi
     #   opentelemetry-instrumentation-fastapi
     #   opentelemetry-instrumentation-httpx
     #   opentelemetry-instrumentation-pymongo
+opentelemetry-instrumentation-aiokafka==0.53b1 \
+    --hash=sha256:70c6b432b1ccded38158e2751ee2b8a6d1e8d61e277ba6c9229b3bb6a0064d1b \
+    --hash=sha256:9b2067ad957ed50e2d079e02eb3251c177c0256fe8d852e532e4bdb31ad6f5d2
+    # via hexkit
 opentelemetry-instrumentation-asgi==0.53b1 \
     --hash=sha256:5f8422eff0a9e3ecb052a8726335925610bb9bd7bb1acf1619c2c28dc3c04842 \
     --hash=sha256:74b7a023787c574f2dd5ed9376e5b921c14501ba1b281ec8527eaadc442563e7
@@ -633,6 +639,7 @@ opentelemetry-semantic-conventions==0.53b1 \
     --hash=sha256:4c5a6fede9de61211b2e9fc1e02e8acacce882204cd770177342b6a3be682992
     # via
     #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-aiokafka
     #   opentelemetry-instrumentation-asgi
     #   opentelemetry-instrumentation-fastapi
     #   opentelemetry-instrumentation-httpx
