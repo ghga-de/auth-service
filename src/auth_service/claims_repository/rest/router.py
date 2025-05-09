@@ -22,7 +22,7 @@ from typing import Annotated
 from fastapi import APIRouter, Path, Response, status
 from fastapi.exceptions import HTTPException
 from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc
-from hexkit.opentelemetry_setup import start_span
+from hexkit.opentelemetry import start_span
 from hexkit.protocols.dao import ResourceNotFoundError
 
 from auth_service.user_registry.deps import (

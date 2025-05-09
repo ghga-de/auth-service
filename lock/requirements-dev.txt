@@ -384,9 +384,9 @@ ghga-event-schemas==5.0.0 \
     --hash=sha256:0b0622d2f724c8cc0f6bcd45b551943dafb0ce9c890d2c89bd6a303b5c21f3b8 \
     --hash=sha256:d6c9ace06548e63defcaf2374b5c9d2f2e9d2585ecd5bee92cd896104ba1c7e7
     # via auth-service (pyproject.toml)
-ghga-service-commons==4.0.0 \
-    --hash=sha256:27ba3dfea1ad40398d64eb72a686952ac7e13ce01a9145018d3175fc056f61ce \
-    --hash=sha256:58ed73c298f37c785ee9eec0fb7410f69d0d3f2027c54cc8f902e1db18f15b92
+ghga-service-commons==4.1.0 \
+    --hash=sha256:3601ca173818f87b73f9dcf55463fd7ec43d881a840e0ba8a1342f77e4127aad \
+    --hash=sha256:6c1b367d324ff23303e949d2af956eda007d24b4d7c811cfc8add1974a9034f0
     # via auth-service (pyproject.toml)
 googleapis-common-protos==1.70.0 \
     --hash=sha256:0e1b44e0ea153e6594f9f394fef15193a68aaaea2d843f83e2742717ca753257 \
@@ -398,9 +398,9 @@ h11==0.16.0 \
     # via
     #   httpcore
     #   uvicorn
-hexkit==4.6.2 \
-    --hash=sha256:422aba57877ec6657de299049d2099c5bb7813cd1a9a0b204dc1b3d8f5a4080e \
-    --hash=sha256:cc6fcc7037914ff896d261caef1126f7ab854c23f4161c71d1dc3edefc81e49c
+hexkit==5.0.0 \
+    --hash=sha256:5d77d6ebfd907d9e9834f3c92d18292713761c8c7a7f8e6bc8736721beeee4e1 \
+    --hash=sha256:cce9c8303582bcd902ff2935b5e5fabaeb6f69140fa73334f0aff6dc8aab9c12
     # via
     #   auth-service (pyproject.toml)
     #   ghga-service-commons
@@ -1264,9 +1264,9 @@ uvloop==0.21.0 \
     --hash=sha256:f3df876acd7ec037a3d005b3ab85a7e4110422e4d9c1571d4fc89b0fc41b6816 \
     --hash=sha256:f7089d2dc73179ce5ac255bdf37c236a9f914b264825fdaacaded6990a7fb4c2
     # via uvicorn
-virtualenv==20.31.1 \
-    --hash=sha256:65442939608aeebb9284cd30baca5865fcd9f12b58bb740a24b220030df46d26 \
-    --hash=sha256:f448cd2f1604c831afb9ea238021060be2c0edbcad8eb0a4e8b4e14ff11a5482
+virtualenv==20.31.2 \
+    --hash=sha256:36efd0d9650ee985f0cad72065001e66d49a6f24eb44d98980f630686243cf11 \
+    --hash=sha256:e10c0a9d02835e592521be48b332b6caee6887f332c111aa79a09b9e79efc2af
     # via pre-commit
 watchfiles==1.0.5 \
     --hash=sha256:0125f91f70e0732a9f8ee01e49515c35d38ba48db507a50c5bdcad9503af5827 \

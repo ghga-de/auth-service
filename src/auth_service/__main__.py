@@ -22,7 +22,7 @@ import logging
 from ghga_service_commons.api import run_server
 from ghga_service_commons.utils.utc_dates import assert_tz_is_utc
 from hexkit.log import configure_logging
-from hexkit.opentelemetry_setup import configure_opentelemetry
+from hexkit.opentelemetry import configure_opentelemetry
 
 from .config import CONFIG, Config
 

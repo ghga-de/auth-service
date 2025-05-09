@@ -21,7 +21,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, Query, Response
 from fastapi.exceptions import HTTPException
-from hexkit.opentelemetry_setup import start_span
+from hexkit.opentelemetry import start_span
 from hexkit.protocols.dao import ResourceNotFoundError
 
 from auth_service.auth_adapter.deps import UserTokenDaoDependency

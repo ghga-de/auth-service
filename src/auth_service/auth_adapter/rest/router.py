@@ -31,7 +31,7 @@ from fastapi import (
     Response,
     status,
 )
-from hexkit.opentelemetry_setup import start_span
+from hexkit.opentelemetry import start_span
 from hexkit.protocols.dao import NoHitsFoundError, ResourceNotFoundError
 from pydantic import SecretStr
 

@@ -322,9 +322,9 @@ ghga-event-schemas==5.0.0 \
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)
-ghga-service-commons==4.0.0 \
-    --hash=sha256:27ba3dfea1ad40398d64eb72a686952ac7e13ce01a9145018d3175fc056f61ce \
-    --hash=sha256:58ed73c298f37c785ee9eec0fb7410f69d0d3f2027c54cc8f902e1db18f15b92
+ghga-service-commons==4.1.0 \
+    --hash=sha256:3601ca173818f87b73f9dcf55463fd7ec43d881a840e0ba8a1342f77e4127aad \
+    --hash=sha256:6c1b367d324ff23303e949d2af956eda007d24b4d7c811cfc8add1974a9034f0
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)
@@ -341,9 +341,9 @@ h11==0.16.0 \
     #   -c lock/requirements-dev.txt
     #   httpcore
     #   uvicorn
-hexkit==4.6.2 \
-    --hash=sha256:422aba57877ec6657de299049d2099c5bb7813cd1a9a0b204dc1b3d8f5a4080e \
-    --hash=sha256:cc6fcc7037914ff896d261caef1126f7ab854c23f4161c71d1dc3edefc81e49c
+hexkit==5.0.0 \
+    --hash=sha256:5d77d6ebfd907d9e9834f3c92d18292713761c8c7a7f8e6bc8736721beeee4e1 \
+    --hash=sha256:cce9c8303582bcd902ff2935b5e5fabaeb6f69140fa73334f0aff6dc8aab9c12
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)

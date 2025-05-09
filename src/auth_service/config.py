@@ -21,7 +21,7 @@ from ghga_service_commons.api import ApiConfigBase
 from ghga_service_commons.auth.ghga import AuthConfig
 from hexkit.config import config_from_yaml
 from hexkit.log import LoggingConfig
-from hexkit.opentelemetry_setup import OpenTelemetryConfig
+from hexkit.opentelemetry import OpenTelemetryConfig
 from hexkit.providers.akafka import KafkaConfig
 from hexkit.providers.mongodb import MongoDbConfig
 from hexkit.providers.mongokafka import MongoKafkaConfig
