@@ -454,9 +454,9 @@ h11==0.16.0 \
     # via
     #   httpcore
     #   uvicorn
-hexkit==5.1.0 \
-    --hash=sha256:16cb52ea84ef00fe2d25cdbb1ae05d6a7023040e1e4978e51716a259e0759e86 \
-    --hash=sha256:4dc81925e09152449e7df211145d8f08ad78dc1cb4bf8074ba2eb5c47870e359
+hexkit==5.1.1 \
+    --hash=sha256:08be6279675c65ef4fcbab0a2d280f93ec0f427692c3d966d05f4afb600ba84d \
+    --hash=sha256:a548fc35e3c50bdd2c82941ce6288182db919daa6b65eb255d9ecb0a2135bc8b
     # via
     #   auth-service (pyproject.toml)
     #   ghga-service-commons
@@ -624,7 +624,6 @@ opentelemetry-api==1.33.1 \
     --hash=sha256:4db83ebcf7ea93e64637ec6ee6fabee45c5cbe4abd9cf3da95c43828ddb50b83
     # via
     #   hexkit
-    #   opentelemetry-distro
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
     #   opentelemetry-instrumentation
@@ -635,10 +634,6 @@ opentelemetry-api==1.33.1 \
     #   opentelemetry-instrumentation-pymongo
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-distro==0.54b1 \
-    --hash=sha256:009486513b32b703e275bb2f9ccaf5791676bbf5e2dcfdd90201ddc8f56f122b \
-    --hash=sha256:61d6b97bb7a245fddbb829345bb4ad18be39eb52f770fab89a127107fca3149f
-    # via hexkit
 opentelemetry-exporter-otlp==1.33.1 \
     --hash=sha256:4d050311ea9486e3994575aa237e32932aad58330a31fba24fdba5c0d531cf04 \
     --hash=sha256:9bcf1def35b880b55a49e31ebd63910edac14b294fd2ab884953c4deaff5b300
@@ -662,7 +657,6 @@ opentelemetry-instrumentation==0.54b1 \
     --hash=sha256:a4ae45f4a90c78d7006c51524f57cd5aa1231aef031eae905ee34d5423f5b198
     # via
     #   hexkit
-    #   opentelemetry-distro
     #   opentelemetry-instrumentation-aiokafka
     #   opentelemetry-instrumentation-asgi
     #   opentelemetry-instrumentation-fastapi
@@ -700,7 +694,6 @@ opentelemetry-sdk==1.33.1 \
     --hash=sha256:85b9fcf7c3d23506fbc9692fd210b8b025a1920535feec50bd54ce203d57a531
     # via
     #   hexkit
-    #   opentelemetry-distro
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
 opentelemetry-semantic-conventions==0.54b1 \
