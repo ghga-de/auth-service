@@ -56,6 +56,7 @@ router = APIRouter()
 INITIAL_USER_STATUS = UserStatus.ACTIVE
 
 
+@start_span()
 @router.post(
     "/users",
     operation_id="post_user",
@@ -73,7 +74,6 @@ INITIAL_USER_STATUS = UserStatus.ACTIVE
     },
     status_code=201,
 )
-@start_span()
 async def post_user(
     user_data: UserRegisteredData,
     user_registry: UserRegistryDependency,
@@ -102,6 +102,7 @@ async def post_user(
         ) from error
 
 
+@start_span()
 @router.put(
     "/users/{id}",
     operation_id="put_user",
@@ -120,7 +121,6 @@ async def post_user(
     },
     status_code=204,
 )
-@start_span()
 async def put_user(
     user_data: UserBasicData,
     id_: Annotated[
@@ -154,6 +154,7 @@ async def put_user(
     return Response(status_code=204)
 
 
+@start_span()
 @router.get(
     "/users/{id}",
     operation_id="get_user",
@@ -170,7 +171,6 @@ async def put_user(
     },
     status_code=200,
 )
-@start_span()
 async def get_user(
     id_: Annotated[
         str,
@@ -203,6 +203,7 @@ async def get_user(
     return user
 
 
+@start_span()
 @router.patch(
     "/users/{id}",
     operation_id="patch_user",
@@ -219,7 +220,6 @@ async def get_user(
     },
     status_code=201,
 )
-@start_span()
 async def patch_user(
     user_data: UserModifiableData,
     id_: Annotated[
@@ -263,6 +263,7 @@ async def patch_user(
     return Response(status_code=204)
 
 
+@start_span()
 @router.delete(
     "/users/{id}",
     operation_id="delete_user",
@@ -279,7 +280,6 @@ async def patch_user(
     },
     status_code=201,
 )
-@start_span()
 async def delete_user(
     id_: Annotated[
         str,
@@ -320,6 +320,7 @@ async def delete_user(
     return Response(status_code=204)
 
 
+@start_span()
 @router.get(
     "/users/{user_id}/ivas",
     operation_id="get_user_ivas",
@@ -338,7 +339,6 @@ async def delete_user(
     },
     status_code=200,
 )
-@start_span()
 async def get_user_ivas(
     user_id: Annotated[
         str,
@@ -363,6 +363,7 @@ async def get_user_ivas(
         raise HTTPException(status_code=500, detail="Cannot retrieve IVAs.") from error
 
 
+@start_span()
 @router.post(
     "/users/{user_id}/ivas",
     operation_id="post_user_iva",
@@ -378,7 +379,6 @@ async def get_user_ivas(
     },
     status_code=201,
 )
-@start_span()
 async def post_user_iva(
     user_id: Annotated[
         str,
@@ -410,6 +410,7 @@ async def post_user_iva(
     return IvaId(id=id_)
 
 
+@start_span()
 @router.delete(
     "/users/{user_id}/ivas/{iva_id}",
     operation_id="delete_user_iva",
@@ -425,7 +426,6 @@ async def post_user_iva(
     },
     status_code=204,
 )
-@start_span()
 async def delete_user_iva(
     user_id: Annotated[
         str,
@@ -461,6 +461,7 @@ async def delete_user_iva(
     return Response(status_code=204)
 
 
+@start_span()
 @router.post(
     "/rpc/ivas/{iva_id}/unverify",
     operation_id="unverify_iva",
@@ -475,7 +476,6 @@ async def delete_user_iva(
     },
     status_code=204,
 )
-@start_span()
 async def unverify_iva(
     iva_id: Annotated[
         str,
@@ -500,6 +500,7 @@ async def unverify_iva(
     return Response(status_code=204)
 
 
+@start_span()
 @router.post(
     "/rpc/ivas/{iva_id}/request-code",
     operation_id="request_code_for_iva",
@@ -514,7 +515,6 @@ async def unverify_iva(
     },
     status_code=204,
 )
-@start_span()
 async def request_code_for_iva(
     iva_id: Annotated[
         str,
@@ -545,6 +545,7 @@ async def request_code_for_iva(
     return Response(status_code=204)
 
 
+@start_span()
 @router.post(
     "/rpc/ivas/{iva_id}/create-code",
     operation_id="create_code_for_iva",
@@ -560,7 +561,6 @@ async def request_code_for_iva(
     },
     status_code=201,
 )
-@start_span()
 async def create_code_for_iva(
     iva_id: Annotated[
         str,
@@ -589,6 +589,7 @@ async def create_code_for_iva(
     return IvaVerificationCode(verification_code=code)
 
 
+@start_span()
 @router.post(
     "/rpc/ivas/{iva_id}/code-transmitted",
     operation_id="code_transmitted_for_iva",
@@ -611,7 +612,6 @@ async def create_code_for_iva(
     },
     status_code=204,
 )
-@start_span()
 async def confirm_code_for_iva_transmitted(
     iva_id: Annotated[
         str,
@@ -641,6 +641,7 @@ async def confirm_code_for_iva_transmitted(
     return Response(status_code=204)
 
 
+@start_span()
 @router.post(
     "/rpc/ivas/{iva_id}/validate-code",
     operation_id="validate_code_for_iva",
@@ -658,7 +659,6 @@ async def confirm_code_for_iva_transmitted(
     },
     status_code=204,
 )
-@start_span()
 async def validate_code_for_iva(
     iva_id: Annotated[
         str,
@@ -700,6 +700,7 @@ async def validate_code_for_iva(
     return Response(status_code=204)
 
 
+@start_span()
 @router.get(
     "/ivas",
     operation_id="get_all_ivas",
@@ -716,7 +717,6 @@ async def validate_code_for_iva(
     },
     status_code=200,
 )
-@start_span()
 async def get_all_ivas(
     user_registry: UserRegistryDependency,
     _auth_context: StewardAuthContext,

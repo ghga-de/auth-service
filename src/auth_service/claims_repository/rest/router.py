@@ -70,6 +70,7 @@ claim_not_found_error = HTTPException(
 )
 
 
+@start_span()
 @router.post(
     "/users/{user_id}/claims",
     operation_id="post_claim",
@@ -85,7 +86,6 @@ claim_not_found_error = HTTPException(
     },
     status_code=201,
 )
-@start_span()
 async def post_claim(
     claim_creation: ClaimCreation,
     user_id: Annotated[
@@ -121,6 +121,7 @@ async def post_claim(
     return full_claim
 
 
+@start_span()
 @router.get(
     "/users/{user_id}/claims",
     operation_id="get_claims",
@@ -135,7 +136,6 @@ async def post_claim(
     },
     status_code=200,
 )
-@start_span()
 async def get_claims(
     user_id: Annotated[
         str,
@@ -155,6 +155,7 @@ async def get_claims(
     return [claim async for claim in claim_dao.find_all(mapping={"user_id": user_id})]
 
 
+@start_span()
 @router.patch(
     "/users/{user_id}/claims/{claim_id}",
     operation_id="patch_claim",
@@ -168,7 +169,6 @@ async def get_claims(
     },
     status_code=201,
 )
-@start_span()
 async def patch_user(
     claim_update: ClaimUpdate,
     user_id: Annotated[
@@ -215,6 +215,7 @@ async def patch_user(
     return Response(status_code=204)
 
 
+@start_span()
 @router.delete(
     "/users/{user_id}/claims/{claim_id}",
     operation_id="delete_claim",
@@ -228,7 +229,6 @@ async def patch_user(
     },
     status_code=201,
 )
-@start_span()
 async def delete_claim(
     user_id: Annotated[
         str,
@@ -269,6 +269,7 @@ async def delete_claim(
     return Response(status_code=204)
 
 
+@start_span()
 @router.post(
     "/download-access/users/{user_id}/ivas/{iva_id}/datasets/{dataset_id}",
     operation_id="grant_download_access",
@@ -284,7 +285,6 @@ async def delete_claim(
     },
     status_code=204,
 )
-@start_span()
 async def grant_download_access(  # noqa: PLR0913
     validity: ClaimValidity,
     user_id: Annotated[
@@ -340,6 +340,7 @@ async def grant_download_access(  # noqa: PLR0913
     return Response(status_code=204)
 
 
+@start_span()
 @router.get(
     "/download-access/users/{user_id}/datasets/{dataset_id}",
     operation_id="check_download_access",
@@ -354,7 +355,6 @@ async def grant_download_access(  # noqa: PLR0913
     },
     status_code=200,
 )
-@start_span()
 async def check_download_access(
     user_id: Annotated[
         str,
@@ -406,6 +406,7 @@ async def check_download_access(
     return False
 
 
+@start_span()
 @router.get(
     "/download-access/users/{user_id}/datasets",
     operation_id="get_download_access_list",
@@ -422,7 +423,6 @@ async def check_download_access(
     },
     status_code=200,
 )
-@start_span()
 async def get_datasets_with_download_access(
     user_id: Annotated[
         str,
