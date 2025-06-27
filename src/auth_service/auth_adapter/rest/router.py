@@ -19,6 +19,7 @@ Note: If a path_prefix is used for the Emissary AuthService,
 then this must be also specified in the config setting api_root_path.
 """
 
+from enum import Enum
 from typing import Annotated
 
 from fastapi import (
@@ -73,8 +74,8 @@ auth_paths = tuple(CONFIG.auth_paths)
 basic_auth_dependency = get_basic_auth_dependency(CONFIG)
 basic_auth_dependencies = [basic_auth_dependency] if basic_auth_dependency else None
 
-TAGS_USER: list[str] = ["users"]
-TAGS_TOTP: list[str] = ["totp"]
+TAGS_USER: list[str | Enum] = ["users"]
+TAGS_TOTP: list[str | Enum] = ["totp"]
 
 # the auth adapter needs to handle all HTTP methods
 READ_METHODS = ["GET", "HEAD", "OPTIONS"]
