@@ -20,4 +20,5 @@ user_topic: users
 iva_state_changed_topic: ivas
 iva_state_changed_type: iva_state_changed
 
+enable_opentelemetry: false
 otel_exporter_endpoint: http://localhost:4318
