@@ -39,6 +39,7 @@ from tests.fixtures.auth_keys import reload_auth_key_config
 reload_auth_key_config(False)
 
 from auth_service.prepare import (
+    access_router,
     base_router,
     claims_router,
     users_router,
@@ -55,3 +56,4 @@ app = FastAPI(
 app.include_router(base_router)
 app.include_router(users_router)
 app.include_router(claims_router)
+app.include_router(access_router)
