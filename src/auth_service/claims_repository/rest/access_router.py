@@ -18,27 +18,31 @@
 
 import logging
 from enum import Enum
+from operator import attrgetter
 from typing import Annotated
 
-from fastapi import APIRouter, Path, Response, status
+from fastapi import APIRouter, Path, Query, Response, status
 from fastapi.exceptions import HTTPException
 from ghga_service_commons.utils.utc_dates import UTCDatetime
 from hexkit.opentelemetry import start_span
+from hexkit.protocols.dao import ResourceNotFoundError
 
 from auth_service.user_registry.deps import (
     IvaDaoDependency,
     UserDaoDependency,
 )
 
+from ...user_registry.models.users import User
 from ..core.claims import (
     create_controlled_access_claim,
+    create_controlled_access_filter,
     dataset_id_for_download_access,
     has_download_access_for_dataset,
     is_valid_claim,
 )
 from ..core.utils import iva_is_verified, user_is_active, user_with_iva_exists
 from ..deps import ClaimDaoDependency
-from ..models.claims import Accession, ClaimValidity, VisaType
+from ..models.claims import Accession, ClaimValidity, Grant
 
 __all__ = ["router"]
 
@@ -55,6 +59,107 @@ iva_not_found_error = HTTPException(
 )
 
 TAGS: list[str | Enum] = ["access"]
+
+
+@start_span()
+@router.get(
+    "/download-access/grants",
+    operation_id="get_download_access_grants",
+    tags=TAGS,
+    summary="Get access grants",
+    description="Endpoint to get the list of all access grants. Can be filtered by user ID, IVA ID, and dataset ID.",
+    responses={
+        200: {
+            "model": list[Grant],
+            "description": "Access grants have been fetched.",
+        },
+    },
+    status_code=200,
+)
+async def get_download_access_grants(  # noqa: PLR0913
+    claim_dao: ClaimDaoDependency,
+    user_dao: UserDaoDependency,
+    user_id: Annotated[
+        str | None,
+        Query(
+            ...,
+            alias="user_id",
+            description="The internal ID of the user",
+        ),
+    ] = None,
+    iva_id: Annotated[
+        str | None,
+        Query(
+            ...,
+            alias="iva_id",
+            description="The ID of the IVA",
+        ),
+    ] = None,
+    dataset_id: Annotated[
+        str | None,
+        Query(
+            ...,
+            alias="dataset_id",
+            description="The ID of the dataset",
+        ),
+    ] = None,
+    valid: Annotated[
+        bool | None,
+        Query(
+            ...,
+            alias="valid",
+            description="Whether the grant is currently valid",
+        ),
+    ] = None,
+    # internal service, authorization without token via service mesh
+) -> list[Grant]:
+    """Get access grants.
+
+    You can filter the grants by user ID, IVA ID, and dataset ID
+    and by whether the grant is currently valid or not.
+    """
+    # Determine all controlled access grants for the user
+    grants: list[Grant] = []
+    users: dict[str, User | None] = {}  # user cache
+    mapping = create_controlled_access_filter(
+        user_id=user_id, iva_id=iva_id, dataset_id=dataset_id
+    )
+    async for claim in claim_dao.find_all(mapping=mapping):
+        if claim.revocation_date:
+            continue  # revoked claims should be considered deleted as grants
+        if valid is not None and is_valid_claim(claim) != valid:
+            continue  # filter by validity if requested
+        dataset_id = dataset_id_for_download_access(claim)
+        if not dataset_id:
+            continue  # consider only claims for the right source
+        # find user name and email
+        user_id = claim.user_id
+        try:
+            user = users[user_id]
+        except KeyError:
+            try:
+                user = await user_dao.get_by_id(user_id)
+            except ResourceNotFoundError:
+                user = None
+            users[user_id] = user
+        if not user:
+            continue
+        grants.append(
+            Grant(
+                id=claim.id,
+                user_id=user_id,
+                iva_id=claim.iva_id,
+                dataset_id=dataset_id,
+                created=claim.creation_date,
+                valid_from=claim.valid_from,
+                valid_until=claim.valid_until,
+                user_name=user.name,
+                user_email=user.email,
+                user_title=user.title,
+            )
+        )
+    # sort the output by ID to make it reproducible
+    return sorted(grants, key=attrgetter("id"))
 
 
 @start_span()
@@ -180,12 +285,8 @@ async def check_download_access(
 
     valid_until: UTCDatetime | None = None
     # run through all controlled access grants for the user
-    async for claim in claim_dao.find_all(
-        mapping={
-            "user_id": user_id,
-            "visa_type": VisaType.CONTROLLED_ACCESS_GRANTS,
-        }
-    ):
+    mapping = create_controlled_access_filter(user_id=user_id)
+    async for claim in claim_dao.find_all(mapping=mapping):
         # check whether the claim is valid and for the right source
         if not (
             is_valid_claim(claim)
@@ -247,13 +348,9 @@ async def get_datasets_with_download_access(
         raise user_not_found_error
 
     dataset_id_to_end_date: dict[str, UTCDatetime] = {}
+    mapping = create_controlled_access_filter(user_id=user_id)
     # run through all controlled access grants for the user
-    async for claim in claim_dao.find_all(
-        mapping={
-            "user_id": user_id,
-            "visa_type": VisaType.CONTROLLED_ACCESS_GRANTS,
-        }
-    ):
+    async for claim in claim_dao.find_all(mapping=mapping):
         # consider only valid controlled access grants for the user
         if not (
             is_valid_claim(claim)
