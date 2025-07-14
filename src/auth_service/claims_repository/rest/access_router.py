@@ -19,13 +19,13 @@
 import logging
 from enum import Enum
 from operator import attrgetter
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Path, Query, Response, status
 from fastapi.exceptions import HTTPException
-from ghga_service_commons.utils.utc_dates import UTCDatetime
+from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc
 from hexkit.opentelemetry import start_span
-from hexkit.protocols.dao import ResourceNotFoundError
+from hexkit.protocols.dao import NoHitsFoundError, ResourceNotFoundError
 
 from auth_service.user_registry.deps import (
     IvaDaoDependency,
@@ -51,6 +51,10 @@ log = logging.getLogger(__name__)
 router = APIRouter()
 
 
+grant_not_found_error = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail="The download access grant was not found.",
+)
 user_not_found_error = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND, detail="The user was not found."
 )
@@ -66,8 +70,8 @@ TAGS: list[str | Enum] = ["access"]
     "/download-access/grants",
     operation_id="get_download_access_grants",
     tags=TAGS,
-    summary="Get access grants",
-    description="Endpoint to get the list of all access grants. Can be filtered by user ID, IVA ID, and dataset ID.",
+    summary="Get download access grants",
+    description="Endpoint to get the list of all download access grants. Can be filtered by user ID, IVA ID, and dataset ID.",
     responses={
         200: {
             "model": list[Grant],
@@ -113,7 +117,7 @@ async def get_download_access_grants(  # noqa: PLR0913
     ] = None,
     # internal service, authorization without token via service mesh
 ) -> list[Grant]:
-    """Get access grants.
+    """Get download access grants.
 
     You can filter the grants by user ID, IVA ID, and dataset ID
     and by whether the grant is currently valid or not.
@@ -160,6 +164,50 @@ async def get_download_access_grants(  # noqa: PLR0913
         )
     # sort the output by ID to make it reproducible
     return sorted(grants, key=attrgetter("id"))
+
+
+@start_span()
+@router.delete(
+    "/download-access/grants/{grant_id}",
+    operation_id="delete_download_access_grant",
+    tags=TAGS,
+    summary="Delete a download access grant",
+    description="Endpoint to delete an existing download access grant. This will revoke the corresponding claim.",
+    responses={
+        204: {
+            "description": "Access grant have been deleted.",
+        },
+        404: {"description": "The access grant was not found."},
+    },
+    status_code=204,
+)
+async def delete_download_access_grant(
+    grant_id: Annotated[
+        str,
+        Path(
+            ...,
+            alias="grant_id",
+            description="The ID of the grant to delete",
+        ),
+    ],
+    claim_dao: ClaimDaoDependency,
+    # internal service, authorization without token via service mesh
+) -> Response:
+    """Delete a download access grants."""
+    mapping = cast(dict[str, str | None], create_controlled_access_filter())
+    mapping.update({"id_": grant_id, "revocation_date": None})
+    try:
+        claim = await claim_dao.find_one(mapping=mapping)
+    except NoHitsFoundError as error:
+        raise grant_not_found_error from error
+
+    claim = claim.model_copy(update={"revocation_date": now_as_utc()})
+    try:
+        await claim_dao.update(claim)
+    except ResourceNotFoundError as error:
+        raise grant_not_found_error from error
+
+    return Response(status_code=204)
 
 
 @start_span()

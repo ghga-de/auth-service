@@ -559,8 +559,8 @@ async def test_get_datasets_with_download_access(full_client: FullClient):
     assert response.json()["detail"] == "The user was not found."
 
 
-async def test_getting_all_access_grants(full_client: FullClient):
-    """Test that getting all access grants works."""
+async def test_fetch_access_grants(full_client: FullClient):
+    """Test that access grants can be fetched and filters can be used."""
     user_dao = DummyUserDao(title="Prof.", name="John Doe Sr.")
     full_client.app.dependency_overrides[get_user_dao] = lambda: user_dao
     claim_dao = DummyClaimDao()
@@ -633,3 +633,53 @@ async def test_getting_all_access_grants(full_client: FullClient):
     response = await full_client.get("/download-access/grants?valid=true")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == expected_grants
+
+
+async def test_delete_access_grants(full_client: FullClient):
+    """Test that access grants can be deleted."""
+    claim_dao = DummyClaimDao()
+    full_client.app.dependency_overrides[get_claim_dao] = lambda: claim_dao
+    claim = claim_dao.claims[1]
+    assert claim.visa_type == "ControlledAccessGrants"
+    claim_id = claim.id
+    assert claim_id == "data-access-claim-id"
+    num_claims = len(claim_dao.claims)
+
+    assert await claim_dao.get_by_id(claim_id) is claim
+
+    expected_error_status = status.HTTP_404_NOT_FOUND
+    expected_error_detail = "The download access grant was not found."
+
+    # try to delete a claim that does not correspond to an access grant
+    response = await full_client.delete("/download-access/grants/data-steward-claim-id")
+    assert response.status_code == expected_error_status
+    assert response.json()["detail"] == expected_error_detail
+
+    # try to delete a non-existing claim
+    response = await full_client.delete("/download-access/grants/some-other-claim-id")
+    assert response.status_code == expected_error_status
+    assert response.json()["detail"] == expected_error_detail
+
+    # make sure that nothing has been changed
+    assert len(claim_dao.claims) == num_claims
+    assert await claim_dao.get_by_id(claim_id) is claim
+
+    # delete the existing access grant
+    response = await full_client.delete(f"/download-access/grants/{claim_id}")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # make sure the claim has been revoked, but not deleted
+    assert len(claim_dao.claims) == num_claims
+    updated_claim = await claim_dao.get_by_id(claim_id)
+    assert updated_claim.revocation_date is not None
+    assert 0 <= (now_as_utc() - updated_claim.revocation_date).total_seconds() < 3
+    assert updated_claim.model_copy(update={"revocation_date": None}) == claim
+
+    # try to delete the access grant again
+    response = await full_client.delete(f"/download-access/grants/{claim_id}")
+    assert response.status_code == expected_error_status
+    assert response.json()["detail"] == expected_error_detail
+
+    # make sure that nothing has been changed
+    assert len(claim_dao.claims) == num_claims
+    assert await claim_dao.get_by_id(claim_id) is updated_claim
