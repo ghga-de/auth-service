@@ -885,21 +885,20 @@ paths:
       - access
   /download-access/grants/{grant_id}:
     delete:
-      description: Endpoint to delete an existing download access grant. This will
-        revoke the corresponding claim.
-      operationId: delete_download_access_grant
+      description: Endpoint to revoke an existing download access grant.
+      operationId: revoke_download_access_grant
       parameters:
-      - description: The ID of the grant to delete
+      - description: The ID of the grant to revoke
         in: path
         name: grant_id
         required: true
         schema:
-          description: The ID of the grant to delete
+          description: The ID of the grant to revoke
           title: Grant Id
           type: string
       responses:
         '204':
-          description: Access grant have been deleted.
+          description: Access grant has been revoked.
         '404':
           description: The access grant was not found.
         '422':
@@ -908,7 +907,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
-      summary: Delete a download access grant
+      summary: Revoke a download access grant
       tags:
       - access
   /download-access/users/{user_id}/datasets:

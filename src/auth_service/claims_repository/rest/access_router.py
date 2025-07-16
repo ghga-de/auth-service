@@ -135,7 +135,7 @@ async def get_download_access_grants(  # noqa: PLR0913
             continue  # filter by validity if requested
         dataset_id = dataset_id_for_download_access(claim)
         if not dataset_id:
-            continue  # consider only claims for the right source
+            continue  # consider only claims for datasets
         # find user name and email
         user_id = claim.user_id
         try:
@@ -169,31 +169,31 @@ async def get_download_access_grants(  # noqa: PLR0913
 @start_span()
 @router.delete(
     "/download-access/grants/{grant_id}",
-    operation_id="delete_download_access_grant",
+    operation_id="revoke_download_access_grant",
     tags=TAGS,
-    summary="Delete a download access grant",
-    description="Endpoint to delete an existing download access grant. This will revoke the corresponding claim.",
+    summary="Revoke a download access grant",
+    description="Endpoint to revoke an existing download access grant.",
     responses={
         204: {
-            "description": "Access grant have been deleted.",
+            "description": "Access grant has been revoked.",
         },
         404: {"description": "The access grant was not found."},
     },
     status_code=204,
 )
-async def delete_download_access_grant(
+async def revoke_download_access_grant(
     grant_id: Annotated[
         str,
         Path(
             ...,
             alias="grant_id",
-            description="The ID of the grant to delete",
+            description="The ID of the grant to revoke",
         ),
     ],
     claim_dao: ClaimDaoDependency,
     # internal service, authorization without token via service mesh
 ) -> Response:
-    """Delete a download access grants."""
+    """Revoke a download access grants."""
     mapping = cast(dict[str, str | None], create_controlled_access_filter())
     mapping.update({"id_": grant_id, "revocation_date": None})
     try:
@@ -335,7 +335,7 @@ async def check_download_access(
     # run through all controlled access grants for the user
     mapping = create_controlled_access_filter(user_id=user_id)
     async for claim in claim_dao.find_all(mapping=mapping):
-        # check whether the claim is valid and for the right source
+        # check whether the claim is valid and for a dataset
         if not (
             is_valid_claim(claim)
             and claim.iva_id
@@ -406,7 +406,7 @@ async def get_datasets_with_download_access(
             and await iva_is_verified(user_id, claim.iva_id, iva_dao=iva_dao)
         ):
             continue
-        # consider only those for the right source
+        # consider only claims for a dataset
         dataset_id = dataset_id_for_download_access(claim)
         if not dataset_id:
             continue
