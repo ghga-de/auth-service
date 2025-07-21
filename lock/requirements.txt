@@ -421,9 +421,9 @@ ghga-event-schemas==9.2.0 \
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)
-ghga-service-commons==4.1.0 \
-    --hash=sha256:3601ca173818f87b73f9dcf55463fd7ec43d881a840e0ba8a1342f77e4127aad \
-    --hash=sha256:6c1b367d324ff23303e949d2af956eda007d24b4d7c811cfc8add1974a9034f0
+ghga-service-commons==4.1.1 \
+    --hash=sha256:af7c2bfe28af791fcc9eb471daf4028080cbdc3105f8974474c67a6e3f315d87 \
+    --hash=sha256:ce1aac7348280bb8c32be9a5fced48336375fbadb814be097d20a5330bee42bc
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)
@@ -579,9 +579,9 @@ importlib-metadata==8.7.0 \
     # via
     #   -c lock/requirements-dev.txt
     #   opentelemetry-api
-jsonschema==4.24.0 \
-    --hash=sha256:0b4e8069eb12aedfa881333004bccaec24ecef5a8a6a4b6df142b2cc9599d196 \
-    --hash=sha256:a462455f19f5faf404a7902952b6f0e3ce868f3ee09a359b05eca6673bd8412d
+jsonschema==4.25.0 \
+    --hash=sha256:24c2e8da302de79c8b9382fee3e76b355e44d2a4364bb207159ce10b517bd716 \
+    --hash=sha256:e63acf5c11762c0e6672ffb61482bdf57f0876684d8d249c0fe2d730d48bc55f
     # via
     #   -c lock/requirements-dev.txt
     #   ghga-event-schemas
