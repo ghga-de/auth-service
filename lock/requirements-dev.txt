@@ -490,9 +490,9 @@ ghga-event-schemas==9.2.0 \
     --hash=sha256:4e085b64e76b76ecf14ba123f11b58d79c1edb1e891c8e044090decc5519a476 \
     --hash=sha256:e9e1b0258f4a97370dce48501a45b820a4ff34b094c3f56840368ed6850391cd
     # via auth-service (pyproject.toml)
-ghga-service-commons==4.1.1 \
-    --hash=sha256:af7c2bfe28af791fcc9eb471daf4028080cbdc3105f8974474c67a6e3f315d87 \
-    --hash=sha256:ce1aac7348280bb8c32be9a5fced48336375fbadb814be097d20a5330bee42bc
+ghga-service-commons==4.1.2 \
+    --hash=sha256:151957afe57c0556510ab75ee030086a5dbe4cdd5a76ce46cc97b11cb57b0800 \
+    --hash=sha256:a40d550f1cbb450e2a172deff7994fa69d6d7a0dd2f2cb213068cda24c85b16a
     # via
     #   auth-service (pyproject.toml)
     #   ghga-event-schemas
@@ -1351,9 +1351,9 @@ starlette==0.46.2 \
     --hash=sha256:595633ce89f8ffa71a015caed34a5b2dc1c0cdb3f0f1fbd1e69339cf2abeec35 \
     --hash=sha256:7f7361f34eed179294600af672f565727419830b54b7b084efe44bb82d2fccd5
     # via fastapi
-testcontainers==4.10.0 \
-    --hash=sha256:03f85c3e505d8b4edeb192c72a961cebbcba0dd94344ae778b4a159cb6dcf8d3 \
-    --hash=sha256:31ed1a81238c7e131a2a29df6db8f23717d892b592fa5a1977fd0dcd0c23fc23
+testcontainers==4.12.0 \
+    --hash=sha256:13ee89cae995e643f225665aad8b200b25c4f219944a6f9c0b03249ec3f31b8d \
+    --hash=sha256:26caef57e642d5e8c5fcc593881cf7df3ab0f0dc9170fad22765b184e226ab15
     # via -r lock/requirements-dev.in
 tomli-w==1.2.0 \
     --hash=sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90 \
