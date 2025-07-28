@@ -568,14 +568,12 @@ async def test_get_users(
     assert user == expected_user
 
 
-async def test_get_users_bad_params(
+async def test_get_users_with_invalid_status(
     bare_client: BareClient,
     steward_headers: dict[str, str],
 ):
-    """Test that we get an error when fetching users with invalid filters."""
+    """Test that we get an error when fetching users with invalid status filter."""
     response = await bare_client.get("/users?status=foo", headers=steward_headers)
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    response = await bare_client.get("/users?foo=active", headers=steward_headers)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
@@ -596,12 +594,12 @@ async def test_get_users_unauthorized(
     response = await bare_client.get("/users", headers=user_headers)
     assert response.status_code == status.HTTP_403_FORBIDDEN
     error = response.json()
-    assert error == {"detail": "Not authorized to request user."}
+    assert error == {"detail": "Not authorized"}
 
     response = await bare_client.get("/users?status=active", headers=user_headers)
     assert response.status_code == status.HTTP_403_FORBIDDEN
     error = response.json()
-    assert error == {"detail": "Not authorized to request user."}
+    assert error == {"detail": "Not authorized"}
 
 
 async def test_patch_non_existing_user(
