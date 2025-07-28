@@ -24,7 +24,11 @@ import pytest
 from fastapi import status
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.providers.akafka.testutils import RecordedEvent
+from hexkit.providers.mongodb import MongoDbDaoFactory
 
+from auth_service.claims_repository.core.claims import Role, create_internal_role_claim
+from auth_service.claims_repository.translators.dao import ClaimDaoFactory
+from auth_service.config import Config
 from auth_service.user_registry.core.registry import UserRegistry
 
 from ...fixtures.utils import get_headers_for
@@ -59,6 +63,15 @@ def seconds_passed(date_string: str) -> float:
     return (
         now_as_utc() - datetime.fromisoformat(date_string.replace("Z", "+00:00"))
     ).total_seconds()
+
+
+async def add_admin_role(user_id: str, config: Config, role: Role = Role.ADMIN) -> None:
+    """Add an admin role to the claims database."""
+    dao_factory = MongoDbDaoFactory(config=config)
+    claim_dao_factory = ClaimDaoFactory(config=config, dao_factory=dao_factory)
+    claim_dao = await claim_dao_factory.get_claim_dao()
+    claim = create_internal_role_claim(user_id, role)
+    await claim_dao.insert(claim)
 
 
 async def test_health_check(bare_client: BareClient):
@@ -306,6 +319,7 @@ async def test_put_user(full_client: FullClient, new_user_headers: dict[str, str
     assert 0 <= seconds_passed(user.pop("registration_date")) <= 10
     assert user.pop("active_submissions") == []
     assert user.pop("active_access_requests") == []
+    assert user.pop("roles") == []
 
     assert user == new_data
 
@@ -423,6 +437,21 @@ async def test_get_user_via_id(
     assert response.status_code == status.HTTP_200_OK
     user = response.json()
 
+    assert user.pop("roles") == []
+
+    assert user == expected_user
+
+    # also test that we can see whether the user is an admin
+
+    await add_admin_role(id_, config=full_client.config)
+
+    response = await full_client.get(f"/users/{id_}", headers=headers)
+
+    assert response.status_code == status.HTTP_200_OK
+    user = response.json()
+
+    assert user.pop("roles") == ["admin"]
+
     assert user == expected_user
 
 
@@ -472,6 +501,8 @@ async def test_get_different_user_as_data_steward(
 
     assert response.status_code == status.HTTP_200_OK
     user = response.json()
+
+    assert user.pop("roles") == []
 
     assert user == expected_user
 
@@ -539,6 +570,7 @@ async def test_patch_user_as_data_steward(
     assert status_change["by"] == "steve-internal"
     assert status_change["context"] == "manual change"
     assert 0 <= seconds_passed(status_change["change_date"]) <= 10
+    assert user.pop("roles") == []
 
     assert user == expected_user
 
@@ -551,6 +583,7 @@ async def test_patch_user_as_data_steward(
     # cannot get status change as normal user
     assert user.pop("status_change") is None
     assert 0 <= seconds_passed(status_change["change_date"]) <= 10
+    assert user.pop("roles") == []
 
     assert user == expected_user
 
@@ -592,6 +625,7 @@ async def test_patch_user_partially(
     assert status_change["by"] == "steve-internal"
     assert status_change["context"] == "manual change"
     assert 0 <= seconds_passed(status_change["change_date"]) <= 10
+    assert user.pop("roles") == []
 
     assert user == expected_user
 
@@ -611,6 +645,7 @@ async def test_patch_user_partially(
     user = response.json()
 
     assert user.pop("status_change") == status_change
+    assert user.pop("roles") == []
 
     assert user == expected_user
 
@@ -653,6 +688,7 @@ async def test_patch_user_as_same_user(
     response = await full_client.get(f"/users/{id_}", headers=steward_headers)
     assert response.status_code == status.HTTP_200_OK
     user = response.json()
+    assert user.pop("roles") == []
     assert user == expected_user
 
     # check that users can change their title
@@ -670,6 +706,7 @@ async def test_patch_user_as_same_user(
 
     assert response.status_code == status.HTTP_200_OK
     user = response.json()
+    assert user.pop("roles") == []
     assert user == expected_user
 
 

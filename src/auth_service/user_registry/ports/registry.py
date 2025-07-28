@@ -21,7 +21,13 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from ..models.ivas import Iva, IvaAndUserData, IvaBasicData, IvaData, IvaState
-from ..models.users import User, UserBasicData, UserModifiableData, UserRegisteredData
+from ..models.users import (
+    User,
+    UserBasicData,
+    UserModifiableData,
+    UserRegisteredData,
+    UserWithRoles,
+)
 
 
 class UserRegistryPort(ABC):
@@ -173,6 +179,16 @@ class UserRegistryPort(ABC):
         ...
 
     @abstractmethod
+    async def get_user_with_roles(self, user_id: str) -> UserWithRoles:
+        """Get user data including all roles, independent of IVAs.
+
+        The roles are returned even if the user is inactive or has no IVAs.
+
+        May raise a UserDoesNotExistError or a UserRetrievalError.
+        """
+        ...
+
+    @abstractmethod
     async def update_user(
         self,
         user_id: str,
@@ -192,6 +208,8 @@ class UserRegistryPort(ABC):
     @abstractmethod
     async def delete_user(self, user_id: str) -> None:
         """Delete a user.
+
+        This also deletes all IVAs and claims belonging to the user.
 
         May raise a UserDoesNotExistError or a UserDeletionError.
         """

@@ -86,7 +86,7 @@ async def get_active_roles(
     user_id: str,
     *,
     claim_dao: ClaimDao,
-    iva_dao: IvaDao,
+    iva_dao: IvaDao | None = None,
     user_dao: UserDao | None = None,
     now: Callable[[], UTCDatetime] = now_as_utc,
 ) -> list[str]:
@@ -95,7 +95,8 @@ async def get_active_roles(
     If no User DAO is provided, the user is assumed to exist and be active,
     otherwise we check this as a requirement for having any active roles.
 
-    For a role to be considered active, we require that the corresponding
+    If no IVA DAO is provided, the corresponding IVAs are ignored, otherwise
+    for a role to be considered active, we require that the corresponding
     claim has a verified associated IVA.
     """
     if user_dao and not await user_is_active(user_id, user_dao=user_dao):
@@ -106,6 +107,9 @@ async def get_active_roles(
     ):
         if is_valid_claim(claim, now=now):
             role = get_role_from_claim(claim)
-            if role and await iva_is_verified(user_id, claim.iva_id, iva_dao=iva_dao):
+            if role and (
+                not iva_dao
+                or await iva_is_verified(user_id, claim.iva_id, iva_dao=iva_dao)
+            ):
                 roles.add(str(role))
     return sorted(roles)

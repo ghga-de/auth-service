@@ -23,12 +23,13 @@ from typing import Any
 
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.protocols.dao import (
+    Dao,
     NoHitsFoundError,
     ResourceNotFoundError,
 )
-from pydantic import Field
-from pydantic_settings import BaseSettings
 
+from ...claims_repository.core.utils import get_active_roles
+from ...claims_repository.ports.dao import ClaimDto
 from ..models.ivas import (
     Iva,
     IvaAndUserData,
@@ -42,24 +43,17 @@ from ..models.users import (
     UserBasicData,
     UserModifiableData,
     UserRegisteredData,
-    UserStatus,
+    UserWithRoles,
 )
 from ..ports.event_pub import EventPublisherPort
 from ..ports.registry import UserRegistryPort
 from ..translators.dao import DaoPublisher, IvaDto, UserDto
+from .config import INITIAL_USER_STATUS, UserRegistryConfig
 from .verification_codes import generate_code, hash_code, validate_code
 
 log = logging.getLogger(__name__)
 
-INITIAL_USER_STATUS = UserStatus.ACTIVE
-
-
-class UserRegistryConfig(BaseSettings):
-    """Configuration for the user registry."""
-
-    max_iva_verification_attempts: int = Field(
-        default=10, description="Maximum number of verification attempts for an IVA"
-    )
+__all__ = ["UserRegistry"]
 
 
 class UserRegistry(UserRegistryPort):
@@ -71,12 +65,14 @@ class UserRegistry(UserRegistryPort):
         config: UserRegistryConfig,
         user_dao: DaoPublisher[UserDto],
         iva_dao: DaoPublisher[IvaDto],
+        claim_dao: Dao[ClaimDto],
         event_pub: EventPublisherPort,
     ):
         """Initialize the user registry."""
         self._max_iva_verification_attempts = config.max_iva_verification_attempts
         self._user_dao = user_dao
         self._iva_dao = iva_dao
+        self._claim_dao = claim_dao
         self._event_pub = event_pub
 
     @staticmethod
@@ -141,6 +137,23 @@ class UserRegistry(UserRegistryPort):
             raise self.UserRetrievalError(user_id=user_id) from error
         return user
 
+    async def get_user_with_roles(self, user_id: str) -> UserWithRoles:
+        """Get user data including all roles.
+
+        The roles are returned even if the user is inactive or has no IVAs.
+
+        May raise a UserDoesNotExistError or a UserRetrievalError.
+        """
+        user = await self.get_user(user_id)
+        roles = await get_active_roles(
+            user_id=user.id,
+            claim_dao=self._claim_dao,
+        )
+        return UserWithRoles(
+            **user.model_dump(),
+            roles=roles,
+        )
+
     async def update_user(
         self,
         user_id: str,
@@ -180,7 +193,7 @@ class UserRegistry(UserRegistryPort):
     async def delete_user(self, user_id: str) -> None:
         """Delete a user.
 
-        This also deletes all IVAs belonging to the user.
+        This also deletes all IVAs and claims belonging to the user.
 
         May raise a UserDoesNotExistError or a UserDeletionError.
         """
@@ -199,6 +212,13 @@ class UserRegistry(UserRegistryPort):
                     await self._iva_dao.delete(iva.id)
         except Exception as error:
             log.error("Could not delete IVAs of user: %s", error)
+            raise self.UserDeletionError(user_id=user_id) from error
+        try:
+            async for claim in self._claim_dao.find_all(mapping={"user_id": user_id}):
+                with suppress(ResourceNotFoundError):
+                    await self._claim_dao.delete(claim.id)
+        except Exception as error:
+            log.error("Could not delete claims of user: %s", error)
             raise self.UserDeletionError(user_id=user_id) from error
 
     async def create_iva(self, user_id: str, data: IvaBasicData) -> str:

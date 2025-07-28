@@ -26,7 +26,6 @@ from hexkit.opentelemetry import start_span
 from hexkit.protocols.dao import ResourceNotFoundError
 
 from auth_service.auth_adapter.deps import UserTokenDaoDependency
-from auth_service.claims_repository.deps import ClaimDaoDependency
 
 from ...auth_adapter.rest.dto import TOTPTokenResponse
 from ...rest.auth import (
@@ -48,14 +47,12 @@ from ..models.users import (
     UserBasicData,
     UserModifiableData,
     UserRegisteredData,
-    UserStatus,
+    UserWithRoles,
 )
 
 __all__ = ["router"]
 
 router = APIRouter()
-
-INITIAL_USER_STATUS = UserStatus.ACTIVE
 
 TAGS_USERS: list[str | Enum] = ["users"]
 TAGS_SESSION: list[str | Enum] = ["session"]
@@ -188,13 +185,13 @@ async def get_user(
     ],
     user_registry: UserRegistryDependency,
     auth_context: UserAuthContext,
-) -> User:
-    """Get user data."""
+) -> UserWithRoles:
+    """Get user data including their roles."""
     # only data stewards can request other user accounts
     if not (is_steward(auth_context) or id_ == auth_context.id):
         raise HTTPException(status_code=403, detail="Not authorized to request user.")
     try:
-        user = await user_registry.get_user(id_)
+        user = await user_registry.get_user_with_roles(id_)
     except user_registry.UserDoesNotExistError as error:
         raise HTTPException(
             status_code=404, detail="The user was not found."
@@ -297,7 +294,6 @@ async def delete_user(
     ],
     user_registry: UserRegistryDependency,
     token_dao: UserTokenDaoDependency,
-    claim_dao: ClaimDaoDependency,
     auth_context: StewardAuthContext,
 ) -> Response:
     """Delete user."""
@@ -311,10 +307,6 @@ async def delete_user(
         # delete associated tokens belonging to the auth adapter
         with suppress(ResourceNotFoundError):
             await token_dao.delete(id_)
-        # delete associated claims belonging to the claims repository
-        async for claim in claim_dao.find_all(mapping={"user_id": id_}):
-            with suppress(ResourceNotFoundError):
-                await claim_dao.delete(claim.id)
     except user_registry.UserDoesNotExistError as error:
         raise HTTPException(
             status_code=404, detail="The user was not found."

@@ -27,6 +27,7 @@ from ghga_service_commons.api import ApiConfigBase
 from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc, utc_datetime
 from hexkit.config import config_from_yaml
 from hexkit.protocols.dao import (
+    Dao,
     MultipleHitsFoundError,
     NoHitsFoundError,
     ResourceNotFoundError,
@@ -42,6 +43,7 @@ from auth_service.claims_repository.models.claims import (
 )
 from auth_service.config import CONFIG
 from auth_service.user_registry.core.registry import (
+    ClaimDto,
     DaoPublisher,
     IvaDto,
     UserDto,
@@ -529,11 +531,13 @@ class DummyUserRegistry(UserRegistry):
         """Initialize the DummyUserRegistry."""
         self.dummy_user_dao = DummyUserDao()
         self.dummy_iva_dao = DummyIvaDao([])
+        self._dummy_claim_dao = DummyClaimDao()
         event_publisher = DummyEventPublisher()
         super().__init__(
             config=config,
             user_dao=cast(DaoPublisher[UserDto], self.dummy_user_dao),
             iva_dao=cast(DaoPublisher[IvaDto], self.dummy_iva_dao),
+            claim_dao=cast(Dao[ClaimDto], self._dummy_claim_dao),
             event_pub=event_publisher,
         )
         self.published_events = event_publisher.published_events
