@@ -436,22 +436,18 @@ async def test_get_user_via_id(
 
     assert response.status_code == status.HTTP_200_OK
     user = response.json()
-
+    assert isinstance(user, dict)
     assert user.pop("roles") == []
-
     assert user == expected_user
 
-    # also test that we can see whether the user is an admin
+    # also test that we can see whether the roles
 
     await add_admin_role(id_, config=full_client.config)
-
     response = await full_client.get(f"/users/{id_}", headers=headers)
-
     assert response.status_code == status.HTTP_200_OK
     user = response.json()
-
+    assert isinstance(user, dict)
     assert user.pop("roles") == ["admin"]
-
     assert user == expected_user
 
 
@@ -503,7 +499,6 @@ async def test_get_different_user_as_data_steward(
     user = response.json()
 
     assert user.pop("roles") == []
-
     assert user == expected_user
 
 
@@ -514,6 +509,99 @@ async def test_get_user_unauthenticated(bare_client: BareClient):
     assert response.status_code == status.HTTP_403_FORBIDDEN
     error = response.json()
     assert error == {"detail": "Not authenticated"}
+
+
+async def test_get_users(
+    full_client: FullClient,
+    new_user_headers: dict[str, str],
+    steward_headers: dict[str, str],
+):
+    """Test that a data steward can fetch the list of users."""
+    # in the beginning the user list is empty
+    response = await full_client.get("/users", headers=steward_headers)
+    assert response.status_code == status.HTTP_200_OK
+    users = response.json()
+    assert isinstance(users, list)
+    assert not users
+
+    # now create a user
+    user_data = MAX_USER_DATA
+    response = await full_client.post(
+        "/users", json=user_data, headers=new_user_headers
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    expected_user = response.json()
+
+    # get the full list of users
+    response = await full_client.get("/users", headers=steward_headers)
+    assert response.status_code == status.HTTP_200_OK
+    users = response.json()
+    assert isinstance(users, list)
+    assert len(users) == 1
+    user = users[0]
+    assert isinstance(user, dict)
+    assert user.pop("roles") == []
+    assert user == expected_user
+
+    # test that we can also filter for active users
+    response = await full_client.get("/users?status=active", headers=steward_headers)
+    assert response.status_code == status.HTTP_200_OK
+    users = response.json()
+    assert users
+    user = users[0]
+    assert user.pop("roles") == []
+    assert users == users
+
+    # test that we can filter for inactive users
+    response = await full_client.get("/users?status=inactive", headers=steward_headers)
+    assert response.status_code == status.HTTP_200_OK
+    users = response.json()
+    assert users == []
+
+    # also test that we can see the roles
+    await add_admin_role(user["id"], config=full_client.config)
+    response = await full_client.get("/users", headers=steward_headers)
+    users = response.json()
+    assert users
+    user = users[0]
+    assert user.pop("roles") == ["admin"]
+    assert user == expected_user
+
+
+async def test_get_users_bad_params(
+    bare_client: BareClient,
+    steward_headers: dict[str, str],
+):
+    """Test that we get an error when fetching users with invalid filters."""
+    response = await bare_client.get("/users?status=foo", headers=steward_headers)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    response = await bare_client.get("/users?foo=active", headers=steward_headers)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+async def test_get_users_unauthenticated(bare_client: BareClient):
+    """Test requesting the user list without authentication."""
+    response = await bare_client.get("/users")
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    error = response.json()
+    assert error == {"detail": "Not authenticated"}
+
+
+async def test_get_users_unauthorized(
+    bare_client: BareClient,
+    user_headers: dict[str, str],
+):
+    """Test requesting a user with insufficient authorization."""
+    response = await bare_client.get("/users", headers=user_headers)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    error = response.json()
+    assert error == {"detail": "Not authorized to request user."}
+
+    response = await bare_client.get("/users?status=active", headers=user_headers)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    error = response.json()
+    assert error == {"detail": "Not authorized to request user."}
 
 
 async def test_patch_non_existing_user(

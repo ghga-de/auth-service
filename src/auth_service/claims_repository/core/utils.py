@@ -16,6 +16,7 @@
 
 """Core utilities for the Claims Repository."""
 
+from collections import defaultdict
 from collections.abc import Callable
 
 from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc
@@ -23,13 +24,20 @@ from hexkit.protocols.dao import ResourceNotFoundError
 
 from auth_service.user_registry.deps import IvaDao, UserDao
 from auth_service.user_registry.models.ivas import IvaState
-from auth_service.user_registry.models.users import UserStatus
+from auth_service.user_registry.models.users import User, UserStatus, UserWithRoles
 
 from ..deps import ClaimDao
 from ..models.claims import VisaType
 from .claims import get_role_from_claim, is_valid_claim
 
-__all__ = ["get_active_roles", "user_exists", "user_with_iva_exists"]
+__all__ = [
+    "get_active_roles",
+    "iva_is_verified",
+    "user_exists",
+    "user_is_active",
+    "user_with_iva_exists",
+    "with_added_roles",
+]
 
 
 async def user_exists(user_id: str, *, user_dao: UserDao) -> bool:
@@ -113,3 +121,29 @@ async def get_active_roles(
             ):
                 roles.add(str(role))
     return sorted(roles)
+
+
+async def with_added_roles(
+    users: list[User],
+    *,
+    claim_dao: ClaimDao,
+    now: Callable[[], UTCDatetime] = now_as_utc,
+) -> list[UserWithRoles]:
+    """Return the given list of users with their roles added."""
+    user_ids: list[str] = [user.id for user in users]
+    roles: dict[str, set] = defaultdict(set)
+    # Note: Here we rely on "$in" being supported by the DAO.
+    async for claim in claim_dao.find_all(
+        mapping={"user_id": {"$in": user_ids}, "visa_type": VisaType.GHGA_ROLE}
+    ):
+        if is_valid_claim(claim, now=now):
+            role = get_role_from_claim(claim)
+            if role:
+                roles[claim.user_id].add(str(role))
+    return [
+        UserWithRoles(
+            **user.model_dump(),
+            roles=sorted(roles[user.id]),
+        )
+        for user in users
+    ]

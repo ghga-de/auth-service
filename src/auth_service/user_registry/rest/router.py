@@ -47,6 +47,7 @@ from ..models.users import (
     UserBasicData,
     UserModifiableData,
     UserRegisteredData,
+    UserStatus,
     UserWithRoles,
 )
 
@@ -57,6 +58,41 @@ router = APIRouter()
 TAGS_USERS: list[str | Enum] = ["users"]
 TAGS_SESSION: list[str | Enum] = ["session"]
 TAGS_TOTP: list[str | Enum] = ["totp"]
+
+
+@start_span()
+@router.get(
+    "/users",
+    operation_id="get_users",
+    tags=TAGS_USERS,
+    summary="Get user data of all users",
+    description="Endpoint used to retrieve user data for all users including all their roles."
+    " Can only be performed by a data steward.",
+    responses={
+        200: {
+            "model": list[User],
+            "description": "User data was successfully retrieved.",
+        },
+        401: {"description": "Not authorized to request user data."},
+        409: {"description": "User was already registered."},
+    },
+    status_code=200,
+)
+async def get_users(
+    user_registry: UserRegistryDependency,
+    _auth_context: StewardAuthContext,
+    status: Annotated[
+        UserStatus | None,
+        Query(
+            description="Filter for the status of the user",
+        ),
+    ] = None,
+) -> list[UserWithRoles]:
+    """Get user data of all users including their roles."""
+    try:
+        return await user_registry.get_users_with_roles(status=status)
+    except user_registry.IvaRetrievalError as error:
+        raise HTTPException(status_code=500, detail="Cannot retrieve users.") from error
 
 
 @start_span()
@@ -163,7 +199,7 @@ async def put_user(
     operation_id="get_user",
     tags=TAGS_USERS,
     summary="Get user data",
-    description="Endpoint used to get the user data for a specified user."
+    description="Endpoint used to get the user data for a specified user including all roles."
     " Can only be performed by a data steward or the same user.",
     responses={
         200: {"model": User, "description": "Requested user has been found."},

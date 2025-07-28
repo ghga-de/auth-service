@@ -476,9 +476,14 @@ class DummyClaimDao:
         for claim in self.claims:
             data = claim.model_dump()
             data["id_"] = data.pop("id")
-            for key in mapping:
-                if mapping[key] != data[key]:
+            for key, value in mapping.items():
+                if isinstance(value, dict) and "$in" in value:
+                    value = value["$in"]
+                    if data[key] not in value:
+                        break
+                elif data[key] != value:
                     break
+
             else:
                 yield claim
 

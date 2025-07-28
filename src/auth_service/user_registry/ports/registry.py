@@ -26,6 +26,7 @@ from ..models.users import (
     UserBasicData,
     UserModifiableData,
     UserRegisteredData,
+    UserStatus,
     UserWithRoles,
 )
 
@@ -52,10 +53,14 @@ class UserRegistryPort(ABC):
             super().__init__(ext_id=ext_id, details="user already exists")
 
     class UserRetrievalError(UserRegistryError):
-        """Raised when a user cannot be retrieved from the database."""
+        """Raised when users cannot be retrieved from the database."""
 
-        def __init__(self, *, user_id: str):
-            message = f"Could not retrieve user with ID {user_id}"
+        def __init__(self, *, user_id: str | None = None):
+            message = (
+                f"Could not retrieve user with ID {user_id}"
+                if user_id
+                else "Could not retrieve users"
+            )
             super().__init__(message)
 
     class UserDoesNotExistError(UserRegistryError):
@@ -185,6 +190,30 @@ class UserRegistryPort(ABC):
         The roles are returned even if the user is inactive or has no IVAs.
 
         May raise a UserDoesNotExistError or a UserRetrievalError.
+        """
+        ...
+
+    @abstractmethod
+    async def get_users(self, status: UserStatus | None = None) -> list[User]:
+        """Get all users.
+
+        The users can be filtered by a given status.
+
+        May raise a UserRetrievalError.
+        """
+        ...
+
+    @abstractmethod
+    async def get_users_with_roles(
+        self, status: UserStatus | None = None
+    ) -> list[UserWithRoles]:
+        """Get all users with their roles.
+
+        The users can be filtered by a given status.
+
+        The roles are returned even if the users are inactive or have no IVAs.
+
+        May raise a UserRetrievalError.
         """
         ...
 

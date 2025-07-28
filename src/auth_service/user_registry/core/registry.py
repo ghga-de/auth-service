@@ -28,7 +28,7 @@ from hexkit.protocols.dao import (
     ResourceNotFoundError,
 )
 
-from ...claims_repository.core.utils import get_active_roles
+from ...claims_repository.core.utils import get_active_roles, with_added_roles
 from ...claims_repository.ports.dao import ClaimDto
 from ..models.ivas import (
     Iva,
@@ -43,6 +43,7 @@ from ..models.users import (
     UserBasicData,
     UserModifiableData,
     UserRegisteredData,
+    UserStatus,
     UserWithRoles,
 )
 from ..ports.event_pub import EventPublisherPort
@@ -153,6 +154,40 @@ class UserRegistry(UserRegistryPort):
             **user.model_dump(),
             roles=roles,
         )
+
+    async def get_users(self, status: UserStatus | None = None) -> list[User]:
+        """Get all users.
+
+        The users can be filtered by a given status.
+
+        May raise a UserRetrievalError.
+        """
+        mapping = {}
+        if status:
+            mapping["status"] = status
+        try:
+            return [user async for user in self._user_dao.find_all(mapping=mapping)]
+        except Exception as error:
+            log.error("Could not retrieve users: %s", error)
+            raise self.UserRetrievalError() from error
+
+    async def get_users_with_roles(
+        self, status: UserStatus | None = None
+    ) -> list[UserWithRoles]:
+        """Get all users with their roles.
+
+        The users can be filtered by a given status.
+
+        The roles are returned even if the users are inactive or have no IVAs.
+
+        May raise a UserRetrievalError.
+        """
+        users = await self.get_users(status=status)
+        try:
+            return await with_added_roles(users, claim_dao=self._claim_dao)
+        except Exception as error:
+            log.error("Could not retrieve user roles: %s", error)
+            raise self.UserRetrievalError() from error
 
     async def update_user(
         self,
