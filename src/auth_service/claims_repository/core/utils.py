@@ -136,10 +136,8 @@ async def with_added_roles(
     async for claim in claim_dao.find_all(
         mapping={"user_id": {"$in": user_ids}, "visa_type": VisaType.GHGA_ROLE}
     ):
-        if is_valid_claim(claim, now=now):
-            role = get_role_from_claim(claim)
-            if role:
-                roles[claim.user_id].add(str(role))
+        if is_valid_claim(claim, now=now) and (role := get_role_from_claim(claim)):
+            roles[claim.user_id].add(str(role))
     return [
         UserWithRoles(
             **user.model_dump(),
