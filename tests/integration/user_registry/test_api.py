@@ -440,7 +440,7 @@ async def test_get_user_via_id(
     assert user.pop("roles") == []
     assert user == expected_user
 
-    # also test that we can see whether the roles
+    # also test that we see the role when the user has one
 
     await add_admin_role(id_, config=full_client.config)
     response = await full_client.get(f"/users/{id_}", headers=headers)
