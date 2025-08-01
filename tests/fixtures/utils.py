@@ -282,8 +282,7 @@ class DummyUserDao:
             data = user.model_dump()
             for key, value in mapping.items():
                 if isinstance(value, dict) and "$in" in value:
-                    value = value["$in"]
-                    if data[key] not in value:
+                    if data[key] not in value["$in"]:
                         break
                 elif data[key] != value:
                     break
@@ -360,8 +359,7 @@ class DummyIvaDao:
             data = iva.model_dump()
             for key, value in mapping.items():
                 if isinstance(value, dict) and "$in" in value:
-                    value = value["$in"]
-                    if data[key] not in value:
+                    if data[key] not in value["$in"]:
                         break
                 elif data[key] != value:
                     break
