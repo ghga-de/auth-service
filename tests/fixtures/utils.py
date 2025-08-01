@@ -282,6 +282,7 @@ class DummyUserDao:
             data = user.model_dump()
             for key, value in mapping.items():
                 if isinstance(value, dict) and "$in" in value:
+                    # mock the MongoDB "$in" operator
                     if data[key] not in value["$in"]:
                         break
                 elif data[key] != value:
@@ -359,6 +360,7 @@ class DummyIvaDao:
             data = iva.model_dump()
             for key, value in mapping.items():
                 if isinstance(value, dict) and "$in" in value:
+                    # mock the MongoDB "$in" operator
                     if data[key] not in value["$in"]:
                         break
                 elif data[key] != value:
@@ -476,6 +478,7 @@ class DummyClaimDao:
             data["id_"] = data.pop("id")
             for key, value in mapping.items():
                 if isinstance(value, dict) and "$in" in value:
+                    # mock the MongoDB "$in" operator
                     if data[key] not in value["$in"]:
                         break
                 elif data[key] != value:
