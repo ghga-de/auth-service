@@ -117,7 +117,7 @@ async def post_user(
     user_data: UserRegisteredData,
     user_registry: UserRegistryDependency,
     auth_context: UserAuthContext,
-) -> User:
+) -> UserWithRoles:
     """Register a user."""
     ext_id = user_data.ext_id
     # note that the auth context contains the external ID for this endpoint (only)

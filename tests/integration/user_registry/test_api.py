@@ -110,6 +110,7 @@ async def test_post_user(full_client: FullClient, new_user_headers: dict[str, st
 
     assert user.pop("active_submissions") == []
     assert user.pop("active_access_requests") == []
+    assert user.pop("roles") == []
 
     assert user == user_data
 
@@ -158,6 +159,7 @@ async def test_post_user_with_minimal_data(
 
     assert user.pop("active_submissions") == []
     assert user.pop("active_access_requests") == []
+    assert user.pop("roles") == []
 
     assert user == {**MIN_USER_DATA, **dict.fromkeys(OPT_USER_DATA)}
 
@@ -437,7 +439,6 @@ async def test_get_user_via_id(
     assert response.status_code == status.HTTP_200_OK
     user = response.json()
     assert isinstance(user, dict)
-    assert user.pop("roles") == []
     assert user == expected_user
 
     # also test that we see the role when the user has one
@@ -447,7 +448,8 @@ async def test_get_user_via_id(
     assert response.status_code == status.HTTP_200_OK
     user = response.json()
     assert isinstance(user, dict)
-    assert user.pop("roles") == ["admin"]
+    assert user["roles"] == ["admin"]
+    user["roles"] = []
     assert user == expected_user
 
 
@@ -498,7 +500,6 @@ async def test_get_different_user_as_data_steward(
     assert response.status_code == status.HTTP_200_OK
     user = response.json()
 
-    assert user.pop("roles") == []
     assert user == expected_user
 
 
@@ -540,7 +541,7 @@ async def test_get_users(
     assert len(users) == 1
     user = users[0]
     assert isinstance(user, dict)
-    assert user.pop("roles") == []
+    assert user["roles"] == []
     assert user == expected_user
 
     # test that we can also filter for active users
@@ -549,7 +550,7 @@ async def test_get_users(
     users = response.json()
     assert users
     user = users[0]
-    assert user.pop("roles") == []
+    assert user["roles"] == []
     assert user == expected_user
 
     # test that we can filter for inactive users
@@ -564,7 +565,8 @@ async def test_get_users(
     users = response.json()
     assert users
     user = users[0]
-    assert user.pop("roles") == ["admin"]
+    assert user["roles"] == ["admin"]
+    user["roles"] = []
     assert user == expected_user
 
 
@@ -656,7 +658,6 @@ async def test_patch_user_as_data_steward(
     assert status_change["by"] == "steve-internal"
     assert status_change["context"] == "manual change"
     assert 0 <= seconds_passed(status_change["change_date"]) <= 10
-    assert user.pop("roles") == []
 
     assert user == expected_user
 
@@ -669,7 +670,6 @@ async def test_patch_user_as_data_steward(
     # cannot get status change as normal user
     assert user.pop("status_change") is None
     assert 0 <= seconds_passed(status_change["change_date"]) <= 10
-    assert user.pop("roles") == []
 
     assert user == expected_user
 
@@ -711,7 +711,6 @@ async def test_patch_user_partially(
     assert status_change["by"] == "steve-internal"
     assert status_change["context"] == "manual change"
     assert 0 <= seconds_passed(status_change["change_date"]) <= 10
-    assert user.pop("roles") == []
 
     assert user == expected_user
 
@@ -731,7 +730,6 @@ async def test_patch_user_partially(
     user = response.json()
 
     assert user.pop("status_change") == status_change
-    assert user.pop("roles") == []
 
     assert user == expected_user
 
@@ -774,7 +772,6 @@ async def test_patch_user_as_same_user(
     response = await full_client.get(f"/users/{id_}", headers=steward_headers)
     assert response.status_code == status.HTTP_200_OK
     user = response.json()
-    assert user.pop("roles") == []
     assert user == expected_user
 
     # check that users can change their title
@@ -792,7 +789,6 @@ async def test_patch_user_as_same_user(
 
     assert response.status_code == status.HTTP_200_OK
     user = response.json()
-    assert user.pop("roles") == []
     assert user == expected_user
 
 

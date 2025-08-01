@@ -168,7 +168,7 @@ class UserRegistryPort(ABC):
     async def create_user(
         self,
         user_data: UserRegisteredData,
-    ) -> User:
+    ) -> UserWithRoles:
         """Create a user with the given registration data.
 
         May raise a UserAlreadyExistsError or a UserCreationError.

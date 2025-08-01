@@ -93,7 +93,7 @@ class UserRegistry(UserRegistryPort):
     async def create_user(
         self,
         user_data: UserRegisteredData,
-    ) -> User:
+    ) -> UserWithRoles:
         """Create a user with the given registration data.
 
         May raise a UserAlreadyExistsError or a UserCreationError.
@@ -120,7 +120,7 @@ class UserRegistry(UserRegistryPort):
         except Exception as error:
             log.error("Could not insert user: %s", error)
             raise self.UserCreationError(ext_id=ext_id) from error
-        return user
+        return UserWithRoles(**user.model_dump(), roles=[])
 
     async def get_user(self, user_id: str) -> User:
         """Get user data.
