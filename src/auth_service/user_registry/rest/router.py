@@ -105,7 +105,10 @@ async def get_users(
     " May only be performed by the users themselves."
     " Data delivered by the OIDC provider may not be altered.",
     responses={
-        201: {"model": User, "description": "User was successfully registered."},
+        201: {
+            "model": UserWithRoles,
+            "description": "User was successfully registered.",
+        },
         401: {"description": "Not authorized to register users."},
         403: {"description": "Not authorized to register this user."},
         409: {"description": "User was already registered."},
