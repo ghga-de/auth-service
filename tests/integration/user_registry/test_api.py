@@ -550,7 +550,7 @@ async def test_get_users(
     assert users
     user = users[0]
     assert user.pop("roles") == []
-    assert users == users
+    assert user == expected_user
 
     # test that we can filter for inactive users
     response = await full_client.get("/users?status=inactive", headers=steward_headers)
