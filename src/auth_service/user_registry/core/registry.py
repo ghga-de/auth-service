@@ -21,12 +21,12 @@ import logging
 from contextlib import suppress
 from typing import Any
 
-from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.protocols.dao import (
     Dao,
     NoHitsFoundError,
     ResourceNotFoundError,
 )
+from hexkit.utils import now_utc_ms_prec
 
 from ...claims_repository.core.utils import get_active_roles, with_added_roles
 from ...claims_repository.ports.dao import ClaimDto
@@ -113,7 +113,7 @@ class UserRegistry(UserRegistryPort):
         user = User(
             **user_data.model_dump(),
             status=INITIAL_USER_STATUS,
-            registration_date=now_as_utc(),
+            registration_date=now_utc_ms_prec(),
         )
         try:
             await self._user_dao.insert(user)
@@ -213,7 +213,7 @@ class UserRegistry(UserRegistryPort):
                 previous=user.status,
                 by=(changed_by or "").strip() or None,
                 context=(context or "").strip() or None,
-                change_date=now_as_utc(),
+                change_date=now_utc_ms_prec(),
             )
         try:
             user = user.model_copy(update=update_data)
@@ -267,7 +267,7 @@ class UserRegistry(UserRegistryPort):
             await self.get_user(user_id)
         except self.UserRetrievalError as error:
             raise self.IvaCreationError(user_id=user_id) from error
-        created = changed = now_as_utc()
+        created = changed = now_utc_ms_prec()
         iva = Iva(
             **data.model_dump(), user_id=user_id, created=created, changed=changed
         )
@@ -370,7 +370,7 @@ class UserRegistry(UserRegistryPort):
         or an IvaModificationError.
         """
         if "changed" not in update:
-            update["changed"] = now_as_utc()
+            update["changed"] = now_utc_ms_prec()
         iva = iva.model_copy(update=update)
         try:
             await self._iva_dao.update(iva)

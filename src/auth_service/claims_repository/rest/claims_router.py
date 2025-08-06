@@ -22,9 +22,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Path, Response, status
 from fastapi.exceptions import HTTPException
-from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.opentelemetry import start_span
 from hexkit.protocols.dao import ResourceNotFoundError
+from hexkit.utils import now_utc_ms_prec
 
 from auth_service.user_registry.deps import UserDaoDependency
 
@@ -82,7 +82,7 @@ async def post_claim(
     if not await user_exists(user_id, user_dao=user_dao):
         raise user_not_found_error
 
-    current_date = now_as_utc()
+    current_date = now_utc_ms_prec()
     full_claim = Claim(
         **claim_creation.model_dump(),
         user_id=user_id,

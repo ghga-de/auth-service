@@ -19,7 +19,7 @@
 from datetime import timedelta
 
 import pytest
-from ghga_service_commons.utils.utc_dates import now_as_utc
+from hexkit.utils import now_utc_ms_prec
 
 from auth_service.user_registry.core.registry import UserRegistry
 from auth_service.user_registry.core.verification_codes import (
@@ -107,7 +107,7 @@ async def test_create_new_user():
     assert registry.is_internal_user_id(user.id)
     assert user.ext_id == "jane@aai.org"
     assert user.status == UserStatus.ACTIVE
-    assert 0 <= (now_as_utc() - user.registration_date).total_seconds() < 3
+    assert 0 <= (now_utc_ms_prec() - user.registration_date).total_seconds() < 3
 
 
 async def test_get_existing_user():
@@ -182,7 +182,7 @@ async def test_update_modifiable_data_only_status():
     assert status_change.context == "This is some context."
     change_date = status_change.change_date
     assert change_date
-    assert 0 <= (now_as_utc() - change_date).total_seconds() < 3
+    assert 0 <= (now_utc_ms_prec() - change_date).total_seconds() < 3
 
 
 async def test_update_modifiable_data_title_and_status():
@@ -209,7 +209,7 @@ async def test_update_modifiable_data_title_and_status():
     assert status_change.context is None
     change_date = status_change.change_date
     assert change_date
-    assert 0 <= (now_as_utc() - change_date).total_seconds() < 3
+    assert 0 <= (now_utc_ms_prec() - change_date).total_seconds() < 3
 
 
 async def test_update_non_existing_user():
@@ -272,8 +272,8 @@ async def test_create_new_iva():
     assert iva.state == IvaState.UNVERIFIED
     assert iva.verification_code_hash is None
     assert iva.verification_attempts == 0
-    assert 0 <= (now_as_utc() - iva.created).total_seconds() < 3
-    assert 0 <= (now_as_utc() - iva.changed).total_seconds() < 3
+    assert 0 <= (now_utc_ms_prec() - iva.created).total_seconds() < 3
+    assert 0 <= (now_utc_ms_prec() - iva.changed).total_seconds() < 3
 
 
 async def test_create_iva_for_non_existing_user():
@@ -481,7 +481,7 @@ async def test_delete_iva_for_wrong_user():
 )
 async def test_unverify_iva(from_state: IvaState):
     """Test that an IVA can be reset to the unverified state."""
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     before = now - timedelta(hours=3)
     registry = DummyUserRegistry()
     registry.add_dummy_iva(
@@ -523,7 +523,7 @@ async def test_unverify_non_existing_iva():
 
 async def test_request_iva_verification_code():
     """Test that a verification code for an IVA can be requested."""
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     before = now - timedelta(hours=3)
     registry = DummyUserRegistry()
     registry.add_dummy_iva(state=IvaState.UNVERIFIED, created=before, changed=before)
@@ -605,7 +605,7 @@ async def test_request_iva_verification_code_with_invalid_state(from_state: IvaS
 )
 async def test_create_iva_verification_code(from_state: IvaState):
     """Test the creation of an IVA verification code."""
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     before = now - timedelta(hours=3)
     registry = DummyUserRegistry()
     registry.add_dummy_iva(state=from_state, created=before, changed=before)
@@ -668,7 +668,7 @@ async def test_create_iva_verification_code_with_invalid_state(from_state: IvaSt
 
 async def test_confirm_iva_transmission():
     """Test confirming the transmission of an IVA verification code."""
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     before = now - timedelta(hours=3)
     registry = DummyUserRegistry()
     registry.add_dummy_iva(state=IvaState.CODE_CREATED, created=before, changed=before)
@@ -730,7 +730,7 @@ async def test_confirm_code_transmission_with_invalid_state(from_state: IvaState
 @pytest.mark.parametrize("attempts", [0, 1, 2, 5, 8, 9])
 async def test_validate_iva_verification_code(from_state: IvaState, attempts: int):
     """Test validating a verification code for an IVA."""
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     before = now - timedelta(hours=3)
     registry = DummyUserRegistry()
     code = generate_code()
@@ -777,7 +777,7 @@ async def test_validate_iva_with_invalid_verification_code(
     from_state: IvaState, attempts: int
 ):
     """Test validating an IVA with an invalid verification code."""
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     before = now - timedelta(hours=3)
     registry = DummyUserRegistry()
     code = generate_code()
@@ -824,7 +824,7 @@ async def test_validate_iva_verification_code_too_often(
     from_state: IvaState, attempts: int
 ):
     """Test validating a verification code for an IVA too often."""
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     before = now - timedelta(hours=3)
     registry = DummyUserRegistry()
     code = generate_code()
@@ -876,7 +876,7 @@ async def test_validate_verification_code_for_non_existing_iva():
 async def test_validate_verification_code_for_different_user():
     """Test validating a verification code for a different user."""
     registry = DummyUserRegistry()
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     before = now - timedelta(hours=3)
     registry = DummyUserRegistry()
     code = generate_code()

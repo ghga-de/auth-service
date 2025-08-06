@@ -24,7 +24,7 @@ from typing import Any, cast
 
 from fastapi import Request
 from ghga_service_commons.api import ApiConfigBase
-from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc, utc_datetime
+from ghga_service_commons.utils.utc_dates import UTCDatetime, utc_datetime
 from hexkit.config import config_from_yaml
 from hexkit.protocols.dao import (
     Dao,
@@ -32,6 +32,7 @@ from hexkit.protocols.dao import (
     NoHitsFoundError,
     ResourceNotFoundError,
 )
+from hexkit.utils import now_utc_ms_prec
 from jwcrypto import jwk, jwt
 
 from auth_service.auth_adapter.core.session_store import Session
@@ -127,7 +128,7 @@ def create_access_token(
         "aud": CONFIG.oidc_client_id,
         "scope": "openid email profile",
     }
-    iat = int(now_as_utc().timestamp())
+    iat = int(now_utc_ms_prec().timestamp())
     if expired:
         exp = iat - 60 * 10  # expired 10 minutes ago
         iat = exp - 60 * 10  # created 20 minutes ago
@@ -164,7 +165,7 @@ def create_internal_token(
         "email": "john@home.org",
         "status": "active",
     }
-    iat = int(now_as_utc().timestamp())
+    iat = int(now_utc_ms_prec().timestamp())
     if expired:
         exp = iat - 60 * 10  # expired 10 minutes ago
         iat = exp - 60 * 10  # created 20 minutes ago
@@ -323,7 +324,7 @@ class DummyIvaDao:
     def __init__(self, ivas: list[Iva] | None = None, state=IvaState.VERIFIED):
         """Initialize the DummyIvaDao."""
         if ivas is None:
-            now = now_as_utc()
+            now = now_utc_ms_prec()
             ivas = [
                 Iva(
                     id="data-steward-iva-id",
@@ -419,7 +420,7 @@ class DummyClaimDao:
 
     claims: list[Claim]
 
-    def __init__(self, valid_date=now_as_utc()):
+    def __init__(self, valid_date=now_utc_ms_prec()):
         """Initialize the DummyClaimDao."""
         self.valid_date = valid_date
         self.invalid_date = valid_date + timedelta(14)
@@ -594,7 +595,7 @@ class DummyUserRegistry(UserRegistry):
                 user_id=user_id or self.dummy_user.id,
                 verification_code_hash=verification_code_hash,
                 verification_attempts=verification_attempts,
-                created=created or now_as_utc(),
-                changed=changed or now_as_utc(),
+                created=created or now_utc_ms_prec(),
+                changed=changed or now_utc_ms_prec(),
             )
         )

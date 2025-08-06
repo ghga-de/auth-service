@@ -20,7 +20,7 @@ from datetime import timedelta
 from typing import cast
 
 import pytest
-from ghga_service_commons.utils.utc_dates import now_as_utc
+from hexkit.utils import now_utc_ms_prec
 
 from auth_service.claims_repository.core.utils import (
     get_active_roles,
@@ -67,7 +67,7 @@ async def test_active_user_exists(status: UserStatus):
 async def test_iva_exists():
     """Test that existence of IVAs for users can be checked."""
     user_id, iva_id = "some-user-id", "some-iva-id"
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     iva = Iva(
         id=iva_id,
         user_id=user_id,
@@ -93,7 +93,7 @@ async def test_iva_exists():
 async def test_iva_exists_when_it_belongs_to_a_different_user():
     """Test that existence and ownership of IVAs for users are properly checked."""
     user_id, iva_id = "some-user-id", "some-iva-id"
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     iva = Iva(
         id=iva_id,
         user_id="other-user-id",
@@ -115,7 +115,7 @@ async def test_iva_exists_when_it_belongs_to_a_different_user():
 async def test_iva_is_verified(state: IvaState):
     """Test that existence of verified IVAs for users can be checked."""
     user_id, iva_id = "some-user-id", "some-iva-id"
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     iva = Iva(
         id=iva_id,
         user_id=user_id,
@@ -156,7 +156,7 @@ async def test_get_active_roles_with_iva(state: IvaState):
     user_id = "james@ghga.de"
     user_dao = cast(UserDao, DummyUserDao(id_=user_id))
     claim_dao = cast(ClaimDao, DummyClaimDao())
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     iva = Iva(
         id="data-steward-iva-id",
         user_id=user_id,
@@ -183,7 +183,7 @@ async def test_get_active_roles_deduplicates_roles():
     user_dao = cast(UserDao, DummyUserDao(id_=user_id))
     claim_dao = cast(ClaimDao, DummyClaimDao())
 
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     iva = Iva(
         id=iva_id,
         user_id=user_id,
@@ -265,7 +265,7 @@ async def test_get_active_roles_with_expired_claim():
     claim_dao = cast(ClaimDao, DummyClaimDao())
     iva_dao = cast(IvaDao, DummyIvaDao())
     claim = await claim_dao.get_by_id("data-steward-claim-id")
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     assert claim.valid_from <= now <= claim.valid_until
     assert await get_active_roles(
         user_id,
@@ -312,7 +312,9 @@ async def test_get_active_roles_with_revoked_claim():
 
     claim = await claim_dao.get_by_id("data-steward-claim-id")
     assert claim.revocation_date is None
-    await claim_dao.update(claim.model_copy(update={"revocation_date": now_as_utc()}))
+    await claim_dao.update(
+        claim.model_copy(update={"revocation_date": now_utc_ms_prec()})
+    )
     claim = await claim_dao.get_by_id("data-steward-claim-id")
     assert claim.revocation_date
 

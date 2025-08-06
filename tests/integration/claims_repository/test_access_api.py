@@ -21,6 +21,7 @@ from typing import Any
 import pytest
 from fastapi import status
 from ghga_service_commons.utils.utc_dates import now_as_utc
+from hexkit.utils import now_utc_ms_prec
 
 from auth_service.claims_repository.deps import get_claim_dao
 from auth_service.user_registry.deps import get_iva_dao, get_user_dao
@@ -42,7 +43,7 @@ async def test_grant_download_access(full_client: FullClient):
     """Test that granting access to a dataset works."""
     user_dao = DummyUserDao()
     full_client.app.dependency_overrides[get_user_dao] = lambda: user_dao
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     iva = Iva(
         id="some-iva-id",
         user_id="john@ghga.de",
@@ -117,7 +118,7 @@ async def test_grant_download_access_with_unverified_iva(full_client: FullClient
     """Test granting access to a dataset when the IVA is not yet verified."""
     user_dao = DummyUserDao()
     full_client.app.dependency_overrides[get_user_dao] = lambda: user_dao
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     iva = Iva(
         id="some-iva-id",
         user_id="john@ghga.de",
@@ -167,7 +168,7 @@ async def test_grant_download_access_without_iva(full_client: FullClient):
     iva_dao = DummyIvaDao()
     full_client.app.dependency_overrides[get_iva_dao] = lambda: iva_dao
 
-    year = now_as_utc().year
+    year = now_utc_ms_prec().year
     validity = {
         "valid_from": f"{year - 1}-01-01T00:00:00Z",
         "valid_until": f"{year + 1}-12-31T23:59:59Z",
@@ -199,7 +200,7 @@ async def test_check_download_access(full_client: FullClient):
     """Test that checking download access for a single dataset works."""
     user_dao = DummyUserDao()
     full_client.app.dependency_overrides[get_user_dao] = lambda: user_dao
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     iva = Iva(
         id="some-iva-id",
         user_id="john@ghga.de",
@@ -325,7 +326,7 @@ async def test_check_download_access_with_unverified_iva(full_client: FullClient
     """Test checking download access for a single dataset with an unverified IVA."""
     user_dao = DummyUserDao()
     full_client.app.dependency_overrides[get_user_dao] = lambda: user_dao
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     iva = Iva(
         id="some-iva-id",
         user_id="john@ghga.de",
@@ -369,7 +370,7 @@ async def test_get_datasets_with_download_access(full_client: FullClient):
     """Test that getting all datasets with download access works."""
     user_dao = DummyUserDao()
     full_client.app.dependency_overrides[get_user_dao] = lambda: user_dao
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     unverified_iva = Iva(
         id="unverified-iva-id",
         user_id="john@ghga.de",

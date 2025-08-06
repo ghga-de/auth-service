@@ -20,10 +20,10 @@ import logging
 from datetime import timedelta
 
 import pytest
-from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.protocols.dao import NoHitsFoundError
 from hexkit.providers.akafka.testutils import KafkaFixture
 from hexkit.providers.mongodb.testutils import MongoDbFixture
+from hexkit.utils import now_utc_ms_prec
 
 from auth_service.claims_repository.models.claims import (
     AuthorityLevel,
@@ -55,7 +55,7 @@ async def test_deletion_handler(
     claim_dao_factory = ClaimDaoFactory(config=config, dao_factory=dao_factory)
     claim_dao = await claim_dao_factory.get_claim_dao()
 
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     claim = Claim(
         id="some-claim-id",
         visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,

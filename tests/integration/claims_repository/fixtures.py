@@ -19,11 +19,11 @@ from collections.abc import AsyncGenerator
 
 import pytest_asyncio
 from ghga_service_commons.api.testing import AsyncTestClient as BareClient
-from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.protocols.dao import ResourceNotFoundError
 from hexkit.providers.akafka.testutils import KafkaFixture
 from hexkit.providers.mongodb import MongoDbDaoFactory
 from hexkit.providers.mongodb.testutils import MongoDbFixture
+from hexkit.utils import now_utc_ms_prec
 
 from auth_service.claims_repository.models.config import (
     IvaType,
@@ -39,7 +39,7 @@ data_steward = User(
     name="Rod Steward",
     email="rod@example.org",
     status=UserStatus.ACTIVE,
-    registration_date=now_as_utc(),
+    registration_date=now_utc_ms_prec(),
 )
 
 add_as_data_stewards = [

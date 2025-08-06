@@ -25,6 +25,7 @@ from fastapi import status
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.providers.akafka.testutils import RecordedEvent
 from hexkit.providers.mongodb import MongoDbDaoFactory
+from hexkit.utils import now_utc_ms_prec
 
 from auth_service.claims_repository.core.claims import Role, create_internal_role_claim
 from auth_service.claims_repository.translators.dao import ClaimDaoFactory
@@ -927,8 +928,8 @@ async def test_delete_users_with_associated_data(
         assert not db[collection].count_documents({})
     # prepare two random, but valid user IDs
     user_ids = [str(uuid4()) for _ in range(2)]
-    now = now_as_utc().isoformat()
-    later = (now_as_utc() + timedelta(days=90)).isoformat()
+    now = now_utc_ms_prec().isoformat()
+    later = (now_utc_ms_prec() + timedelta(days=90)).isoformat()
     # create some data for each user
     for id_ in user_ids:
         # create the base dataset for a fake user

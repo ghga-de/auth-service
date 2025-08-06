@@ -23,9 +23,10 @@ from typing import Annotated, cast
 
 from fastapi import APIRouter, Path, Query, Response, status
 from fastapi.exceptions import HTTPException
-from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc
+from ghga_service_commons.utils.utc_dates import UTCDatetime
 from hexkit.opentelemetry import start_span
 from hexkit.protocols.dao import NoHitsFoundError, ResourceNotFoundError
+from hexkit.utils import now_utc_ms_prec
 
 from auth_service.user_registry.deps import (
     IvaDaoDependency,
@@ -201,7 +202,7 @@ async def revoke_download_access_grant(
     except NoHitsFoundError as error:
         raise grant_not_found_error from error
 
-    claim = claim.model_copy(update={"revocation_date": now_as_utc()})
+    claim = claim.model_copy(update={"revocation_date": now_utc_ms_prec()})
     try:
         await claim_dao.update(claim)
     except ResourceNotFoundError as error:

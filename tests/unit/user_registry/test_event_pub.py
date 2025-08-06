@@ -20,9 +20,9 @@ from collections.abc import Mapping
 from typing import Any
 
 import pytest
-from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.custom_types import Ascii, JsonObject
 from hexkit.protocols.eventpub import EventPublisherProtocol
+from hexkit.utils import now_utc_ms_prec
 
 from auth_service.user_registry.models.ivas import (
     Iva,
@@ -119,7 +119,7 @@ async def test_publish_iva_state_changed(config: EventPubTranslatorConfig):
     """Test publishing an IVA state change."""
     publisher = IvaEventPublisher(config)
     translator = EventPubTranslator(config=config, event_publisher=publisher)
-    now = now_as_utc()
+    now = now_utc_ms_prec()
     iva = Iva(
         id="some-iva-id",
         user_id="some-user_id",
