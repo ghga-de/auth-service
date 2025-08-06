@@ -55,15 +55,14 @@ add_as_data_stewards = [
 
 async def seed_database(config: Config) -> None:
     """Seed the database with a dummy user that will become a data steward."""
-    dao_factory = MongoDbDaoFactory(config=config)
-
-    user_dao = await dao_factory.get_dao(
-        name=config.users_collection, dto_model=User, id_field="id"
-    )
-    try:
-        await user_dao.get_by_id(data_steward.id)
-    except ResourceNotFoundError:
-        await user_dao.insert(data_steward)
+    async with MongoDbDaoFactory.construct(config=config) as dao_factory:
+        user_dao = await dao_factory.get_dao(
+            name=config.users_collection, dto_model=User, id_field="id"
+        )
+        try:
+            await user_dao.get_by_id(data_steward.id)
+        except ResourceNotFoundError:
+            await user_dao.insert(data_steward)
 
 
 class FullClient(BareClient):

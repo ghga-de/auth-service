@@ -23,7 +23,6 @@ import pytest
 from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.protocols.dao import NoHitsFoundError
 from hexkit.providers.akafka.testutils import KafkaFixture
-from hexkit.providers.mongodb import MongoDbDaoFactory
 from hexkit.providers.mongodb.testutils import MongoDbFixture
 
 from auth_service.claims_repository.models.claims import (
@@ -52,7 +51,7 @@ async def test_deletion_handler(
         }
     )
 
-    dao_factory = MongoDbDaoFactory(config=config)
+    dao_factory = mongodb.dao_factory
     claim_dao_factory = ClaimDaoFactory(config=config, dao_factory=dao_factory)
     claim_dao = await claim_dao_factory.get_claim_dao()
 

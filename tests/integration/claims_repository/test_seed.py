@@ -46,8 +46,8 @@ from auth_service.user_registry.translators.dao import (
 async def fut(config: Config):
     """Run seed_data_steward_claims (the function under test here)."""
     # prepare the infrastructure
-    dao_factory = MongoDbDaoFactory(config=config)
     async with (
+        MongoDbDaoFactory.construct(config=config) as dao_factory,
         MongoKafkaDaoPublisherFactory.construct(config=config) as dao_publisher_factory,
     ):
         # create DAOs

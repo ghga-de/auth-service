@@ -67,11 +67,11 @@ def seconds_passed(date_string: str) -> float:
 
 async def add_admin_role(user_id: str, config: Config, role: Role = Role.ADMIN) -> None:
     """Add an admin role to the claims database."""
-    dao_factory = MongoDbDaoFactory(config=config)
-    claim_dao_factory = ClaimDaoFactory(config=config, dao_factory=dao_factory)
-    claim_dao = await claim_dao_factory.get_claim_dao()
-    claim = create_internal_role_claim(user_id, role)
-    await claim_dao.insert(claim)
+    async with MongoDbDaoFactory.construct(config=config) as dao_factory:
+        claim_dao_factory = ClaimDaoFactory(config=config, dao_factory=dao_factory)
+        claim_dao = await claim_dao_factory.get_claim_dao()
+        claim = create_internal_role_claim(user_id, role)
+        await claim_dao.insert(claim)
 
 
 async def test_health_check(bare_client: BareClient):
