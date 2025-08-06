@@ -537,13 +537,13 @@ filelock==3.18.0 \
     --hash=sha256:adbc88eabb99d2fec8c9c1b229b171f18afa655400173ddc653d5d01501fb9f2 \
     --hash=sha256:c401f4f8377c4464e6db25fff06205fd89bdd83b65eb0488ed1b160f780e21de
     # via virtualenv
-ghga-event-schemas==9.2.0 \
-    --hash=sha256:4e085b64e76b76ecf14ba123f11b58d79c1edb1e891c8e044090decc5519a476 \
-    --hash=sha256:e9e1b0258f4a97370dce48501a45b820a4ff34b094c3f56840368ed6850391cd
+ghga-event-schemas==10.0.0 \
+    --hash=sha256:997feaa5ed672b3eb85d82eb3fe4d37b31cd6f810d26efa65a6db53b33d6ce26 \
+    --hash=sha256:deb5260a902701cf53074e77d0ee78046d47b2f14fe8d4dae43c917ec5c6182f
     # via auth-service (pyproject.toml)
-ghga-service-commons==4.1.2 \
-    --hash=sha256:151957afe57c0556510ab75ee030086a5dbe4cdd5a76ce46cc97b11cb57b0800 \
-    --hash=sha256:a40d550f1cbb450e2a172deff7994fa69d6d7a0dd2f2cb213068cda24c85b16a
+ghga-service-commons==5.0.0 \
+    --hash=sha256:9c772d7b7fb47d95e0a8c4522f2c79fc11bc3b8125090fe6b7cee86b1685f226 \
+    --hash=sha256:ffda793f369171d2b79c55fb5e7d218a455f964edacb5902bfa34f6c962f5532
     # via
     #   auth-service (pyproject.toml)
     #   ghga-event-schemas
@@ -612,9 +612,9 @@ h11==0.16.0 \
     # via
     #   httpcore
     #   uvicorn
-hexkit==5.4.1 \
-    --hash=sha256:6879fd265e891cd5f3bfd1d86e3f75f15e4ec9b6e85d4cd121dc73d9bd84dddd \
-    --hash=sha256:dda609b31300cd2aedaf873d456c2159c6489ded8f7ba74b6e6cc07f9a1b8e33
+hexkit==6.0.0 \
+    --hash=sha256:021ffd92559468860bd744daeb32cd7428f58395eade416d4b1b103258cc6414 \
+    --hash=sha256:a1af45ad5325a64050de4ac9e9ced3ac30a32db1b9cef5fa208b49630322dc1e
     # via
     #   auth-service (pyproject.toml)
     #   ghga-service-commons
@@ -729,10 +729,6 @@ mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
     # via markdown-it-py
-motor==3.7.1 \
-    --hash=sha256:27b4d46625c87928f331a6ca9d7c51c2f518ba0e270939d395bc1ddc89d64526 \
-    --hash=sha256:8a63b9049e38eeeb56b4fdd57c3312a6d1f25d01db717fe7d82222393c410298
-    # via hexkit
 mypy==1.17.1 \
     --hash=sha256:03b6d0ed2b188e35ee6d5c36b5580cffd6da23319991c49ab5556c023ccf1341 \
     --hash=sha256:064e2ff508e5464b4bd807a7c1625bc5047c5022b85c70f030680e18f37273a5 \
@@ -1100,7 +1096,7 @@ pymongo==4.13.2 \
     --hash=sha256:f30eab4d4326df54fee54f31f93e532dc2918962f733ee8e115b33e6fe151d92 \
     --hash=sha256:f57a664aa74610eb7a52fa93f2cf794a1491f4f76098343485dd7da5b3bcff06 \
     --hash=sha256:f8057f9bc9c94a8fd54ee4f5e5106e445a8f406aff2df74746f21c8791ee2403
-    # via motor
+    # via hexkit
 pynacl==1.5.0 \
     --hash=sha256:06b8f6fa7f5de8d5d2f7573fe8c863c051225a27b61e6860fd047b1775807858 \
     --hash=sha256:0c84947a22519e013607c9be43706dd42513f9e6ae5d39d3613ca1e142fba44d \
