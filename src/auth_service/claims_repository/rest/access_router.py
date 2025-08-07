@@ -20,6 +20,7 @@ import logging
 from enum import Enum
 from operator import attrgetter
 from typing import Annotated, cast
+from uuid import UUID
 
 from fastapi import APIRouter, Path, Query, Response, status
 from fastapi.exceptions import HTTPException
@@ -27,6 +28,7 @@ from ghga_service_commons.utils.utc_dates import UTCDatetime
 from hexkit.opentelemetry import start_span
 from hexkit.protocols.dao import NoHitsFoundError, ResourceNotFoundError
 from hexkit.utils import now_utc_ms_prec
+from pydantic import UUID4
 
 from auth_service.user_registry.deps import (
     IvaDaoDependency,
@@ -85,7 +87,7 @@ async def get_download_access_grants(  # noqa: PLR0913
     claim_dao: ClaimDaoDependency,
     user_dao: UserDaoDependency,
     user_id: Annotated[
-        str | None,
+        UUID4 | None,
         Query(
             ...,
             alias="user_id",
@@ -93,7 +95,7 @@ async def get_download_access_grants(  # noqa: PLR0913
         ),
     ] = None,
     iva_id: Annotated[
-        str | None,
+        UUID4 | None,
         Query(
             ...,
             alias="iva_id",
@@ -125,7 +127,8 @@ async def get_download_access_grants(  # noqa: PLR0913
     """
     # Determine all controlled access grants for the user
     grants: list[Grant] = []
-    users: dict[str, User | None] = {}  # user cache
+    users: dict[UUID, User | None] = {}  # user cache
+
     mapping = create_controlled_access_filter(
         user_id=user_id, iva_id=iva_id, dataset_id=dataset_id
     )
@@ -138,21 +141,21 @@ async def get_download_access_grants(  # noqa: PLR0913
         if not dataset_id:
             continue  # consider only claims for datasets
         # find user name and email
-        user_id = claim.user_id
+        _user_id = claim.user_id
         try:
-            user = users[user_id]
+            user = users[_user_id]
         except KeyError:
             try:
-                user = await user_dao.get_by_id(user_id)
+                user = await user_dao.get_by_id(_user_id)
             except ResourceNotFoundError:
                 user = None
-            users[user_id] = user
+            users[_user_id] = user
         if not user:
             continue
         grants.append(
             Grant(
                 id=claim.id,
-                user_id=user_id,
+                user_id=_user_id,
                 iva_id=claim.iva_id,
                 dataset_id=dataset_id,
                 created=claim.creation_date,
@@ -184,7 +187,7 @@ async def get_download_access_grants(  # noqa: PLR0913
 )
 async def revoke_download_access_grant(
     grant_id: Annotated[
-        str,
+        UUID4,
         Path(
             ...,
             alias="grant_id",
@@ -195,7 +198,7 @@ async def revoke_download_access_grant(
     # internal service, authorization without token via service mesh
 ) -> Response:
     """Revoke a download access grants."""
-    mapping = cast(dict[str, str | None], create_controlled_access_filter())
+    mapping = cast(dict[str, str | UUID4 | None], create_controlled_access_filter())
     mapping.update({"id_": grant_id, "revocation_date": None})
     try:
         claim = await claim_dao.find_one(mapping=mapping)
@@ -230,7 +233,7 @@ async def revoke_download_access_grant(
 async def grant_download_access(  # noqa: PLR0913
     validity: ClaimValidity,
     user_id: Annotated[
-        str,
+        UUID4,
         Path(
             ...,
             alias="user_id",
@@ -238,7 +241,7 @@ async def grant_download_access(  # noqa: PLR0913
         ),
     ],
     iva_id: Annotated[
-        str,
+        UUID4,
         Path(
             ...,
             alias="iva_id",
@@ -299,7 +302,7 @@ async def grant_download_access(  # noqa: PLR0913
 )
 async def check_download_access(
     user_id: Annotated[
-        str,
+        UUID4,
         Path(
             ...,
             alias="user_id",
@@ -373,7 +376,7 @@ async def check_download_access(
 )
 async def get_datasets_with_download_access(
     user_id: Annotated[
-        str,
+        UUID4,
         Path(
             ...,
             alias="user_id",

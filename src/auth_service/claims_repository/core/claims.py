@@ -22,6 +22,7 @@ from enum import StrEnum
 
 from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc
 from hexkit.utils import now_utc_ms_prec
+from pydantic import UUID4
 
 from ...config import CONFIG
 from ..models.claims import AuthorityLevel, Claim, VisaType
@@ -78,7 +79,7 @@ def is_internal_claim(claim: Claim, visa_type: VisaType) -> bool:
 
 
 def create_internal_role_claim(
-    user_id: str, role: Role, iva_id: str | None = None, valid_days=365
+    user_id: UUID4, role: Role, iva_id: UUID4 | None = None, valid_days=365
 ) -> Claim:
     """Create a claim for a data steward with the given IVA."""
     valid_from = now_utc_ms_prec()
@@ -123,8 +124,8 @@ def get_role_from_claim(claim: Claim) -> Role | None:
 
 
 def create_controlled_access_claim(
-    user_id: str,
-    iva_id: str,
+    user_id: UUID4,
+    iva_id: UUID4,
     dataset_id: str,
     valid_from: UTCDatetime,
     valid_until: UTCDatetime,
@@ -150,15 +151,15 @@ def create_controlled_access_claim(
 
 def create_controlled_access_filter(
     *,
-    user_id: str | None = None,
-    iva_id: str | None = None,
+    user_id: UUID4 | None = None,
+    iva_id: UUID4 | None = None,
     dataset_id: str | None = None,
-) -> dict[str, str]:
+) -> dict[str, UUID4 | str]:
     """Create a mapping for filtering controlled access grants.
 
     If a user, IVA or dataset ID is given, filter values will be set accordingly.
     """
-    mapping = {
+    mapping: dict[str, UUID4 | str] = {
         "visa_type": VisaType.CONTROLLED_ACCESS_GRANTS.value,
         "source": str(INTERNAL_SOURCE).rstrip("/"),
     }

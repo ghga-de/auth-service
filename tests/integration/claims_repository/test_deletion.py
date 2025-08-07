@@ -18,6 +18,7 @@
 
 import logging
 from datetime import timedelta
+from uuid import uuid4
 
 import pytest
 from hexkit.protocols.dao import NoHitsFoundError
@@ -35,6 +36,7 @@ from auth_service.claims_repository.translators.dao import (
 )
 from auth_service.config import CONFIG
 from auth_service.prepare import prepare_event_subscriber
+from tests.fixtures.constants import SOME_USER_ID
 
 
 @pytest.mark.asyncio()
@@ -57,7 +59,7 @@ async def test_deletion_handler(
 
     now = now_utc_ms_prec()
     claim = Claim(
-        id="some-claim-id",
+        id=uuid4(),
         visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
         visa_value="https://ghga.de/datasets/DS0815",
         assertion_date=now,
@@ -66,14 +68,14 @@ async def test_deletion_handler(
         source="https://ghga.de",  # type: ignore[arg-type]
         sub_source=None,
         asserted_by=AuthorityLevel.DAC,
-        user_id="some-user-id",
+        user_id=SOME_USER_ID,
         conditions=None,
         revocation_date=None,
         creation_date=now,
     )
 
     await claim_dao.insert(claim)
-    assert await claim_dao.find_one(mapping={"user_id": "some-user-id"})
+    assert await claim_dao.find_one(mapping={"user_id": SOME_USER_ID})
 
     event_type = config.dataset_deletion_type
     event_topic = config.dataset_change_topic
@@ -94,7 +96,7 @@ async def test_deletion_handler(
         assert messages[0].startswith("Consuming event of type 'dataset_deleted'")
         assert messages[1] == "Deleted 1 claims for dataset DS0815"
         with pytest.raises(NoHitsFoundError):
-            assert not await claim_dao.find_one(mapping={"user_id": "some-user-id"})
+            assert not await claim_dao.find_one(mapping={"user_id": SOME_USER_ID})
 
         caplog.clear()
         await kafka.publish_event(payload=payload, type_=event_type, topic=event_topic)

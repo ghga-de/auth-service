@@ -33,6 +33,7 @@ from auth_service.auth_adapter.ports.dao import UserToken, UserTokenDao
 from auth_service.config import Config
 from auth_service.user_registry.models.ivas import IvaState
 from auth_service.user_registry.models.users import UserStatus
+from tests.fixtures.constants import ID_OF_JOHN
 
 from ...fixtures.utils import (
     DummyUserDao,
@@ -44,7 +45,7 @@ SESSION_ARGS = {
     "ext_id": "john@aai.org",
     "user_name": "John Doe",
     "user_email": "john@home.org",
-    "user_id": "john@ghga.de",
+    "user_id": str(ID_OF_JOHN),
 }
 
 config = Config(
@@ -102,7 +103,9 @@ async def test_verify_totp(session_state: SessionState, totp_code: str):  # noqa
     assert user_id == session.user_id
     if user_has_token:
         assert totp_token
-        await user_token_dao.upsert(UserToken(user_id=user_id, totp_token=totp_token))
+        await user_token_dao.upsert(
+            UserToken(user_id=str(user_id), totp_token=totp_token)
+        )
 
     user_registry.add_dummy_iva(state=IvaState.VERIFIED)
 
@@ -166,7 +169,7 @@ async def test_verify_totp(session_state: SessionState, totp_code: str):  # noqa
         session_store.delete_session.assert_not_called()
 
     if should_verify or user_has_token:
-        assert user_token_dao.user_tokens[user_id].totp_token is totp_token
+        assert user_token_dao.user_tokens[str(user_id)].totp_token is totp_token
     else:
         assert not user_token_dao.user_tokens
 

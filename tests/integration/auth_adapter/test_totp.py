@@ -31,6 +31,7 @@ from auth_service.auth_adapter.deps import get_session_store
 from auth_service.auth_adapter.ports.session_store import SessionStorePort
 from auth_service.user_registry.models.ivas import IvaState
 from auth_service.user_registry.models.users import UserStatus
+from tests.fixtures.constants import ID_OF_JOHN, SOME_USER_ID
 
 from ...fixtures.utils import (
     RE_USER_INFO_URL,
@@ -159,7 +160,7 @@ async def test_verify_totp_without_session(bare_client: BareClient):
     """Test that TOTP verification without a session fails."""
     response = await bare_client.post(
         VERIFY_TOTP_PATH,
-        json={"user_id": "some-user-id", "totp": "123456"},
+        json={"user_id": str(SOME_USER_ID), "totp": "123456"},
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.json() == {"detail": "Not logged in"}
@@ -201,7 +202,7 @@ async def test_verify_totp_without_csrf_token(
     del headers["X-CSRF-Token"]
     response = await client.post(
         VERIFY_TOTP_PATH,
-        json={"user_id": "john@ghga.de", "totp": "123456"},
+        json={"user_id": str(ID_OF_JOHN), "totp": "123456"},
         headers=headers,
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -214,7 +215,6 @@ async def test_verify_totp(
     """Test verification of TOTP tokens."""
     client, session, user_registry, user_token_dao = client_with_session
     headers = headers_for_session(session)
-    user_id = "john@ghga.de"
     assert session.state is SessionState.REGISTERED
     # create a new TOTP token on the backend
     response = await client.post(TOTP_TOKEN_PATH, headers=headers)
@@ -251,7 +251,7 @@ async def test_verify_totp(
     # check that the token has been moved to the database
     user_tokens = user_token_dao.user_tokens
     assert len(user_tokens) == 1
-    user_token = user_tokens.get(user_id, None)
+    user_token = user_tokens.get(str(ID_OF_JOHN), None)
     assert user_token
     totp_token = user_token.totp_token
     assert len(totp_token.encrypted_secret) == 96
@@ -298,7 +298,6 @@ async def test_rate_limiting_totp(
     """Test that the rate limiting for code verification works."""
     client, session, user_registry, user_token_dao = client_with_session
     headers = headers_for_session(session)
-    user_id = "john@ghga.de"
     assert session.state is SessionState.REGISTERED
     # create a new TOTP token on the backend
     response = await client.post(TOTP_TOKEN_PATH, headers=headers)
@@ -313,7 +312,7 @@ async def test_rate_limiting_totp(
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
     # decrease the TOTP counter so that we can re-login without waiting
-    totp_token = user_token_dao.user_tokens[user_id].totp_token
+    totp_token = user_token_dao.user_tokens[str(ID_OF_JOHN)].totp_token
     totp_token.last_counter -= 1
     # make 6 attempts with invalid TOTP codes
     # (we might get 3 extra attempts due to time code increment during the test)
@@ -348,7 +347,6 @@ async def test_total_limit_totp(client_with_session: ClientWithSession):
 
     user = user_registry.dummy_user
     user_id = user.id
-    assert user_id == "john@ghga.de"
     assert user.status is UserStatus.ACTIVE
     assert not user.status_change
 
@@ -372,7 +370,7 @@ async def test_total_limit_totp(client_with_session: ClientWithSession):
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
     # decrease the TOTP counter so that we can re-login without waiting
-    totp_token = user_token_dao.user_tokens[user_id].totp_token
+    totp_token = user_token_dao.user_tokens[str(ID_OF_JOHN)].totp_token
     totp_token.last_counter -= 1
 
     # make 10 attempts with invalid TOTP codes
@@ -487,4 +485,4 @@ async def test_recreate_existing_totp_token(
     assert session.state is SessionState.NEW_TOTP_TOKEN
 
     # should notify because the token was overwritten
-    assert user_registry.published_events == [("2fa_recreation", "john@ghga.de")]
+    assert user_registry.published_events == [("2fa_recreation", str(ID_OF_JOHN))]

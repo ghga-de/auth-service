@@ -17,6 +17,7 @@
 """Unit tests for the core user and IVA registry."""
 
 from datetime import timedelta
+from uuid import UUID, uuid4
 
 import pytest
 from hexkit.utils import now_utc_ms_prec
@@ -43,12 +44,13 @@ from auth_service.user_registry.models.users import (
     UserStatus,
     UserWithRoles,
 )
+from tests.fixtures.constants import ID_OF_JOHN, ID_OF_ROD_STEWARD, IVA_IDS
 
 from ...fixtures.utils import DummyUserRegistry
 
 pytestmark = pytest.mark.asyncio()
 
-
+DUMMY_USER_ID = UUID("958c1df0-cb45-449d-a3ce-e4e7bd0ef319")
 VERIFICATION_CODE_SIZE = 6  # the expected size of verification codes
 
 
@@ -96,15 +98,15 @@ async def test_create_new_user():
     """Test creating a user account that does not yet exist."""
     registry = DummyUserRegistry()
     user_data = UserRegisteredData(
-        ext_id="jane@aai.org",
+        ext_id="jane@aai.org",  # TODO: Does this need to go into the dict?
         name="John Roe",
         title=AcademicTitle.DR,
         email="jane@home.org",
     )
     user = await registry.create_user(user_data)
-    user = user.model_copy(update={"id": "jane@ghga.de"})
+    user = user.model_copy(update={"id": DUMMY_USER_ID})
     assert user == UserWithRoles(**registry.dummy_user.model_dump(), roles=[])
-    assert registry.is_internal_user_id(user.id)
+    assert registry.is_internal_user_id(str(user.id))
     assert user.ext_id == "jane@aai.org"
     assert user.status == UserStatus.ACTIVE
     assert 0 <= (now_utc_ms_prec() - user.registration_date).total_seconds() < 3
@@ -122,9 +124,10 @@ async def test_get_non_existing_user():
     """Test trying to get a non-existing user."""
     registry = DummyUserRegistry()
     with pytest.raises(
-        registry.UserDoesNotExistError, match="User with ID jane@ghga.de does not exist"
+        registry.UserDoesNotExistError,
+        match=f"User with ID {DUMMY_USER_ID} does not exist",
     ):
-        await registry.get_user("jane@ghga.de")
+        await registry.get_user(DUMMY_USER_ID)
 
 
 async def test_update_basic_data():
@@ -166,7 +169,7 @@ async def test_update_modifiable_data_only_status():
     await registry.update_user(
         dummy_user.id,
         basic_data,
-        changed_by="some-steward",
+        changed_by=ID_OF_ROD_STEWARD,
         context="This is some context.",
     )
     assert registry.dummy_user is not dummy_user
@@ -178,7 +181,7 @@ async def test_update_modifiable_data_only_status():
     status_change = dummy_user.status_change
     assert status_change
     assert status_change.previous is UserStatus.ACTIVE
-    assert status_change.by == "some-steward"
+    assert status_change.by == ID_OF_ROD_STEWARD
     assert status_change.context == "This is some context."
     change_date = status_change.change_date
     assert change_date
@@ -218,16 +221,16 @@ async def test_update_non_existing_user():
     basic_data = UserBasicData(name="John Doe", email="john@home.org")
     with pytest.raises(
         registry.UserDoesNotExistError,
-        match="User with ID nobody@ghga.de does not exist",
+        match=f"User with ID {DUMMY_USER_ID} does not exist",
     ):
-        await registry.update_user("nobody@ghga.de", basic_data)
+        await registry.update_user(DUMMY_USER_ID, basic_data)
 
 
 async def test_delete_existing_user():
     """Test deleting an existing user."""
     registry = DummyUserRegistry()
     assert registry.dummy_users
-    await registry.delete_user("john@ghga.de")
+    await registry.delete_user(ID_OF_JOHN)
     assert not registry.dummy_users
 
 
@@ -236,37 +239,37 @@ async def test_delete_non_existing_user():
     registry = DummyUserRegistry()
     with pytest.raises(
         registry.UserDoesNotExistError,
-        match="User with ID nobody@ghga.de does not exist",
+        match=f"User with ID {DUMMY_USER_ID} does not exist",
     ):
-        await registry.delete_user("nobody@ghga.de")
+        await registry.delete_user(DUMMY_USER_ID)
 
 
 async def test_delete_existing_user_with_ivas():
     """Test deleting an existing user who has IVAs."""
     registry = DummyUserRegistry()
     registry.add_dummy_iva(value="123")
-    registry.add_dummy_iva(user_id="jane@ghga.de", value="456")
+    registry.add_dummy_iva(user_id=DUMMY_USER_ID, value="456")
     registry.add_dummy_iva(value="789")
     ivas = registry.dummy_ivas
     assert len(ivas) == 3
-    await registry.delete_user("john@ghga.de")
+    await registry.delete_user(ID_OF_JOHN)
     assert not registry.dummy_users
     assert len(ivas) == 1
-    assert ivas[0].user_id == "jane@ghga.de"
+    assert ivas[0].user_id == DUMMY_USER_ID
 
 
 async def test_create_new_iva():
     """Test creating a new IVA."""
     registry = DummyUserRegistry()
     iva_data = IvaBasicData(type=IvaType.PHONE, value="123456")
-    iva_id = await registry.create_iva("john@ghga.de", iva_data)
+    iva_id = await registry.create_iva(ID_OF_JOHN, iva_data)
     assert iva_id
     ivas = registry.dummy_ivas
     assert isinstance(ivas, list)
     assert len(ivas) == 1
     iva = ivas[0]
     assert iva.id == iva_id
-    assert iva.user_id == "john@ghga.de"
+    assert iva.user_id == ID_OF_JOHN
     assert iva.type == IvaType.PHONE
     assert iva.value == "123456"
     assert iva.state == IvaState.UNVERIFIED
@@ -282,16 +285,16 @@ async def test_create_iva_for_non_existing_user():
     iva_data = IvaBasicData(type=IvaType.PHONE, value="123456")
     with pytest.raises(
         registry.UserDoesNotExistError,
-        match="User with ID nobody@ghga.de does not exist",
+        match=f"User with ID {DUMMY_USER_ID} does not exist",
     ):
-        await registry.create_iva("nobody@ghga.de", iva_data)
+        await registry.create_iva(DUMMY_USER_ID, iva_data)
     assert not registry.published_events
 
 
 async def test_get_ivas_of_non_existing_user():
     """Test trying to get all IVAs of a non-existing user."""
     registry = DummyUserRegistry()
-    ivas = await registry.get_ivas("nobody@ghga.de")
+    ivas = await registry.get_ivas(DUMMY_USER_ID)
     assert isinstance(ivas, list)
     assert not ivas
 
@@ -299,7 +302,7 @@ async def test_get_ivas_of_non_existing_user():
 async def test_get_ivas_of_an_existing_user_without_ivas():
     """Test getting all IVAs of an existing user without IVAS."""
     registry = DummyUserRegistry()
-    ivas = await registry.get_ivas("john@ghga.de")
+    ivas = await registry.get_ivas(ID_OF_JOHN)
     assert isinstance(ivas, list)
     assert not ivas
 
@@ -308,17 +311,17 @@ async def test_get_ivas_of_an_existing_user_with_ivas():
     """Test getting all IVAs of an existing user without IVAS."""
     registry = DummyUserRegistry()
     registry.add_dummy_iva(value="123")
-    registry.add_dummy_iva(value="456", user_id="jane@ghga.de")
+    registry.add_dummy_iva(value="456", user_id=DUMMY_USER_ID)
     registry.add_dummy_iva(value="789")
     ivas_before = list(registry.dummy_ivas)
     assert len(ivas_before) == 3
-    ivas = await registry.get_ivas("john@ghga.de")
+    ivas = await registry.get_ivas(ID_OF_JOHN)
     assert isinstance(ivas, list)
     assert len(ivas) == 2
     for iva in ivas:
         assert isinstance(iva, IvaData)
-    assert [Iva(**iva.model_dump(), user_id="john@ghga.de") for iva in ivas] == [
-        iva for iva in ivas_before if iva.user_id.startswith("john")
+    assert [Iva(**iva.model_dump(), user_id=ID_OF_JOHN) for iva in ivas] == [
+        iva for iva in ivas_before if iva.user_id == ID_OF_JOHN
     ]
     assert not registry.published_events
 
@@ -328,14 +331,14 @@ async def test_get_ivas_of_an_existing_user_filtering_by_state():
     registry = DummyUserRegistry()
     registry.add_dummy_iva(value="123")
     registry.add_dummy_iva(value="456", state=IvaState.VERIFIED)
-    ivas = await registry.get_ivas("john@ghga.de")
+    ivas = await registry.get_ivas(ID_OF_JOHN)
     assert isinstance(ivas, list)
     assert len(ivas) == 2
-    ivas = await registry.get_ivas("john@ghga.de", state=IvaState.VERIFIED)
+    ivas = await registry.get_ivas(ID_OF_JOHN, state=IvaState.VERIFIED)
     assert isinstance(ivas, list)
     assert len(ivas) == 1
     assert ivas[0].state == IvaState.VERIFIED
-    ivas = await registry.get_ivas("john@ghga.de", state=IvaState.CODE_REQUESTED)
+    ivas = await registry.get_ivas(ID_OF_JOHN, state=IvaState.CODE_REQUESTED)
     assert isinstance(ivas, list)
     assert len(ivas) == 0
     assert not registry.published_events
@@ -347,7 +350,7 @@ async def test_get_all_ivas_with_user():
     john = registry.dummy_user
     jane = john.model_copy(
         update={
-            "id": "jane@ghga.de",
+            "id": DUMMY_USER_ID,
             "name": "Jane Roe",
             "title": AcademicTitle.PROF,
             "email": "jane@home.org",
@@ -381,7 +384,7 @@ async def test_get_selected_ivas_with_user():
     """Test getting a selection of IVAs with user data."""
     registry = DummyUserRegistry()
     john = registry.dummy_user
-    jane = john.model_copy(update={"id": "jane@ghga.de"})
+    jane = john.model_copy(update={"id": DUMMY_USER_ID})
     registry.dummy_users.append(jane)
     add_iva = registry.add_dummy_iva
     add_iva(value="123", user_id=john.id)
@@ -404,13 +407,13 @@ async def test_delete_existing_iva():
     """Test deleting an existing IVA."""
     registry = DummyUserRegistry()
     registry.add_dummy_iva(value="123")
-    registry.add_dummy_iva(value="456", user_id="jane@ghga.de")
+    registry.add_dummy_iva(value="456", user_id=DUMMY_USER_ID)
     ivas = registry.dummy_ivas
     assert len(ivas) == 2
-    await registry.delete_iva("iva-id-2")
+    await registry.delete_iva(IVA_IDS[1])
     assert len(ivas) == 1
-    assert ivas[0].id == "iva-id-1"
-    await registry.delete_iva("iva-id-1")
+    assert ivas[0].id == IVA_IDS[0]
+    await registry.delete_iva(IVA_IDS[0])
     assert not ivas
     assert not registry.published_events
 
@@ -422,9 +425,9 @@ async def test_delete_non_existing_iva():
     registry.add_dummy_iva()
     assert len(ivas) == 1
     with pytest.raises(
-        registry.IvaDoesNotExistError, match="IVA with ID iva-id-2 does not exist"
+        registry.IvaDoesNotExistError, match=f"IVA with ID {IVA_IDS[1]} does not exist"
     ):
-        await registry.delete_iva("iva-id-2")
+        await registry.delete_iva(IVA_IDS[1])
     assert len(ivas) == 1
 
 
@@ -434,7 +437,7 @@ async def test_delete_iva_for_a_user():
     ivas = registry.dummy_ivas
     registry.add_dummy_iva()
     assert len(ivas) == 1
-    await registry.delete_iva("iva-id-1", user_id="john@ghga.de")
+    await registry.delete_iva(IVA_IDS[0], user_id=ID_OF_JOHN)
     assert not ivas
     assert not registry.published_events
 
@@ -447,11 +450,11 @@ async def test_delete_iva_for_nonexisting_user():
     assert len(ivas) == 1
     with pytest.raises(
         registry.IvaDoesNotExistError,
-        match="User with ID nobody@ghga.de does not have an IVA with ID iva-id-1",
+        match=f"User with ID {DUMMY_USER_ID} does not have an IVA with ID {IVA_IDS[0]}",
     ):
-        await registry.delete_iva("iva-id-1", user_id="nobody@ghga.de")
+        await registry.delete_iva(IVA_IDS[0], user_id=DUMMY_USER_ID)
     assert len(ivas) == 1
-    assert ivas[0].id == "iva-id-1"
+    assert ivas[0].id == IVA_IDS[0]
 
 
 async def test_delete_iva_for_wrong_user():
@@ -462,11 +465,11 @@ async def test_delete_iva_for_wrong_user():
     assert len(ivas) == 1
     with pytest.raises(
         registry.IvaDoesNotExistError,
-        match="User with ID jane@ghga.de does not have an IVA with ID iva-id-1",
+        match=f"User with ID {DUMMY_USER_ID} does not have an IVA with ID {IVA_IDS[0]}",
     ):
-        await registry.delete_iva("iva-id-1", user_id="jane@ghga.de")
+        await registry.delete_iva(IVA_IDS[0], user_id=DUMMY_USER_ID)
     assert len(ivas) == 1
-    assert ivas[0].id == "iva-id-1"
+    assert ivas[0].id == IVA_IDS[0]
 
 
 @pytest.mark.parametrize(
@@ -494,7 +497,7 @@ async def test_unverify_iva(from_state: IvaState):
     ivas = registry.dummy_ivas
     assert len(ivas) == 1
     from_iva = ivas[0]
-    await registry.unverify_iva("iva-id-1")
+    await registry.unverify_iva(IVA_IDS[0])
     iva = ivas[0]
     changed = iva.changed
     assert 0 <= (changed - now).total_seconds() < 3
@@ -513,11 +516,12 @@ async def test_unverify_iva(from_state: IvaState):
 async def test_unverify_non_existing_iva():
     """Test trying to unverify a non-existing IVA."""
     registry = DummyUserRegistry()
+    random_iva_id = uuid4()
     with pytest.raises(
         registry.IvaDoesNotExistError,
-        match="IVA with ID non-existing-iva-id does not exist",
+        match=f"IVA with ID {random_iva_id} does not exist",
     ):
-        await registry.unverify_iva("non-existing-iva-id")
+        await registry.unverify_iva(random_iva_id)
     assert not registry.published_events
 
 
@@ -530,7 +534,7 @@ async def test_request_iva_verification_code():
     ivas = registry.dummy_ivas
     assert len(ivas) == 1
     from_iva = ivas[0]
-    await registry.request_iva_verification_code("iva-id-1", user_id="john@ghga.de")
+    await registry.request_iva_verification_code(IVA_IDS[0], user_id=ID_OF_JOHN)
     assert len(ivas) == 1
     iva = ivas[0]
     changed = iva.changed
@@ -548,11 +552,12 @@ async def test_request_iva_verification_code():
 async def test_request_verification_code_for_non_existing_iva():
     """Test requesting a verification code for a non-existing IVA."""
     registry = DummyUserRegistry()
+    random_iva_id = uuid4()
     with pytest.raises(
         registry.IvaDoesNotExistError,
-        match="IVA with ID non-existing-iva-id does not exist",
+        match=f"IVA with ID {random_iva_id} does not exist",
     ):
-        await registry.request_iva_verification_code("non-existing-iva-id")
+        await registry.request_iva_verification_code(random_iva_id)
     assert not registry.published_events
 
 
@@ -564,12 +569,12 @@ async def test_request_verification_code_for_different_user():
     # first test with a different user ID
     with pytest.raises(
         registry.IvaDoesNotExistError,
-        match="User with ID jane@ghga.de does not have an IVA with ID iva-id-1",
+        match=f"User with ID {DUMMY_USER_ID} does not have an IVA with ID {IVA_IDS[0]}",
     ):
-        await registry.request_iva_verification_code("iva-id-1", user_id="jane@ghga.de")
+        await registry.request_iva_verification_code(IVA_IDS[0], user_id=DUMMY_USER_ID)
     assert not registry.published_events
     # now test again with the right user ID
-    await registry.request_iva_verification_code("iva-id-1", user_id="john@ghga.de")
+    await registry.request_iva_verification_code(IVA_IDS[0], user_id=ID_OF_JOHN)
     iva = registry.dummy_ivas[0]
     assert iva.state == IvaState.CODE_REQUESTED
     assert registry.published_events == [("iva_state_changed", iva)]
@@ -590,9 +595,9 @@ async def test_request_iva_verification_code_with_invalid_state(from_state: IvaS
     registry.add_dummy_iva(state=from_state)
     with pytest.raises(
         registry.IvaUnexpectedStateError,
-        match=f"IVA with ID iva-id-1 has an unexpected state {from_state.name}",
+        match=f"IVA with ID {IVA_IDS[0]} has an unexpected state {from_state.name}",
     ):
-        await registry.request_iva_verification_code("iva-id-1")
+        await registry.request_iva_verification_code(IVA_IDS[0])
     assert not registry.published_events
 
 
@@ -613,7 +618,7 @@ async def test_create_iva_verification_code(from_state: IvaState):
     assert len(ivas) == 1
     from_iva = ivas[0]
     assert not from_iva.verification_code_hash
-    code = await registry.create_iva_verification_code("iva-id-1")
+    code = await registry.create_iva_verification_code(IVA_IDS[0])
     assert len(ivas) == 1
     assert isinstance(code, str)
     assert code.isascii()
@@ -640,11 +645,12 @@ async def test_create_iva_verification_code(from_state: IvaState):
 async def test_create_verification_code_for_non_existing_iva():
     """Test creating a verification code for a non-existing IVA."""
     registry = DummyUserRegistry()
+    random_iva_id = uuid4()
     with pytest.raises(
         registry.IvaDoesNotExistError,
-        match="IVA with ID non-existing-iva-id does not exist",
+        match=f"IVA with ID {random_iva_id} does not exist",
     ):
-        await registry.create_iva_verification_code("non-existing-iva-id")
+        await registry.create_iva_verification_code(random_iva_id)
 
 
 @pytest.mark.parametrize(
@@ -661,9 +667,9 @@ async def test_create_iva_verification_code_with_invalid_state(from_state: IvaSt
     registry.add_dummy_iva(state=from_state)
     with pytest.raises(
         registry.IvaUnexpectedStateError,
-        match=f"IVA with ID iva-id-1 has an unexpected state {from_state.name}",
+        match=f"IVA with ID {IVA_IDS[0]} has an unexpected state {from_state.name}",
     ):
-        await registry.create_iva_verification_code("iva-id-1")
+        await registry.create_iva_verification_code(IVA_IDS[0])
 
 
 async def test_confirm_iva_transmission():
@@ -675,7 +681,7 @@ async def test_confirm_iva_transmission():
     ivas = registry.dummy_ivas
     assert len(ivas) == 1
     from_iva = ivas[0]
-    await registry.confirm_iva_code_transmission("iva-id-1")
+    await registry.confirm_iva_code_transmission(IVA_IDS[0])
     assert len(ivas) == 1
     iva = ivas[0]
     changed = iva.changed
@@ -693,11 +699,12 @@ async def test_confirm_iva_transmission():
 async def test_confirm_verification_code_transmission_for_non_existing_iva():
     """Test confirming transmission of a verification code for a non-existing IVA."""
     registry = DummyUserRegistry()
+    random_iva_id = uuid4()
     with pytest.raises(
         registry.IvaDoesNotExistError,
-        match="IVA with ID non-existing-iva-id does not exist",
+        match=f"IVA with ID {random_iva_id} does not exist",
     ):
-        await registry.confirm_iva_code_transmission("non-existing-iva-id")
+        await registry.confirm_iva_code_transmission(random_iva_id)
 
 
 @pytest.mark.parametrize(
@@ -715,9 +722,9 @@ async def test_confirm_code_transmission_with_invalid_state(from_state: IvaState
     registry.add_dummy_iva(state=from_state)
     with pytest.raises(
         registry.IvaUnexpectedStateError,
-        match=f"IVA with ID iva-id-1 has an unexpected state {from_state.name}",
+        match=f"IVA with ID {IVA_IDS[0]} has an unexpected state {from_state.name}",
     ):
-        await registry.confirm_iva_code_transmission("iva-id-1")
+        await registry.confirm_iva_code_transmission(IVA_IDS[0])
 
 
 @pytest.mark.parametrize(
@@ -746,7 +753,7 @@ async def test_validate_iva_verification_code(from_state: IvaState, attempts: in
     assert len(ivas) == 1
     from_iva = ivas[0]
     validated = await registry.validate_iva_verification_code(
-        "iva-id-1", code, user_id="john@ghga.de"
+        IVA_IDS[0], code, user_id=ID_OF_JOHN
     )
     assert validated is True
     assert len(ivas) == 1
@@ -794,7 +801,7 @@ async def test_validate_iva_with_invalid_verification_code(
     from_iva = ivas[0]
     invalid_code = code[:-1] + ("Y" if code[-1] == "X" else "X")
     validated = await registry.validate_iva_verification_code(
-        "iva-id-1", invalid_code, user_id="john@ghga.de"
+        IVA_IDS[0], invalid_code, user_id=ID_OF_JOHN
     )
     assert validated is False
     assert len(ivas) == 1
@@ -841,10 +848,10 @@ async def test_validate_iva_verification_code_too_often(
     from_iva = ivas[0]
     with pytest.raises(
         registry.IvaTooManyVerificationAttemptsError,
-        match="Too many verification attempts for IVA with ID iva-id-1",
+        match=f"Too many verification attempts for IVA with ID {IVA_IDS[0]}",
     ):
         await registry.validate_iva_verification_code(
-            "iva-id-1", code, user_id="john@ghga.de"
+            IVA_IDS[0], code, user_id=ID_OF_JOHN
         )
     assert len(ivas) == 1
     iva = ivas[0]
@@ -865,11 +872,12 @@ async def test_validate_iva_verification_code_too_often(
 async def test_validate_verification_code_for_non_existing_iva():
     """Test validating a verification code for a non-existing IVA."""
     registry = DummyUserRegistry()
+    random_iva_id = uuid4()
     with pytest.raises(
         registry.IvaDoesNotExistError,
-        match="IVA with ID non-existing-iva-id does not exist",
+        match=f"IVA with ID {random_iva_id} does not exist",
     ):
-        await registry.validate_iva_verification_code("non-existing-iva-id", "123456")
+        await registry.validate_iva_verification_code(random_iva_id, "123456")
     assert not registry.published_events
 
 
@@ -891,14 +899,14 @@ async def test_validate_verification_code_for_different_user():
     assert len(ivas) == 1
     with pytest.raises(
         registry.IvaDoesNotExistError,
-        match="User with ID jane@ghga.de does not have an IVA with ID iva-id-1",
+        match=f"User with ID {DUMMY_USER_ID} does not have an IVA with ID {IVA_IDS[0]}",
     ):
         await registry.validate_iva_verification_code(
-            "iva-id-1", code, user_id="jane@ghga.de"
+            IVA_IDS[0], code, user_id=DUMMY_USER_ID
         )
     assert not registry.published_events
     validated = await registry.validate_iva_verification_code(
-        "iva-id-1", code, user_id="john@ghga.de"
+        IVA_IDS[0], code, user_id=ID_OF_JOHN
     )
     assert validated is True
     assert ivas[0].state == IvaState.VERIFIED
@@ -923,9 +931,9 @@ async def test_validate_verification_code_with_invalid_state(from_state: IvaStat
     )
     with pytest.raises(
         registry.IvaUnexpectedStateError,
-        match=f"IVA with ID iva-id-1 has an unexpected state {from_state.name}",
+        match=f"IVA with ID {IVA_IDS[0]} has an unexpected state {from_state.name}",
     ):
-        await registry.validate_iva_verification_code("iva-id-1", code)
+        await registry.validate_iva_verification_code(IVA_IDS[0], code)
     assert not registry.published_events
 
 
@@ -945,39 +953,39 @@ async def test_validate_verification_code_without_hash(from_state: IvaState):
     registry.add_dummy_iva(state=from_state)
     with pytest.raises(
         registry.IvaUnexpectedStateError,
-        match=f"IVA with ID iva-id-1 has an unexpected state {from_state.name}",
+        match=f"IVA with ID {IVA_IDS[0]} has an unexpected state {from_state.name}",
     ):
-        await registry.validate_iva_verification_code("iva-id-1", "123456")
+        await registry.validate_iva_verification_code(IVA_IDS[0], "123456")
     assert not registry.published_events
 
 
 async def test_reset_verified_ivas():
     """Test resetting all verified IVAs."""
     registry = DummyUserRegistry()
-    for user_id in ("john@ghga.de", "jane@ghga.de"):
+    for user_id in (ID_OF_JOHN, DUMMY_USER_ID):
         for type_ in IvaType.PHONE, IvaType.FAX:
             for state in IvaState.__members__.values():
                 registry.add_dummy_iva(state=state, type_=type_, user_id=user_id)
     dummy_ivas = registry.dummy_ivas
     old_ivas = list(dummy_ivas)
-    await registry.reset_verified_ivas("john@ghga.de")
+    await registry.reset_verified_ivas(ID_OF_JOHN)
     assert len(dummy_ivas) == len(old_ivas)
     for old_iva, new_iva in zip(old_ivas, dummy_ivas, strict=True):
-        if old_iva.user_id == "john@ghga.de" and old_iva.state == IvaState.VERIFIED:
+        if old_iva.user_id == ID_OF_JOHN and old_iva.state == IvaState.VERIFIED:
             assert new_iva.state == IvaState.UNVERIFIED
             assert new_iva == old_iva.model_copy(
                 update={"state": IvaState.UNVERIFIED, "changed": new_iva.changed}
             )
         else:
             assert old_iva is new_iva
-    assert registry.published_events == [("ivas_reset", "john@ghga.de")]
+    assert registry.published_events == [("ivas_reset", ID_OF_JOHN)]
 
 
 async def test_iva_verification_happy_path():
     """Test happy path of a complete IVA verification."""
     registry = DummyUserRegistry()
     iva_data = IvaBasicData(type=IvaType.PHONE, value="123456")
-    user_id = "john@ghga.de"
+    user_id = ID_OF_JOHN
     iva_id = await registry.create_iva(user_id, iva_data)
     assert iva_id
     ivas = registry.dummy_ivas

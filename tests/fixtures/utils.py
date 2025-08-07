@@ -18,9 +18,11 @@
 import json
 import re
 from collections.abc import AsyncIterator, Mapping
+from contextlib import suppress
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, cast
+from uuid import UUID
 
 from fastapi import Request
 from ghga_service_commons.api import ApiConfigBase
@@ -34,6 +36,7 @@ from hexkit.protocols.dao import (
 )
 from hexkit.utils import now_utc_ms_prec
 from jwcrypto import jwk, jwt
+from pydantic import UUID4
 
 from auth_service.auth_adapter.core.session_store import Session
 from auth_service.auth_adapter.ports.dao import UserToken
@@ -60,6 +63,17 @@ from auth_service.user_registry.models.users import User
 from auth_service.user_registry.ports.event_pub import (
     EventPublisherPort,
 )
+from tests.fixtures.constants import (
+    DATA_ACCESS_CLAIM_ID,
+    DATA_ACCESS_IVA_ID,
+    DATA_STEWARD_CLAIM_ID,
+    DATA_STEWARD_IVA_ID,
+    EXT_ID_OF_JOHN,
+    EXT_TO_INT_ID,
+    ID_OF_JAMES,
+    ID_OF_JOHN,
+    IVA_IDS,
+)
 
 BASE_DIR = Path(__file__).parent.resolve()
 
@@ -68,7 +82,7 @@ RE_USER_INFO_URL = re.compile(".*/userinfo$")
 USER_INFO = {
     "name": "John Doe",
     "email": "john@home.org",
-    "sub": "john@aai.org",
+    "sub": EXT_ID_OF_JOHN,
 }
 
 
@@ -121,7 +135,7 @@ def create_access_token(
     header = {"alg": "ES256" if kty == "EC" else "RS256", "typ": "JWT"}
     claims: dict[str, None | str | int] = {
         "jti": "123-456-789-0",
-        "sub": "john@aai.org",
+        "sub": EXT_ID_OF_JOHN,
         "iss": str(CONFIG.oidc_authority_url),
         "client_id": CONFIG.oidc_client_id,
         "foo": "bar",
@@ -232,11 +246,11 @@ class DummyUserDao:
 
     def __init__(
         self,
-        id_="john@ghga.de",
+        id_=ID_OF_JOHN,
         name="John Doe",
         email="john@home.org",
         title=None,
-        ext_id="john@aai.org",
+        ext_id=EXT_ID_OF_JOHN,
         status="active",
     ):
         """Initialize the DummyUserDao."""
@@ -260,7 +274,7 @@ class DummyUserDao:
         """Get the last inserted user."""
         return self.users[-1]
 
-    async def get_by_id(self, id_: str) -> User:
+    async def get_by_id(self, id_: UUID4) -> User:
         """Get the dummy user via internal ID."""
         for user in self.users:
             if id_ == user.id:
@@ -269,7 +283,7 @@ class DummyUserDao:
 
     async def find_one(self, *, mapping: Mapping[str, Any]) -> User:
         """Find the dummy user via LS-ID."""
-        mapping = json.loads(json.dumps(mapping))
+        mapping = json.loads(json.dumps(mapping, default=str))
         ext_id = mapping.get("ext_id")
         for user in self.users:
             if not ext_id or ext_id == user.ext_id:
@@ -278,7 +292,7 @@ class DummyUserDao:
 
     async def find_all(self, *, mapping: Mapping[str, Any]) -> AsyncIterator[User]:
         """Find all dummy users with given ID(s)."""
-        mapping = json.loads(json.dumps(mapping))
+        mapping = json.loads(json.dumps(mapping, default=str))
         for user in self.users:
             data = user.model_dump()
             for key, value in mapping.items():
@@ -293,7 +307,7 @@ class DummyUserDao:
 
     async def insert(self, dto: User) -> None:
         """Insert the dummy user."""
-        dto = dto.model_copy(update={"id": dto.ext_id.replace("@aai.org", "@ghga.de")})
+        dto = dto.model_copy(update={"id": EXT_TO_INT_ID[dto.ext_id]})
         user = User(**dto.model_dump())
         self.users.append(user)
 
@@ -306,7 +320,7 @@ class DummyUserDao:
         else:
             raise ResourceNotFoundError(id_=dto.id)
 
-    async def delete(self, id_: str) -> None:
+    async def delete(self, id_: UUID4) -> None:
         """Delete the dummy user."""
         for index, user in enumerate(self.users):
             if id_ == user.id:
@@ -327,8 +341,8 @@ class DummyIvaDao:
             now = now_utc_ms_prec()
             ivas = [
                 Iva(
-                    id="data-steward-iva-id",
-                    user_id="james@ghga.de",
+                    id=DATA_STEWARD_IVA_ID,
+                    user_id=ID_OF_JAMES,
                     value="Nice to meet you",
                     type=IvaType.IN_PERSON,
                     state=state,
@@ -336,8 +350,8 @@ class DummyIvaDao:
                     changed=now,
                 ),
                 Iva(
-                    id="data-steward-iva-id",
-                    user_id="john@ghga.de",
+                    id=DATA_STEWARD_IVA_ID,
+                    user_id=ID_OF_JOHN,
                     value="123/456",
                     type=IvaType.PHONE,
                     state=state,
@@ -347,7 +361,7 @@ class DummyIvaDao:
             ]
         self.ivas = ivas
 
-    async def get_by_id(self, id_: str) -> Iva:
+    async def get_by_id(self, id_: UUID4) -> Iva:
         """Get a dummy IVA via its ID."""
         for iva in self.ivas:
             if iva.id == id_:
@@ -356,7 +370,7 @@ class DummyIvaDao:
 
     async def find_all(self, *, mapping: Mapping[str, Any]) -> AsyncIterator[Iva]:
         """Find all dummy IVAs."""
-        mapping = json.loads(json.dumps(mapping))
+        mapping = json.loads(json.dumps(mapping, default=str))
         for iva in self.ivas:
             data = iva.model_dump()
             for key, value in mapping.items():
@@ -384,7 +398,7 @@ class DummyIvaDao:
         else:
             raise ResourceNotFoundError(id_=iva_id)
 
-    async def delete(self, id_: str) -> None:
+    async def delete(self, id_: UUID4) -> None:
         """Delete a dummy IVA."""
         iva = await self.get_by_id(id_)
         self.ivas.remove(iva)
@@ -426,9 +440,9 @@ class DummyClaimDao:
         self.invalid_date = valid_date + timedelta(14)
         self.claims = [
             Claim(
-                id="data-steward-claim-id",
-                user_id="james@ghga.de",
-                iva_id="data-steward-iva-id",
+                id=DATA_STEWARD_CLAIM_ID,
+                user_id=ID_OF_JAMES,
+                iva_id=DATA_STEWARD_IVA_ID,
                 visa_type=VisaType.GHGA_ROLE,
                 visa_value="data_steward@some.org",
                 source="https://ghga.de",  # type: ignore
@@ -439,9 +453,9 @@ class DummyClaimDao:
                 creation_date=valid_date - timedelta(10),
             ),
             Claim(
-                id="data-access-claim-id",
-                user_id="john@ghga.de",
-                iva_id="data-access-iva-id",
+                id=DATA_ACCESS_CLAIM_ID,
+                user_id=ID_OF_JOHN,
+                iva_id=DATA_ACCESS_IVA_ID,
                 visa_type=VisaType.CONTROLLED_ACCESS_GRANTS,
                 visa_value="https://ghga.de/datasets/DS0815",
                 source="https://ghga.de",  # type: ignore
@@ -453,7 +467,7 @@ class DummyClaimDao:
             ),
         ]
 
-    async def get_by_id(self, id_: str) -> Claim:
+    async def get_by_id(self, id_: UUID4) -> Claim:
         """Get a dummy user claim via its ID."""
         for claim in self.claims:
             if claim.id == id_:
@@ -473,7 +487,7 @@ class DummyClaimDao:
 
     async def find_all(self, *, mapping: Mapping[str, Any]) -> AsyncIterator[Claim]:
         """Find all dummy user claims."""
-        mapping = json.loads(json.dumps(mapping))
+        mapping = json.loads(json.dumps(mapping, default=str))
         for claim in self.claims:
             data = claim.model_dump()
             data["id_"] = data.pop("id")
@@ -502,7 +516,7 @@ class DummyClaimDao:
         claim = Claim(**dto.model_dump())
         self.claims.append(claim)
 
-    async def delete(self, id_: str) -> None:
+    async def delete(self, id_: UUID4) -> None:
         """Delete a dummy user claim."""
         claim = await self.get_by_id(id_)
         self.claims.remove(claim)
@@ -515,7 +529,7 @@ class DummyEventPublisher(EventPublisherPort):
         """Initialize the dummy event publisher."""
         self.published_events = []
 
-    async def publish_2fa_recreated(self, *, user_id: str) -> None:
+    async def publish_2fa_recreated(self, *, user_id: UUID4) -> None:
         """Publish an event relaying that the 2nd factor of a user was recreated."""
         self.published_events.append(("2fa_recreation", user_id))
 
@@ -523,7 +537,7 @@ class DummyEventPublisher(EventPublisherPort):
         """Publish an event relaying that the state of a user IVA has been changed."""
         self.published_events.append(("iva_state_changed", iva))
 
-    async def publish_ivas_reset(self, *, user_id: str) -> None:
+    async def publish_ivas_reset(self, *, user_id: UUID4) -> None:
         """Publish an event relaying that all IVAs of the user have been reset."""
         self.published_events.append(("ivas_reset", user_id))
 
@@ -551,7 +565,10 @@ class DummyUserRegistry(UserRegistry):
     @staticmethod
     def is_internal_user_id(id_: str) -> bool:
         """Check if the passed ID is an internal user id."""
-        return isinstance(id_, str) and id_.endswith("@ghga.de")
+        with suppress(ValueError, TypeError):
+            converted_id = UUID(id_)
+            return converted_id.version == 4
+        return False
 
     @staticmethod
     def is_external_user_id(id_: str) -> bool:
@@ -575,8 +592,8 @@ class DummyUserRegistry(UserRegistry):
 
     def add_dummy_iva(
         self,
-        id_: str | None = None,
-        user_id: str | None = None,
+        id_: UUID4 | None = None,
+        user_id: UUID4 | None = None,
         type_: IvaType = IvaType.PHONE,
         value: str = "123456",
         state: IvaState = IvaState.UNVERIFIED,
@@ -588,7 +605,7 @@ class DummyUserRegistry(UserRegistry):
         """Add a dummy IVA with the specified data."""
         self.dummy_ivas.append(
             Iva(
-                id=id_ or f"iva-id-{len(self.dummy_ivas) + 1}",
+                id=id_ or IVA_IDS[len(self.dummy_ivas)],
                 state=state,
                 type=type_,
                 value=value,

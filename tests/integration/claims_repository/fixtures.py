@@ -32,9 +32,10 @@ from auth_service.claims_repository.models.config import (
 from auth_service.config import Config
 from auth_service.prepare import prepare_rest_app
 from auth_service.user_registry.models.users import User, UserStatus
+from tests.fixtures.constants import ID_OF_ROD_STEWARD
 
 data_steward = User(
-    id="the-id-of-rod-steward",
+    id=ID_OF_ROD_STEWARD,
     ext_id="rod@ls.org",
     name="Rod Steward",
     email="rod@example.org",

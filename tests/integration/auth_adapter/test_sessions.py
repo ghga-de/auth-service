@@ -34,6 +34,7 @@ from auth_service.auth_adapter.deps import (
 from auth_service.claims_repository.deps import get_claim_dao
 from auth_service.user_registry.deps import get_iva_dao, get_user_dao
 from auth_service.user_registry.models.users import UserStatus
+from tests.fixtures.constants import ID_OF_JOHN
 
 from ...fixtures.utils import (
     RE_USER_INFO_URL,
@@ -230,7 +231,7 @@ async def test_login_with_registered_user(
     assert_session_header(
         response,
         {
-            "id": "john@ghga.de",
+            "id": str(ID_OF_JOHN),
             "ext_id": "john@aai.org",
             "name": "John Doe",
             "email": "john@home.org",
@@ -262,7 +263,7 @@ async def test_login_with_registered_user_and_name_change(
     assert_session_header(
         response,
         {
-            "id": "john@ghga.de",
+            "id": str(ID_OF_JOHN),
             "ext_id": "john@aai.org",
             "name": "John Doe Jr.",
             "email": "john@home.org",
@@ -293,7 +294,7 @@ async def test_login_with_registered_user_with_title(
     assert_session_header(
         response,
         {
-            "id": "john@ghga.de",
+            "id": str(ID_OF_JOHN),
             "ext_id": "john@aai.org",
             "name": "John Doe",
             "email": "john@home.org",
@@ -392,7 +393,7 @@ async def test_login_with_cookie_and_registered_user(bare_client: BareClient):
     store = bare_client.app.dependency_overrides[get_session_store]()
     session = await store.create_session(
         ext_id="john@aai.org",
-        user_id="john@ghga.de",
+        user_id=str(ID_OF_JOHN),
         user_name="John Doe",
         user_email="john@home.org",
     )
@@ -405,7 +406,7 @@ async def test_login_with_cookie_and_registered_user(bare_client: BareClient):
     assert_session_header(
         response,
         {
-            "id": "john@ghga.de",
+            "id": str(ID_OF_JOHN),
             "ext_id": "john@aai.org",
             "name": "John Doe",
             "email": "john@home.org",
@@ -467,7 +468,7 @@ async def test_login_with_cookie_but_without_csrf_token(bare_client: BareClient)
     store = bare_client.app.dependency_overrides[get_session_store]()
     session = await store.create_session(
         ext_id="john@aai.org",
-        user_id="john@ghga.de",
+        user_id=str(ID_OF_JOHN),
         user_name="John Doe",
         user_email="john@home.org",
     )
@@ -481,7 +482,7 @@ async def test_login_with_cookie_but_without_csrf_token(bare_client: BareClient)
     assert_session_header(
         response,
         {
-            "id": "john@ghga.de",
+            "id": str(ID_OF_JOHN),
             "ext_id": "john@aai.org",
             "name": "John Doe",
             "email": "john@home.org",

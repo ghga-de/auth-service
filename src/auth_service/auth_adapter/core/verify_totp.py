@@ -107,7 +107,7 @@ async def verify_totp(  # noqa: C901, PLR0912, PLR0913, PLR0915
         await user_registry.reset_verified_ivas(user_id)
         # store token in the database
         user_token = UserToken(
-            user_id=user_id,
+            user_id=str(user_id),
             totp_token=totp_token,
         )
         # check whether a token already existed

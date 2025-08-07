@@ -25,6 +25,7 @@ from auth_service.claims_repository.translators.dao import (
     ClaimDaoFactory,
 )
 from auth_service.config import get_config
+from tests.fixtures.constants import SOME_USER_ID
 
 
 @pytest.mark.asyncio()
@@ -35,7 +36,7 @@ async def test_claim_creation(mongodb: MongoDbFixture):
     claim_dao = await claim_dao_factory.get_claim_dao()
 
     claim = Claim(
-        user_id="some-internal-user-id",
+        user_id=SOME_USER_ID,
         visa_type=VisaType.GHGA_ROLE,
         visa_value="data_steward@ghga.de",
         assertion_date=utc_datetime(2022, 9, 1),

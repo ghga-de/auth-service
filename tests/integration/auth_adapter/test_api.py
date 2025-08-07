@@ -32,6 +32,7 @@ from auth_service.auth_adapter.deps import get_user_token_dao
 from auth_service.auth_adapter.rest.headers import get_bearer_token
 from auth_service.claims_repository.deps import get_claim_dao
 from auth_service.user_registry.deps import get_user_dao
+from tests.fixtures.constants import ID_OF_JOHN, SOME_USER_ID
 
 from ...fixtures.utils import (
     DummyClaimDao,
@@ -284,7 +285,7 @@ async def test_post_user_without_session_and_basic_auth(
     # invalid basic auth, no session
     auth = "Basic invalid"
     response = await client.put(
-        AUTH_PATH + "/users/some-internal-id", headers={"Authorization": auth}
+        AUTH_PATH + f"/users/{SOME_USER_ID}", headers={"Authorization": auth}
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.headers["WWW-Authenticate"] == 'Basic realm="GHGA Data Portal"'
@@ -354,7 +355,7 @@ async def test_post_user_with_session(bare_client: BareClient, httpx_mock: HTTPX
 
 async def test_put_user_without_session(bare_client: BareClient):
     """Test authentication for user update without a session."""
-    response = await bare_client.put(AUTH_PATH + "/users/some-internal-id")
+    response = await bare_client.put(AUTH_PATH + f"/users/{SOME_USER_ID}")
     assert_is_unauthorized_error(response, "Not logged in")
 
 
@@ -364,7 +365,7 @@ async def test_put_user_with_session_and_wrong_user_id(
     """Test user update with session and wrong user ID."""
     client, session = client_with_session[:2]
     response = await client.put(
-        AUTH_PATH + "/users/jane@ghga.de", headers=headers_for_session(session)
+        AUTH_PATH + f"/users/{SOME_USER_ID}", headers=headers_for_session(session)
     )
     assert_is_unauthorized_error(response, "Not registered")
 
@@ -376,7 +377,7 @@ async def test_put_user_with_session_and_invalid_csrf(
     client, session = client_with_session[:2]
     session.csrf_token = "invalid"
     response = await client.put(
-        AUTH_PATH + "/users/john@ghga.de", headers=headers_for_session(session)
+        AUTH_PATH + f"/users/{ID_OF_JOHN}", headers=headers_for_session(session)
     )
     assert_is_unauthorized_error(response, "Invalid or missing CSRF token")
 
@@ -396,7 +397,7 @@ async def test_put_unregistered_user_with_session(
     assert not session.user_id
 
     response = await bare_client.put(
-        AUTH_PATH + "/users/john@ghga.de", headers=headers_for_session(session)
+        AUTH_PATH + f"/users/{ID_OF_JOHN}", headers=headers_for_session(session)
     )
     assert_is_unauthorized_error(response, "Not registered")
 
@@ -416,10 +417,10 @@ async def test_put_registered_user_with_session(
     app.dependency_overrides[get_claim_dao] = lambda: claim_dao
 
     session = await query_new_session(bare_client)
-    assert session.user_id == "john@ghga.de"
+    assert session.user_id == str(ID_OF_JOHN)
 
     response = await bare_client.put(
-        AUTH_PATH + "/users/john@ghga.de", headers=headers_for_session(session)
+        AUTH_PATH + f"/users/{ID_OF_JOHN}", headers=headers_for_session(session)
     )
 
     assert response.status_code == status.HTTP_200_OK
@@ -435,7 +436,7 @@ async def test_put_registered_user_with_session(
     expected_claims = {"id", "name", "email", "title", "exp", "iat", "roles"}
 
     assert set(claims) == expected_claims
-    assert claims["id"] == "john@ghga.de"
+    assert claims["id"] == ID_OF_JOHN
     assert claims["name"] == "John Doe"
     assert claims["email"] == "john@home.org"
     assert claims["title"] is None
