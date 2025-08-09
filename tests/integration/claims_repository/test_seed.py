@@ -21,11 +21,11 @@ from datetime import datetime
 from typing import Any
 
 import pytest
-from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.providers.akafka.testutils import KafkaFixture
 from hexkit.providers.mongodb import MongoDbDaoFactory
 from hexkit.providers.mongodb.testutils import MongoDbFixture
 from hexkit.providers.mongokafka import MongoKafkaDaoPublisherFactory
+from hexkit.utils import now_utc_ms_prec
 
 from auth_service.claims_repository.core.seed import seed_data_steward_claims
 from auth_service.claims_repository.models.config import IvaType, UserWithIVA
@@ -121,7 +121,7 @@ async def test_add_data_steward(
     assert iva["verification_attempts"] == 0
     assert iva["verification_code_hash"] is None
     creation_date = iva["created"]
-    time_diff = now_as_utc() - datetime.fromisoformat(creation_date)
+    time_diff = now_utc_ms_prec() - creation_date
     assert -1 < time_diff.total_seconds() < 5
     assert iva["changed"] == iva["created"]
 
@@ -138,14 +138,11 @@ async def test_add_data_steward(
     assert claim["sub_source"] is None
     assert claim["conditions"] is None
     creation_date = claim["creation_date"]
-    time_diff = now_as_utc() - datetime.fromisoformat(creation_date)
+    time_diff = now_utc_ms_prec() - creation_date
     assert -1 < time_diff.total_seconds() < 5
     assert claim["assertion_date"] == creation_date
     assert claim["valid_from"] == creation_date
-    assert (
-        datetime.fromisoformat(claim["valid_until"])
-        - datetime.fromisoformat(claim["valid_from"])
-    ).days == 365
+    assert (claim["valid_until"] - claim["valid_from"]).days == 365
     assert claim["revocation_date"] is None
     assert claim["iva_id"] == iva["_id"]
 
