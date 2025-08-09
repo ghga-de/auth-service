@@ -22,7 +22,6 @@ from uuid import uuid4
 
 import pytest
 from fastapi import status
-from ghga_service_commons.utils.utc_dates import now_as_utc
 from hexkit.providers.mongodb import MongoDbDaoFactory
 from hexkit.utils import now_utc_ms_prec
 from pydantic import UUID4
@@ -31,7 +30,13 @@ from auth_service.claims_repository.core.claims import Role, create_internal_rol
 from auth_service.claims_repository.translators.dao import ClaimDaoFactory
 from auth_service.config import Config
 from auth_service.user_registry.core.registry import UserRegistry
-from tests.fixtures.constants import ID_OF_MAX, ID_OF_STEVE, SOME_IVA_ID
+from tests.fixtures.constants import (
+    ID_OF_JOHN,
+    ID_OF_MAX,
+    ID_OF_STEVE,
+    SOME_IVA_ID,
+    SOME_USER_ID,
+)
 
 from ...fixtures.utils import get_headers_for
 from .fixtures import (  # noqa: F401
@@ -55,15 +60,13 @@ OPT_USER_DATA = {
 
 MAX_USER_DATA = {**MIN_USER_DATA, **OPT_USER_DATA}
 
-DUMMY_USER_ID = "12345678-9012-3456-7890-123456789012"
-
 VERIFICATION_CODE_SIZE = 6  # the expected size of verification codes
 
 
 def seconds_passed(date_string: str) -> float:
     """Get number of seconds that have passed since the given date string."""
     return (
-        now_as_utc() - datetime.fromisoformat(date_string.replace("Z", "+00:00"))
+        now_utc_ms_prec() - datetime.fromisoformat(date_string.replace("Z", "+00:00"))
     ).total_seconds()
 
 
@@ -258,8 +261,7 @@ async def test_post_user_with_existing_user(
     bare_client: BareClient, user_headers: dict[str, str]
 ):
     """Test that registering a user with an internal ID does not work."""
-    # actually it's not even possible to specify an internal address here
-    user_data = {**MAX_USER_DATA, "ext_id": ID_OF_MAX}
+    user_data = {**MAX_USER_DATA, "ext_id": str(ID_OF_MAX)}
     response = await bare_client.post("/users", json=user_data, headers=user_headers)
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -329,14 +331,14 @@ async def test_put_non_existing_user_with_invalid_id(full_client: FullClient):
     user_data = MAX_USER_DATA.copy()
     del user_data["ext_id"]
 
-    id_ = DUMMY_USER_ID
+    id_ = "non-existing-user-id"
     assert not UserRegistry.is_internal_user_id(id_)
     headers = get_headers_for(id=id_, name=user_data["name"], email=user_data["email"])
 
     response = await full_client.put(f"/users/{id_}", json=user_data, headers=headers)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     error = response.json()
-    assert error["detail"] == "User cannot be updated."
+    assert "should be a valid UUID" in error["detail"][0]["msg"]
 
 
 async def test_put_non_existing_user_with_valid_id(full_client: FullClient):
@@ -344,7 +346,8 @@ async def test_put_non_existing_user_with_valid_id(full_client: FullClient):
     user_data = MAX_USER_DATA.copy()
     del user_data["ext_id"]
 
-    id_ = DUMMY_USER_ID
+    id_ = str(ID_OF_JOHN)
+    assert UserRegistry.is_internal_user_id(id_)
     headers = get_headers_for(id=id_, name=user_data["name"], email=user_data["email"])
 
     response = await full_client.put(f"/users/{id_}", json=user_data, headers=headers)
@@ -356,7 +359,7 @@ async def test_put_non_existing_user_with_valid_id(full_client: FullClient):
 async def test_put_user_with_too_much_data(bare_client: BareClient):
     """Test that updating a user with too much data does not work."""
     user_data = MAX_USER_DATA
-    id_ = DUMMY_USER_ID
+    id_ = str(ID_OF_JOHN)
     headers = get_headers_for(id=id_, name=user_data["name"], email=user_data["email"])
 
     response = await bare_client.put(f"/users/{id_}", json=user_data, headers=headers)
@@ -369,7 +372,7 @@ async def test_put_user_with_invalid_data(bare_client: BareClient):
     """Test that updating a user with invalid email does not work."""
     user_data = MAX_USER_DATA.copy()
     del user_data["ext_id"]
-    id_ = DUMMY_USER_ID
+    id_ = str(ID_OF_JOHN)
     headers = get_headers_for(id=id_, name=user_data["name"], email=user_data["email"])
 
     user_data["email"] = "invalid"
@@ -382,7 +385,7 @@ async def test_put_user_with_invalid_data(bare_client: BareClient):
 
 async def test_put_user_unauthenticated(bare_client: BareClient):
     """Test that updating a user without authentication does not work."""
-    response = await bare_client.put(f"/users/{DUMMY_USER_ID}", json=MAX_USER_DATA)
+    response = await bare_client.put(f"/users/{ID_OF_JOHN}", json=MAX_USER_DATA)
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     error = response.json()
@@ -393,7 +396,7 @@ async def test_get_non_existing_user(
     full_client: FullClient, steward_headers: dict[str, str]
 ):
     """Test requesting a non-existing user."""
-    response = await full_client.get(f"/users/{DUMMY_USER_ID}", headers=steward_headers)
+    response = await full_client.get(f"/users/{ID_OF_JOHN}", headers=steward_headers)
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
     error = response.json()
@@ -404,7 +407,7 @@ async def test_get_different_user(
     bare_client: BareClient, user_headers: dict[str, str]
 ):
     """Test requesting a different user."""
-    response = await bare_client.get(f"/users/{DUMMY_USER_ID}", headers=user_headers)
+    response = await bare_client.get(f"/users/{ID_OF_JOHN}", headers=user_headers)
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     error = response.json()
@@ -467,16 +470,16 @@ async def test_get_user_via_ext_id(
     id_ = expected_user["ext_id"]
     response = await full_client.get(f"/users/{id_}", headers=new_user_headers)
 
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     error = response.json()
-    assert error == {"detail": "The user was not found."}
+    assert "Input should be a valid UUID" in error["detail"][0]["msg"]
 
     id_ = expected_user["ext_id"]
     response = await full_client.get(f"/users/{id_}", headers=user_headers)
 
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     error = response.json()
-    assert error == {"detail": "Not authorized to request user."}
+    assert "Input should be a valid UUID" in error["detail"][0]["msg"]
 
 
 async def test_get_different_user_as_data_steward(
@@ -503,7 +506,7 @@ async def test_get_different_user_as_data_steward(
 
 async def test_get_user_unauthenticated(bare_client: BareClient):
     """Test requesting a user without authentication."""
-    response = await bare_client.get(f"/users/{DUMMY_USER_ID}")
+    response = await bare_client.get(f"/users/{ID_OF_JOHN}")
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     error = response.json()
@@ -608,7 +611,7 @@ async def test_patch_non_existing_user(
     """Test modifying a non-existing user."""
     update_data = {"title": "Prof."}
     response = await full_client.patch(
-        f"/users/{DUMMY_USER_ID}", json=update_data, headers=steward_headers
+        f"/users/{ID_OF_JOHN}", json=update_data, headers=steward_headers
     )
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -796,7 +799,7 @@ async def test_patch_different_user_as_normal_user(
     """Test that normal users cannot modify other users."""
     update_data = {"title": "Prof."}
     response = await bare_client.patch(
-        f"/users/{DUMMY_USER_ID}", json=update_data, headers=user_headers
+        f"/users/{ID_OF_JOHN}", json=update_data, headers=user_headers
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -807,7 +810,7 @@ async def test_patch_different_user_as_normal_user(
 async def test_patch_user_unauthenticated(bare_client: BareClient):
     """Test that modifying a user without authentication does not work."""
     update_data = {"title": "Prof."}
-    response = await bare_client.patch(f"/users/{DUMMY_USER_ID}", json=update_data)
+    response = await bare_client.patch(f"/users/{ID_OF_JOHN}", json=update_data)
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     error = response.json()
@@ -818,9 +821,7 @@ async def test_delete_non_existing_user(
     full_client: FullClient, steward_headers: dict[str, str]
 ):
     """Test deleting a non-existing user."""
-    response = await full_client.delete(
-        f"/users/{DUMMY_USER_ID}", headers=steward_headers
-    )
+    response = await full_client.delete(f"/users/{ID_OF_JOHN}", headers=steward_headers)
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
     error = response.json()
@@ -883,12 +884,12 @@ async def test_delete_user_as_same_user(bare_client: BareClient):
 
     # and even data stewards cannot delete their own accounts
     headers = get_headers_for(
-        id="some-id",
+        id=str(ID_OF_MAX),
         name="Max Headroom",
         email="max@example.org",
         roles=["data_steward"],
     )
-    response = await bare_client.delete("/users/some-id", headers=headers)
+    response = await bare_client.delete(f"/users/{ID_OF_MAX}", headers=headers)
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     error = response.json()
@@ -897,7 +898,7 @@ async def test_delete_user_as_same_user(bare_client: BareClient):
 
 async def test_delete_user_unauthenticated(bare_client: BareClient):
     """Test that deleting a user without authentication does not work."""
-    response = await bare_client.delete(f"/users/{DUMMY_USER_ID}")
+    response = await bare_client.delete(f"/users/{ID_OF_JOHN}")
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     error = response.json()
@@ -1118,7 +1119,7 @@ async def test_crud_operations_for_ivas(
     response = await full_client.get(
         "/ivas",
         headers=steward_headers,
-        params={"user_id": user_id, "state": "Unverified"},
+        params={"user_id": str(user_id), "state": "Unverified"},
     )
     assert response.status_code == status.HTTP_200_OK
     ivas = response.json()
@@ -1127,7 +1128,7 @@ async def test_crud_operations_for_ivas(
     response = await full_client.get(
         "/ivas",
         headers=steward_headers,
-        params={"user_id": "some-other-user"},
+        params={"user_id": str(SOME_USER_ID)},
     )
     assert response.status_code == status.HTTP_200_OK
     ivas = response.json()
@@ -1360,7 +1361,7 @@ async def test_create_iva_for_non_existing_user_as_data_steward(
     """Test creating an IVA for a non-existing user as a data steward."""
     data = {"type": "InPerson", "value": "Hi there!"}
     response = await full_client.post(
-        f"/users/{DUMMY_USER_ID}/ivas", json=data, headers=steward_headers
+        f"/users/{ID_OF_JOHN}/ivas", json=data, headers=steward_headers
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     error = response.json()
@@ -1372,7 +1373,7 @@ async def test_get_ivas_for_non_existing_user_as_data_steward(
 ):
     """Test getting all IVAs of a non-existing user as a data steward."""
     response = await full_client.get(
-        f"/users/{DUMMY_USER_ID}/ivas", headers=steward_headers
+        f"/users/{ID_OF_JOHN}/ivas", headers=steward_headers
     )
     assert response.status_code == status.HTTP_200_OK
     ivas = response.json()
@@ -1385,7 +1386,7 @@ async def test_deleting_iva_for_non_existing_user_as_data_steward(
 ):
     """Test deleting an IVA for a non-existing user as a data steward."""
     response = await full_client.delete(
-        f"/users/{DUMMY_USER_ID}/ivas/{uuid4()}", headers=steward_headers
+        f"/users/{ID_OF_JOHN}/ivas/{uuid4()}", headers=steward_headers
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     error = response.json()

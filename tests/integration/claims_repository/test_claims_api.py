@@ -123,8 +123,8 @@ async def test_get_claims(full_client: FullClient):
 
     assert requested_claims == posted_claims
 
-    assert requested_claims[0]["user_id"] == ID_OF_JOHN
-    assert requested_claims[1]["user_id"] == ID_OF_JOHN
+    assert requested_claims[0]["user_id"] == str(ID_OF_JOHN)
+    assert requested_claims[1]["user_id"] == str(ID_OF_JOHN)
     assert requested_claims[0]["visa_type"] == ROLE_CLAIM_DATA["visa_type"]
     assert requested_claims[1]["visa_type"] == "ResearcherStatus"
     assert requested_claims[0]["visa_value"] != requested_claims[1]["visa_value"]

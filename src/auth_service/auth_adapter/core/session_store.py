@@ -141,7 +141,7 @@ class SessionStore(SessionStorePort[Session]):
         ext_id: str,
         user_name: str,
         user_email: str,
-        user_id: str | None = None,
+        user_id: UUID4 | None = None,
         user_title: str | None = None,
         roles: list[str] | None = None,
     ) -> Session:

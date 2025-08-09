@@ -103,22 +103,22 @@ async def test_user_crud(
     assert len(recorder.recorded_events) == 3
     event1, event2, event3 = recorder.recorded_events
     assert event1.payload == {
-        "user_id": user.id,
+        "user_id": str(user.id),
         "name": user.name,
         "email": user.email,
         "title": user.title,
     }
     assert event1.type_ == "upserted"
-    assert event1.key == user.id
+    assert event1.key == str(user.id)
 
     assert event2.payload == {
-        "user_id": user.id,
+        "user_id": str(user.id),
         "name": user.name,
         "email": changed_user.email,
         "title": user.title,
     }
     assert event2.type_ == "upserted"
-    assert event2.key == user.id
+    assert event2.key == str(user.id)
     assert event3.payload == {}
     assert event3.type_ == "deleted"
     assert event3.key == user.id

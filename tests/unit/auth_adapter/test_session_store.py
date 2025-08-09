@@ -236,7 +236,7 @@ async def test_update_session_with_user_to_registered(original_state: SessionSta
         ext_id="some-ext-id@home.org",
         user_id=None
         if original_state is SessionState.NEEDS_REGISTRATION
-        else str(SOME_USER_ID),
+        else SOME_USER_ID,
         user_name="John Doe",
         user_email="john@home.org",
         csrf_token="some-csrf-token",
@@ -284,7 +284,7 @@ async def test_update_session_with_data_steward_to_registered(
         ext_id="some-ext-id@home.org",
         user_id=None
         if original_state is SessionState.NEEDS_REGISTRATION
-        else str(SOME_USER_ID),
+        else SOME_USER_ID,
         user_name="John Doe",
         user_email="john@home.org",
         csrf_token="some-csrf-token",
@@ -337,7 +337,7 @@ async def test_update_session_with_user_to_has_totp_token(original_state: Sessio
         ext_id="some-ext-id@home.org",
         user_id=None
         if original_state is SessionState.NEEDS_REGISTRATION
-        else str(SOME_USER_ID),
+        else SOME_USER_ID,
         user_name="John Doe",
         user_email="john@home.org",
         csrf_token="some-csrf-token",

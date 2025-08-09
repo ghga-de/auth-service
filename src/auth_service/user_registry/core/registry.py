@@ -83,10 +83,10 @@ class UserRegistry(UserRegistryPort):
         """Check if the passed ID is an internal user id."""
         try:
             converted_id = UUID(id_)
-            # We only generate UUID4s for user IDs -- e.g. UUID1 would not be from us
-            return converted_id.version == 4
-        except (ValueError, TypeError):
+        except Exception:
             return False
+        # We only generate UUID4s for user IDs -- e.g. UUID1 would not be from us
+        return converted_id.version == 4
 
     @staticmethod
     def is_external_user_id(id_: str) -> bool:

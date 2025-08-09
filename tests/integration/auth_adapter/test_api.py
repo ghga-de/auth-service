@@ -20,11 +20,11 @@ import re
 from base64 import b64encode
 from typing import Any
 from urllib.parse import parse_qs, urlparse
+from uuid import UUID
 
 import pytest
 from fastapi import status
 from ghga_service_commons.utils.utc_dates import now_as_utc
-from hexkit.correlation import validate_correlation_id
 from pytest_httpx import HTTPXMock
 
 from auth_service.auth_adapter.core.session_store import SessionState
@@ -96,7 +96,10 @@ def assert_has_authorization_header(response, session):
 
     correlation_id = headers.get("X-Request-Id")
     assert correlation_id
-    validate_correlation_id(correlation_id)
+    try:
+        assert str(UUID(correlation_id)) == correlation_id
+    except Exception:
+        assert False, "Invalid correlation ID"
 
     authorization = headers.get("Authorization")
     assert authorization
@@ -107,7 +110,7 @@ def assert_has_authorization_header(response, session):
     expected_claims = {"id", "name", "email", "title", "roles", "exp", "iat"}
 
     assert set(claims) == expected_claims
-    assert claims["id"] == session.user_id
+    assert claims["id"] == str(session.user_id)
     assert claims["name"] == session.user_name
     assert claims["email"] == session.user_email
     assert claims["title"] == session.user_title
@@ -417,7 +420,7 @@ async def test_put_registered_user_with_session(
     app.dependency_overrides[get_claim_dao] = lambda: claim_dao
 
     session = await query_new_session(bare_client)
-    assert session.user_id == str(ID_OF_JOHN)
+    assert session.user_id == ID_OF_JOHN
 
     response = await bare_client.put(
         AUTH_PATH + f"/users/{ID_OF_JOHN}", headers=headers_for_session(session)
@@ -436,7 +439,7 @@ async def test_put_registered_user_with_session(
     expected_claims = {"id", "name", "email", "title", "exp", "iat", "roles"}
 
     assert set(claims) == expected_claims
-    assert claims["id"] == ID_OF_JOHN
+    assert claims["id"] == str(ID_OF_JOHN)
     assert claims["name"] == "John Doe"
     assert claims["email"] == "john@home.org"
     assert claims["title"] is None
@@ -486,7 +489,7 @@ async def test_random_url_authenticated(client_with_session: ClientWithSession):
     # create second factor and authenticate with that
     response = await client.post(
         AUTH_PATH + "/totp-token",
-        json={"user_id": session.user_id, "force": False},
+        json={"user_id": str(session.user_id), "force": False},
         headers=headers,
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -549,7 +552,7 @@ async def test_log_auth_info(
     headers = headers_for_session(session)
     response = await client.post(
         AUTH_PATH + "/totp-token",
-        json={"user_id": session.user_id, "force": False},
+        json={"user_id": str(session.user_id), "force": False},
         headers=headers,
     )
     assert response.status_code == status.HTTP_201_CREATED
@@ -574,5 +577,5 @@ async def test_log_auth_info(
     assert record.message == "User authorized"
     assert record.method == "PUT"
     assert record.path == "/api/some/path"
-    assert record.user == session.user_id
+    assert record.user == str(session.user_id)
     assert record.roles == session.roles

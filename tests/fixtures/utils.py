@@ -283,7 +283,6 @@ class DummyUserDao:
 
     async def find_one(self, *, mapping: Mapping[str, Any]) -> User:
         """Find the dummy user via LS-ID."""
-        mapping = json.loads(json.dumps(mapping, default=str))
         ext_id = mapping.get("ext_id")
         for user in self.users:
             if not ext_id or ext_id == user.ext_id:
@@ -292,7 +291,6 @@ class DummyUserDao:
 
     async def find_all(self, *, mapping: Mapping[str, Any]) -> AsyncIterator[User]:
         """Find all dummy users with given ID(s)."""
-        mapping = json.loads(json.dumps(mapping, default=str))
         for user in self.users:
             data = user.model_dump()
             for key, value in mapping.items():
@@ -370,7 +368,6 @@ class DummyIvaDao:
 
     async def find_all(self, *, mapping: Mapping[str, Any]) -> AsyncIterator[Iva]:
         """Find all dummy IVAs."""
-        mapping = json.loads(json.dumps(mapping, default=str))
         for iva in self.ivas:
             data = iva.model_dump()
             for key, value in mapping.items():
@@ -407,13 +404,13 @@ class DummyIvaDao:
 class DummyUserTokenDao:
     """Dummy UserTokenDao for testing."""
 
-    user_tokens: dict[str, UserToken]
+    user_tokens: dict[UUID4, UserToken]
 
     def __init__(self):
         """Initialize the dummy UserTokenDao"""
         self.user_tokens = {}
 
-    async def get_by_id(self, id_: str) -> UserToken:
+    async def get_by_id(self, id_: UUID4) -> UserToken:
         """Get the user token via the (user) ID."""
         try:
             return self.user_tokens[id_]
@@ -487,7 +484,6 @@ class DummyClaimDao:
 
     async def find_all(self, *, mapping: Mapping[str, Any]) -> AsyncIterator[Claim]:
         """Find all dummy user claims."""
-        mapping = json.loads(json.dumps(mapping, default=str))
         for claim in self.claims:
             data = claim.model_dump()
             data["id_"] = data.pop("id")

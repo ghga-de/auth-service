@@ -23,7 +23,7 @@ from urllib.parse import parse_qs, urlparse
 import pyotp
 import pytest
 from fastapi import status
-from ghga_service_commons.utils.utc_dates import now_as_utc
+from hexkit.utils import now_utc_ms_prec
 from pytest_httpx import HTTPXMock
 
 from auth_service.auth_adapter.core.session_store import Session, SessionState
@@ -62,14 +62,14 @@ def get_valid_totp_code(
 ) -> str:
     """Generate a valid TOTP code for the given secret."""
     if not when:
-        when = now_as_utc()
+        when = now_utc_ms_prec()
     return pyotp.TOTP(secret).at(when, offset)
 
 
 def get_invalid_totp_code(secret: str, when: datetime | None = None) -> str:
     """Generate an invalid TOTP code for the given secret."""
     if not when:
-        when = now_as_utc()
+        when = now_utc_ms_prec()
     # get the time codes for the tolerance interval
     # plus one more for possible timecode increment during the test
     valid_codes = {get_valid_totp_code(secret, when, offset) for offset in range(-1, 3)}
@@ -251,7 +251,7 @@ async def test_verify_totp(
     # check that the token has been moved to the database
     user_tokens = user_token_dao.user_tokens
     assert len(user_tokens) == 1
-    user_token = user_tokens.get(str(ID_OF_JOHN), None)
+    user_token = user_tokens.get(ID_OF_JOHN, None)
     assert user_token
     totp_token = user_token.totp_token
     assert len(totp_token.encrypted_secret) == 96
@@ -312,7 +312,7 @@ async def test_rate_limiting_totp(
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
     # decrease the TOTP counter so that we can re-login without waiting
-    totp_token = user_token_dao.user_tokens[str(ID_OF_JOHN)].totp_token
+    totp_token = user_token_dao.user_tokens[ID_OF_JOHN].totp_token
     totp_token.last_counter -= 1
     # make 6 attempts with invalid TOTP codes
     # (we might get 3 extra attempts due to time code increment during the test)
@@ -370,7 +370,7 @@ async def test_total_limit_totp(client_with_session: ClientWithSession):
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
     # decrease the TOTP counter so that we can re-login without waiting
-    totp_token = user_token_dao.user_tokens[str(ID_OF_JOHN)].totp_token
+    totp_token = user_token_dao.user_tokens[ID_OF_JOHN].totp_token
     totp_token.last_counter -= 1
 
     # make 10 attempts with invalid TOTP codes
@@ -400,7 +400,7 @@ async def test_total_limit_totp(client_with_session: ClientWithSession):
     assert status_change.by == user_id
     assert status_change.context == "Too many failed TOTP login attempts"
     assert status_change.change_date
-    assert 0 <= (now_as_utc() - status_change.change_date).total_seconds() < 3
+    assert 0 <= (now_utc_ms_prec() - status_change.change_date).total_seconds() < 3
 
     # check that the user is not authorized any more
     response = await client.post(USERS_URL, headers=headers)
@@ -485,4 +485,4 @@ async def test_recreate_existing_totp_token(
     assert session.state is SessionState.NEW_TOTP_TOKEN
 
     # should notify because the token was overwritten
-    assert user_registry.published_events == [("2fa_recreation", str(ID_OF_JOHN))]
+    assert user_registry.published_events == [("2fa_recreation", ID_OF_JOHN)]

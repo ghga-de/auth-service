@@ -20,7 +20,7 @@ from collections.abc import Callable
 from datetime import timedelta
 from enum import StrEnum
 
-from ghga_service_commons.utils.utc_dates import UTCDatetime, now_as_utc
+from ghga_service_commons.utils.utc_dates import UTCDatetime
 from hexkit.utils import now_utc_ms_prec
 from pydantic import UUID4
 
@@ -55,7 +55,9 @@ class Role(StrEnum):
 DATASET_PREFIX = str(INTERNAL_SOURCE).rstrip("/") + "/datasets/"
 
 
-def is_valid_claim(claim: Claim, now: Callable[[], UTCDatetime] = now_as_utc) -> bool:
+def is_valid_claim(
+    claim: Claim, now: Callable[[], UTCDatetime] = now_utc_ms_prec
+) -> bool:
     """Check whether the given claim is currently valid.
 
     This function does not check the existence and status of an associated IVA.

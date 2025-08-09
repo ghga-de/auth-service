@@ -21,6 +21,7 @@ import logging
 from hexkit.correlation import set_new_correlation_id
 from hexkit.protocols.dao import MultipleHitsFoundError, NoHitsFoundError
 from hexkit.utils import now_utc_ms_prec
+from pydantic import UUID4
 
 from auth_service.claims_repository.deps import ClaimDao
 from auth_service.config import Config
@@ -81,7 +82,7 @@ def _check_data_steward_info(*, info: UserWithIVA, user: User) -> None:
 
 
 async def _add_iva_for_user(
-    *, user_id: str, data: IvaBasicData, iva_dao: IvaDao
+    *, user_id: UUID4, data: IvaBasicData, iva_dao: IvaDao
 ) -> Iva:
     """Add a new IVA for the given user with the given basic data."""
     now = now_utc_ms_prec()

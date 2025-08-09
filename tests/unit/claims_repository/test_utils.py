@@ -17,7 +17,7 @@
 """Unit tests for the utils module."""
 
 from datetime import timedelta
-from typing import cast
+from typing import Any, cast
 from uuid import uuid4
 
 import pytest
@@ -109,7 +109,7 @@ async def test_iva_exists_when_it_belongs_to_a_different_user():
         created=now,
         changed=now,
     )
-    kwargs = {
+    kwargs: Any = {
         "user_dao": DummyUserDao(id_=SOME_USER_ID),
         "iva_dao": DummyIvaDao([iva]),
     }
@@ -204,12 +204,12 @@ async def test_get_active_roles_deduplicates_roles():
     claim = await claim_dao.get_by_id(DATA_STEWARD_CLAIM_ID)
     assert claim.visa_value == "data_steward@some.org"
 
-    for i in range(3):
+    for _ in range(3):
         for role in ["data_steward", "bad_role", "admin"]:
             await claim_dao.insert(
                 claim.model_copy(
                     update={
-                        "id": f"add-claim-id-{role}-{i + 1}",
+                        "id": uuid4(),
                         "iva_id": iva_id,
                         "visa_value": f"{role}@some.org",
                     }

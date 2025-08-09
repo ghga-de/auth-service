@@ -22,7 +22,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from fastapi import HTTPException, status
-from ghga_service_commons.utils.utc_dates import now_as_utc
+from hexkit.utils import now_utc_ms_prec
 from pydantic import SecretStr
 
 from auth_service.auth_adapter.adapters.memory_session_store import MemorySessionStore
@@ -103,9 +103,7 @@ async def test_verify_totp(session_state: SessionState, totp_code: str):  # noqa
     assert user_id == session.user_id
     if user_has_token:
         assert totp_token
-        await user_token_dao.upsert(
-            UserToken(user_id=str(user_id), totp_token=totp_token)
-        )
+        await user_token_dao.upsert(UserToken(user_id=user_id, totp_token=totp_token))
 
     user_registry.add_dummy_iva(state=IvaState.VERIFIED)
 
@@ -156,7 +154,7 @@ async def test_verify_totp(session_state: SessionState, totp_code: str):  # noqa
         assert status_change.by == user_id
         assert status_change.context == "Too many failed TOTP login attempts"
         assert status_change.change_date
-        assert 0 <= (now_as_utc() - status_change.change_date).total_seconds() < 3
+        assert 0 <= (now_utc_ms_prec() - status_change.change_date).total_seconds() < 3
         assert totp_token
         assert not totp_handler.is_invalid(totp_token)
     else:
@@ -169,7 +167,7 @@ async def test_verify_totp(session_state: SessionState, totp_code: str):  # noqa
         session_store.delete_session.assert_not_called()
 
     if should_verify or user_has_token:
-        assert user_token_dao.user_tokens[str(user_id)].totp_token is totp_token
+        assert user_token_dao.user_tokens[user_id].totp_token is totp_token
     else:
         assert not user_token_dao.user_tokens
 

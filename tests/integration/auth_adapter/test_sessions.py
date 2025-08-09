@@ -34,7 +34,7 @@ from auth_service.auth_adapter.deps import (
 from auth_service.claims_repository.deps import get_claim_dao
 from auth_service.user_registry.deps import get_iva_dao, get_user_dao
 from auth_service.user_registry.models.users import UserStatus
-from tests.fixtures.constants import ID_OF_JOHN
+from tests.fixtures.constants import ID_OF_JAMES, ID_OF_JOHN
 
 from ...fixtures.utils import (
     RE_USER_INFO_URL,
@@ -70,7 +70,7 @@ def expected_set_cookie(session_id: str) -> str:
 def setup_daos(
     app: FastAPI,
     iva_state: IvaState = IvaState.VERIFIED,
-    **user_args: str,
+    **user_args: Any,
 ) -> None:
     """Setup the dummy DAOs for the tests."""
     user_dao = DummyUserDao(**user_args)
@@ -423,7 +423,7 @@ async def test_login_with_cookie_and_registered_data_steward(
     """Test login request with session cookie for a registered data steward."""
     setup_daos(
         bare_client.app,
-        id_="james@ghga.de",
+        id_=ID_OF_JAMES,
         ext_id="james@aai.org",
         name="James Steward",
         email="james@home.org",
@@ -434,7 +434,7 @@ async def test_login_with_cookie_and_registered_data_steward(
     store = bare_client.app.dependency_overrides[get_session_store]()
     session = await store.create_session(
         ext_id="james@aai.org",
-        user_id="james@ghga.de",
+        user_id=ID_OF_JAMES,
         user_name="James Steward",
         user_email="james@home.org",
     )
@@ -445,7 +445,7 @@ async def test_login_with_cookie_and_registered_data_steward(
 
     assert SESSION_COOKIE not in response.cookies
     expected_session_header: dict[str, Any] = {
-        "id": "james@ghga.de",
+        "id": str(ID_OF_JAMES),
         "ext_id": "james@aai.org",
         "name": "James Steward",
         "email": "james@home.org",
