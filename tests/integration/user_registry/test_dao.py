@@ -121,7 +121,7 @@ async def test_user_crud(
     assert event2.key == str(user.id)
     assert event3.payload == {}
     assert event3.type_ == "deleted"
-    assert event3.key == user.id
+    assert event3.key == str(user.id)
 
 
 @pytest.mark.asyncio()
