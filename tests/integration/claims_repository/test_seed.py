@@ -17,7 +17,6 @@
 """Test seeding the database with data stewards."""
 
 import logging
-from datetime import datetime
 from typing import Any
 
 import pytest
@@ -176,9 +175,7 @@ async def test_add_data_steward(
         "valid_from",
         "valid_until",
     ]:
-        time_diff = datetime.fromisoformat(
-            new_claim.pop(date_field)
-        ) - datetime.fromisoformat(claim.pop(date_field))
+        time_diff = new_claim.pop(date_field) - claim.pop(date_field)
         assert -1 < time_diff.total_seconds() < 5
     assert new_claim == claim
 
