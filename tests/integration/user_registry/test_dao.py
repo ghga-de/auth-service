@@ -55,6 +55,8 @@ async def fixture_user_dao(
         kafka_servers=kafka.config.kafka_servers,
         service_name=kafka.config.service_name,
         service_instance_id=kafka.config.service_instance_id,
+        migration_wait_sec=2,
+        db_version_collection="authDbVersions",
     )
     async with (
         MongoKafkaDaoPublisherFactory.construct(config=config) as dao_publisher_factory,

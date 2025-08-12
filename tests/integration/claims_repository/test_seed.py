@@ -75,6 +75,8 @@ async def test_add_data_steward(
                 iva_value="Some address",
             )
         ],
+        migration_wait_sec=2,
+        db_version_collection="authDbVersions",
     )
 
     # add non-existing data steward

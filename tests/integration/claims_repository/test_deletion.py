@@ -55,6 +55,8 @@ async def test_deletion_handler(
         service_instance_id=kafka.config.service_instance_id,
         provide_apis=[],
         add_as_data_stewards=[],
+        migration_wait_sec=2,
+        db_version_collection="authDbVersions",
     )
 
     async with MongoDbDaoFactory.construct(config=config) as dao_factory:

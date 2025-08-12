@@ -22,3 +22,6 @@ iva_state_changed_type: iva_state_changed
 
 enable_opentelemetry: false
 otel_exporter_endpoint: http://localhost:4318
+
+migration_wait_sec: 10
+db_version_collection: authDbVersions

@@ -85,6 +85,8 @@ async def fixture_full_client(
         service_instance_id=kafka.config.service_instance_id,
         provide_apis=["claims", "access"],
         add_as_data_stewards=add_as_data_stewards,
+        migration_wait_sec=2,
+        db_version_collection="authDbVersions",
     )
     await seed_database(config)
     async with prepare_rest_app(config=config) as app, FullClient(app) as client:
