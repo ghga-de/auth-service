@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Database migration logic for DLQS"""
+"""Database migration logic for Auth Service"""
 
 from datetime import UTC, datetime
 from uuid import UUID
