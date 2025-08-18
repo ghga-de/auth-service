@@ -1,6 +1,6 @@
 [project]
 name = "auth_service"
-version = "7.0.0"
+version = "8.0.0"
 description = "Authentication adapter and services used for the GHGA data portal"
 dependencies = [
     "ghga-event-schemas~=10.0.0",
