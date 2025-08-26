@@ -203,7 +203,7 @@ async def revoke_download_access_grant(
 ) -> Response:
     """Revoke a download access grants."""
     mapping = cast(dict[str, str | UUID4 | None], create_controlled_access_filter())
-    mapping.update({"id_": grant_id, "revocation_date": None})
+    mapping.update({"id": grant_id, "revocation_date": None})
     try:
         claim = await claim_dao.find_one(mapping=mapping)
     except NoHitsFoundError as error:
