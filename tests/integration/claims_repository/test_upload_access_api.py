@@ -119,9 +119,13 @@ async def test_grant_upload_access(full_client: FullClient):
     full_client.app.dependency_overrides[get_iva_dao] = lambda: iva_dao
 
     box_id = uuid4()
+    validity = {
+        "valid_from": now_utc_ms_prec().isoformat(),
+        "valid_until": (now_utc_ms_prec() + timedelta(weeks=4)).isoformat(),
+    }
     response = await full_client.post(
         f"/upload-access/users/{ID_OF_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{box_id}",
-        json=VALIDITY,
+        json=validity,
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
@@ -138,9 +142,9 @@ async def test_grant_upload_access(full_client: FullClient):
     assert len(claims) == 1
     claim = claims[0]
     assert str(claim.visa_value).endswith(str(box_id))
-    assert claim.valid_from == datetime.fromisoformat(VALIDITY["valid_from"])
-    assert claim.valid_until == datetime.fromisoformat(VALIDITY["valid_until"])
-    assert abs(claim.creation_date - claim.valid_from) < timedelta(seconds=15)
+    assert claim.valid_from == datetime.fromisoformat(validity["valid_from"])
+    assert claim.valid_until == datetime.fromisoformat(validity["valid_until"])
+    assert abs(claim.creation_date - claim.valid_from) < timedelta(seconds=5)
 
 
 async def test_check_upload_access(full_client: FullClient):
