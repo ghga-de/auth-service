@@ -438,6 +438,76 @@ upload_grant_not_found_error = HTTPException(
 )
 
 
+@router.post(
+    "/upload-access/users/{user_id}/ivas/{iva_id}/boxes/{box_id}",
+    operation_id="grant_upload_access",
+    tags=TAGS,
+    summary="Grant upload access permission for a box",
+    description="Endpoint to add an upload access grant for a given box"
+    " so that it can be used for upload by the given user with the given IVA."
+    " For internal use only.",
+    responses={
+        204: {"description": "Upload access has been granted."},
+        404: {"description": "The user or the IVA was not found."},
+        422: {"description": "Validation error in submitted user IDs."},
+    },
+    status_code=204,
+)
+@TRACER.start_as_current_span("access_router.grant_upload_access")
+async def grant_upload_access(  # noqa: PLR0913
+    validity: ClaimValidity,
+    user_id: Annotated[
+        UUID4,
+        Path(
+            ...,
+            alias="user_id",
+            description="The internal ID of the user",
+        ),
+    ],
+    iva_id: Annotated[
+        UUID4,
+        Path(
+            ...,
+            alias="iva_id",
+            description="The ID of the IVA",
+        ),
+    ],
+    box_id: Annotated[
+        UUID4,
+        Path(
+            ...,
+            alias="box_id",
+            description="The ID of the upload box",
+        ),
+    ],
+    user_dao: UserDaoDependency,
+    iva_dao: IvaDaoDependency,
+    claim_dao: ClaimDaoDependency,
+    # internal service, authorization without token via service mesh
+) -> Response:
+    """Grant upload access permission for an upload box to a user with the given IVA.
+
+    Note that at this point the IVA needs to exist, but does not need to be verified.
+    We check whether the user exists but we do not check whether the user is active.
+    We also do not check here whether the upload box actually exists.
+    """
+    if not await user_with_iva_exists(
+        user_id, iva_id=iva_id, user_dao=user_dao, iva_dao=iva_dao
+    ):
+        raise iva_not_found_error
+
+    claim = create_upload_access_claim(
+        user_id,
+        iva_id,
+        box_id,
+        valid_from=validity.valid_from,
+        valid_until=validity.valid_until,
+    )
+    await claim_dao.insert(claim)
+
+    return Response(status_code=204)
+
+
 @router.get(
     "/upload-access/grants",
     operation_id="get_upload_access_grants",
@@ -536,120 +606,6 @@ async def get_upload_access_grants(  # noqa: PLR0913
         )
     # sort the output by ID to make it reproducible
     return sorted(grants, key=attrgetter("id"))
-
-
-@router.delete(
-    "/upload-access/grants/{grant_id}",
-    operation_id="revoke_upload_access_grant",
-    tags=TAGS,
-    summary="Revoke an upload access grant",
-    description="Endpoint to revoke an existing upload access grant.",
-    responses={
-        204: {
-            "description": "Upload access grant has been revoked.",
-        },
-        404: {"description": "The upload access grant was not found."},
-    },
-    status_code=204,
-)
-@TRACER.start_as_current_span("access_router.revoke_upload_access_grant")
-async def revoke_upload_access_grant(
-    grant_id: Annotated[
-        UUID4,
-        Path(
-            ...,
-            alias="grant_id",
-            description="The ID of the grant to revoke",
-        ),
-    ],
-    claim_dao: ClaimDaoDependency,
-    # internal service, authorization without token via service mesh
-) -> Response:
-    """Revoke an upload access grant."""
-    mapping = cast(dict[str, str | UUID4 | None], create_upload_access_filter())
-    mapping.update({"id_": grant_id, "revocation_date": None})
-    try:
-        claim = await claim_dao.find_one(mapping=mapping)
-    except NoHitsFoundError as error:
-        raise upload_grant_not_found_error from error
-
-    claim = claim.model_copy(update={"revocation_date": now_utc_ms_prec()})
-    try:
-        await claim_dao.update(claim)
-    except ResourceNotFoundError as error:
-        raise upload_grant_not_found_error from error
-
-    return Response(status_code=204)
-
-
-@router.post(
-    "/upload-access/users/{user_id}/ivas/{iva_id}/boxes/{box_id}",
-    operation_id="grant_upload_access",
-    tags=TAGS,
-    summary="Grant upload access permission for a box",
-    description="Endpoint to add an upload access grant for a given box"
-    " so that it can be used for upload by the given user with the given IVA."
-    " For internal use only.",
-    responses={
-        204: {"description": "Upload access has been granted."},
-        404: {"description": "The user or the IVA was not found."},
-        422: {"description": "Validation error in submitted user IDs."},
-    },
-    status_code=204,
-)
-@TRACER.start_as_current_span("access_router.grant_upload_access")
-async def grant_upload_access(  # noqa: PLR0913
-    validity: ClaimValidity,
-    user_id: Annotated[
-        UUID4,
-        Path(
-            ...,
-            alias="user_id",
-            description="The internal ID of the user",
-        ),
-    ],
-    iva_id: Annotated[
-        UUID4,
-        Path(
-            ...,
-            alias="iva_id",
-            description="The ID of the IVA",
-        ),
-    ],
-    box_id: Annotated[
-        UUID4,
-        Path(
-            ...,
-            alias="box_id",
-            description="The ID of the upload box",
-        ),
-    ],
-    user_dao: UserDaoDependency,
-    iva_dao: IvaDaoDependency,
-    claim_dao: ClaimDaoDependency,
-    # internal service, authorization without token via service mesh
-) -> Response:
-    """Grant upload access permission for an upload box to a user with the given IVA.
-
-    Note that at this point the IVA needs to exist, but does not need to be verified.
-    We check whether the user exists but we do not check whether the user is active.
-    We also do not check here whether the upload box actually exists.
-    """
-    if not await user_with_iva_exists(
-        user_id, iva_id=iva_id, user_dao=user_dao, iva_dao=iva_dao
-    ):
-        raise iva_not_found_error
-
-    claim = create_upload_access_claim(
-        user_id,
-        iva_id,
-        box_id,
-        valid_from=validity.valid_from,
-        valid_until=validity.valid_until,
-    )
-    await claim_dao.insert(claim)
-
-    return Response(status_code=204)
 
 
 @router.get(
@@ -789,3 +745,47 @@ async def get_boxes_with_upload_access(
 
     # sort the output by upload box ID to make it reproducible
     return dict(sorted(box_id_to_end_date.items()))
+
+
+@router.delete(
+    "/upload-access/grants/{grant_id}",
+    operation_id="revoke_upload_access_grant",
+    tags=TAGS,
+    summary="Revoke an upload access grant",
+    description="Endpoint to revoke an existing upload access grant.",
+    responses={
+        204: {
+            "description": "Upload access grant has been revoked.",
+        },
+        404: {"description": "The upload access grant was not found."},
+    },
+    status_code=204,
+)
+@TRACER.start_as_current_span("access_router.revoke_upload_access_grant")
+async def revoke_upload_access_grant(
+    grant_id: Annotated[
+        UUID4,
+        Path(
+            ...,
+            alias="grant_id",
+            description="The ID of the grant to revoke",
+        ),
+    ],
+    claim_dao: ClaimDaoDependency,
+    # internal service, authorization without token via service mesh
+) -> Response:
+    """Revoke an upload access grant."""
+    mapping = cast(dict[str, str | UUID4 | None], create_upload_access_filter())
+    mapping.update({"id": grant_id, "revocation_date": None})
+    try:
+        claim = await claim_dao.find_one(mapping=mapping)
+    except NoHitsFoundError as error:
+        raise upload_grant_not_found_error from error
+
+    claim = claim.model_copy(update={"revocation_date": now_utc_ms_prec()})
+    try:
+        await claim_dao.update(claim)
+    except ResourceNotFoundError as error:
+        raise upload_grant_not_found_error from error
+
+    return Response(status_code=204)
