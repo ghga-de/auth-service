@@ -42,7 +42,7 @@ __all__ = [
     "ClaimUpdate",
     "ClaimValidity",
     "Condition",
-    "Grant",
+    "DownloadGrant",
     "Identity",
     "MatchClaim",
     "MatchType",
@@ -215,57 +215,42 @@ class Claim(ClaimCreation):
     )
 
 
-class Grant(BaseDto):
-    """An access grant based on a corresponding claim."""
+class BaseGrant(BaseDto):
+    """Fields common to both upload and download grants"""
 
     id: UUID4 = Field(..., description="Internal grant ID (same as claim ID)")
     user_id: UUID4 = Field(default=..., description="Internal user ID")
     iva_id: UUID4 | None = Field(
         default=None, description="ID of an IVA associated with this grant"
     )
+
+    created: UTCDatetime = Field(
+        default=..., description="Date of creation of this grant"
+    )
+    valid_from: UTCDatetime = Field(default=..., description="Start date of validity")
+    valid_until: UTCDatetime = Field(default=..., description="End date of validity")
+
+    user_name: str = Field(default=..., description="Full name of the user")
+    user_email: EmailStr = Field(
+        default=...,
+        description="The email address of the user",
+    )
+    user_title: str | None = Field(
+        default=None, description="Academic title of the user"
+    )
+
+
+class DownloadGrant(BaseGrant):
+    """An access grant based on a corresponding claim."""
+
     dataset_id: Accession = Field(
         default=..., description="ID of the dataset this grant is for"
     )
 
-    created: UTCDatetime = Field(
-        default=..., description="Date of creation of this grant"
-    )
-    valid_from: UTCDatetime = Field(default=..., description="Start date of validity")
-    valid_until: UTCDatetime = Field(default=..., description="End date of validity")
 
-    user_name: str = Field(default=..., description="Full name of the user")
-    user_email: EmailStr = Field(
-        default=...,
-        description="The email address of the user",
-    )
-    user_title: str | None = Field(
-        default=None, description="Academic title of the user"
-    )
-
-
-class UploadGrant(BaseDto):
+class UploadGrant(BaseGrant):
     """An upload access grant based on a corresponding claim."""
 
-    id: UUID4 = Field(..., description="Internal grant ID (same as claim ID)")
-    user_id: UUID4 = Field(default=..., description="Internal user ID")
-    iva_id: UUID4 | None = Field(
-        default=None, description="ID of an IVA associated with this grant"
-    )
     box_id: UUID4 = Field(
-        default=..., description="ID of the upload box this grant is for"
-    )
-
-    created: UTCDatetime = Field(
-        default=..., description="Date of creation of this grant"
-    )
-    valid_from: UTCDatetime = Field(default=..., description="Start date of validity")
-    valid_until: UTCDatetime = Field(default=..., description="End date of validity")
-
-    user_name: str = Field(default=..., description="Full name of the user")
-    user_email: EmailStr = Field(
-        default=...,
-        description="The email address of the user",
-    )
-    user_title: str | None = Field(
-        default=None, description="Academic title of the user"
+        default=..., description="ID of the research data upload box this grant is for"
     )

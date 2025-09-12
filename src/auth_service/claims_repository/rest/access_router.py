@@ -49,7 +49,7 @@ from ..core.claims import (
 )
 from ..core.utils import iva_is_verified, user_is_active, user_with_iva_exists
 from ..deps import ClaimDaoDependency
-from ..models.claims import Accession, ClaimValidity, Grant, UploadGrant
+from ..models.claims import Accession, ClaimValidity, DownloadGrant, UploadGrant
 
 __all__ = ["router"]
 
@@ -80,7 +80,7 @@ TAGS: list[str | Enum] = ["access"]
     description="Endpoint to get the list of all download access grants. Can be filtered by user ID, IVA ID, and dataset ID.",
     responses={
         200: {
-            "model": list[Grant],
+            "model": list[DownloadGrant],
             "description": "Access grants have been fetched.",
         },
     },
@@ -123,14 +123,14 @@ async def get_download_access_grants(  # noqa: PLR0913
         ),
     ] = None,
     # internal service, authorization without token via service mesh
-) -> list[Grant]:
+) -> list[DownloadGrant]:
     """Get download access grants.
 
     You can filter the grants by user ID, IVA ID, and dataset ID
     and by whether the grant is currently valid or not.
     """
     # Determine all controlled access grants for the user
-    grants: list[Grant] = []
+    grants: list[DownloadGrant] = []
     users: dict[UUID, User | None] = {}  # user cache
 
     mapping = create_controlled_access_filter(
@@ -157,7 +157,7 @@ async def get_download_access_grants(  # noqa: PLR0913
         if not user:
             continue
         grants.append(
-            Grant(
+            DownloadGrant(
                 id=claim.id,
                 user_id=_user_id,
                 iva_id=claim.iva_id,

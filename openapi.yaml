@@ -314,7 +314,7 @@ components:
       - matches
       title: Condition
       type: object
-    Grant:
+    DownloadGrant:
       additionalProperties: false
       description: An access grant based on a corresponding claim.
       properties:
@@ -373,13 +373,13 @@ components:
       required:
       - id
       - user_id
-      - dataset_id
       - created
       - valid_from
       - valid_until
       - user_name
       - user_email
-      title: Grant
+      - dataset_id
+      title: DownloadGrant
       type: object
     HTTPValidationError:
       properties:
@@ -630,7 +630,7 @@ components:
       description: An upload access grant based on a corresponding claim.
       properties:
         box_id:
-          description: ID of the upload box this grant is for
+          description: ID of the research data upload box this grant is for
           format: uuid4
           title: Box Id
           type: string
@@ -684,12 +684,12 @@ components:
       required:
       - id
       - user_id
-      - box_id
       - created
       - valid_from
       - valid_until
       - user_name
       - user_email
+      - box_id
       title: UploadGrant
       type: object
     User:
@@ -1034,7 +1034,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/Grant'
+                  $ref: '#/components/schemas/DownloadGrant'
                 title: Response 200 Get Download Access Grants
                 type: array
           description: Access grants have been fetched.
