@@ -68,10 +68,16 @@ UPLOAD_BOX_CLAIM_DATA = {
     "asserted_by": "system",
 }
 
-VALIDITY: dict[str, Any] = {
-    "valid_from": now.isoformat(),
-    "valid_until": (now + timedelta(weeks=52)).isoformat(),
-}
+
+def get_validity() -> dict[str, Any]:
+    """Generate a validity dict based on current time"""
+    return {
+        "valid_from": now.isoformat(),
+        "valid_until": (now + timedelta(weeks=52)).isoformat(),
+    }
+
+
+VALIDITY: dict[str, Any] = get_validity()
 URL_JOHN = f"/upload-access/users/{ID_OF_JOHN}"
 
 
@@ -120,17 +126,18 @@ async def test_grant_upload_access(full_client: FullClient):
     full_client.app.dependency_overrides[get_iva_dao] = lambda: iva_dao
 
     box_id = uuid4()
+    validity = get_validity()
     response = await full_client.post(
         f"{URL_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{box_id}",
-        json=VALIDITY,
+        json=validity,
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # Check that the claim was created, but check directly with a DAO
     claim = await claim_dao.find_one(mapping={"visa_type": VisaType.GHGA_UPLOAD})
     assert str(claim.visa_value).endswith(str(box_id))
-    assert claim.valid_from == datetime.fromisoformat(VALIDITY["valid_from"])
-    assert claim.valid_until == datetime.fromisoformat(VALIDITY["valid_until"])
+    assert claim.valid_from == datetime.fromisoformat(validity["valid_from"])
+    assert claim.valid_until == datetime.fromisoformat(validity["valid_until"])
     assert abs(claim.creation_date - claim.valid_from) < timedelta(seconds=15)
 
 
