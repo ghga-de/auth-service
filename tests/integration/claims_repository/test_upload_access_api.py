@@ -72,6 +72,7 @@ VALIDITY: dict[str, Any] = {
     "valid_from": now.isoformat(),
     "valid_until": (now + timedelta(weeks=52)).isoformat(),
 }
+URL_JOHN = f"/upload-access/users/{ID_OF_JOHN}"
 
 
 @pytest.mark.parametrize(
@@ -79,15 +80,15 @@ VALIDITY: dict[str, Any] = {
     [
         (
             "post",
-            f"/upload-access/users/{ID_OF_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/box123",
+            f"{URL_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/box123",
         ),
-        ("post", f"/upload-access/users/{ID_OF_JOHN}/ivas/iva123/boxes/{TEST_BOX_ID}"),
+        ("post", f"{URL_JOHN}/ivas/iva123/boxes/{TEST_BOX_ID}"),
         (
             "post",
             f"/upload-access/users/user123/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}",
         ),
         ("delete", "/upload-access/grants/grant123"),
-        ("get", f"/upload-access/users/{ID_OF_JOHN}/boxes/box123"),
+        ("get", f"{URL_JOHN}/boxes/box123"),
         ("get", f"/upload-access/users/user123/boxes/{TEST_BOX_ID}"),
         ("get", "/upload-access/users/user123/boxes"),
     ],
@@ -104,7 +105,7 @@ VALIDITY: dict[str, Any] = {
 async def test_invalid_params_for_upload_access_endpoints(
     http_method: str, url: str, full_client: FullClient
 ):
-    """Test calling variousupload access endpoints with invalid path parameters"""
+    """Test calling various upload access endpoints with invalid path parameters"""
     response = await full_client.request(http_method, url, json=VALIDITY)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -119,32 +120,18 @@ async def test_grant_upload_access(full_client: FullClient):
     full_client.app.dependency_overrides[get_iva_dao] = lambda: iva_dao
 
     box_id = uuid4()
-    validity = {
-        "valid_from": now_utc_ms_prec().isoformat(),
-        "valid_until": (now_utc_ms_prec() + timedelta(weeks=4)).isoformat(),
-    }
     response = await full_client.post(
-        f"/upload-access/users/{ID_OF_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{box_id}",
-        json=validity,
+        f"{URL_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{box_id}",
+        json=VALIDITY,
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # Check that the claim was created, but check directly with a DAO
-    claims = [
-        x
-        async for x in claim_dao.find_all(
-            mapping={
-                "visa_type": VisaType.GHGA_UPLOAD,
-            }
-        )
-    ]
-
-    assert len(claims) == 1
-    claim = claims[0]
+    claim = await claim_dao.find_one(mapping={"visa_type": VisaType.GHGA_UPLOAD})
     assert str(claim.visa_value).endswith(str(box_id))
-    assert claim.valid_from == datetime.fromisoformat(validity["valid_from"])
-    assert claim.valid_until == datetime.fromisoformat(validity["valid_until"])
-    assert abs(claim.creation_date - claim.valid_from) < timedelta(seconds=5)
+    assert claim.valid_from == datetime.fromisoformat(VALIDITY["valid_from"])
+    assert claim.valid_until == datetime.fromisoformat(VALIDITY["valid_until"])
+    assert abs(claim.creation_date - claim.valid_from) < timedelta(seconds=15)
 
 
 async def test_check_upload_access(full_client: FullClient):
@@ -155,23 +142,21 @@ async def test_check_upload_access(full_client: FullClient):
     full_client.app.dependency_overrides[get_iva_dao] = lambda: iva_dao
 
     # First grant upload access
-    url = (
-        f"/upload-access/users/{ID_OF_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}"
-    )
+    url = f"{URL_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}"
     response = await full_client.post(url, json=VALIDITY)
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # Now check upload access
-    response = await full_client.get(
-        f"/upload-access/users/{ID_OF_JOHN}/boxes/{TEST_BOX_ID}"
-    )
+    url = f"{URL_JOHN}/boxes/{TEST_BOX_ID}"
+    response = await full_client.get(url)
     assert response.status_code == status.HTTP_200_OK
     assert response.json() is not None
+    assert (  # Account for format difference
+        datetime.fromisoformat(response.json()).isoformat() == VALIDITY["valid_until"]
+    )
 
     # Check access for non-existent box
-    response = await full_client.get(
-        f"/upload-access/users/{ID_OF_JOHN}/boxes/{uuid4()}"
-    )
+    response = await full_client.get(f"{URL_JOHN}/boxes/{uuid4()}")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() is None
 
@@ -187,18 +172,17 @@ async def test_get_boxes_with_upload_access(full_client: FullClient):
     box1 = str(uuid4())
     box2 = str(uuid4())
     for box_id in [box1, box2]:
-        url = f"/upload-access/users/{ID_OF_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{box_id}"
+        url = f"{URL_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{box_id}"
         response = await full_client.post(url, json=VALIDITY)
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # Get list of accessible boxes
-    response = await full_client.get(f"/upload-access/users/{ID_OF_JOHN}/boxes")
+    response = await full_client.get(f"{URL_JOHN}/boxes")
     assert response.status_code == status.HTTP_200_OK
     boxes = response.json()
-    assert isinstance(boxes, dict)
-    assert len(boxes) == 2
-    assert box1 in boxes
-    assert box2 in boxes
+    for k, v in boxes.items():
+        boxes[k] = v.replace("Z", "+00:00")
+    assert boxes == dict.fromkeys((box1, box2), VALIDITY["valid_until"])
 
 
 async def test_get_upload_access_grants(full_client: FullClient):
@@ -209,9 +193,7 @@ async def test_get_upload_access_grants(full_client: FullClient):
     full_client.app.dependency_overrides[get_iva_dao] = lambda: iva_dao
 
     # Create an upload access claim
-    url = (
-        f"/upload-access/users/{ID_OF_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}"
-    )
+    url = f"{URL_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}"
     response = await full_client.post(url, json=VALIDITY)
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
@@ -239,7 +221,7 @@ async def test_grant_upload_access_with_unverified_iva(full_client: FullClient):
 
     # Grant access with an unverified IVA
     response = await full_client.post(
-        f"/upload-access/users/{ID_OF_JOHN}/ivas/{UNVERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}",
+        f"{URL_JOHN}/ivas/{UNVERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}",
         json=VALIDITY,
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -255,13 +237,11 @@ async def test_grant_upload_access_with_unverified_iva(full_client: FullClient):
     assert claim_data["iva_id"] == str(UNVERIFIED_IVA_ID)
 
     # Check if the user has access to the test box -- they shouldn't
-    response = await full_client.get(
-        f"/upload-access/users/{ID_OF_JOHN}/boxes/{TEST_BOX_ID}"
-    )
+    response = await full_client.get(f"{URL_JOHN}/boxes/{TEST_BOX_ID}")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() is None
 
-    response = await full_client.get(f"/upload-access/users/{ID_OF_JOHN}/boxes")
+    response = await full_client.get(f"{URL_JOHN}/boxes")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {}
 
@@ -274,7 +254,7 @@ async def test_grant_upload_access_without_iva(full_client: FullClient):
     full_client.app.dependency_overrides[get_iva_dao] = lambda: iva_dao
 
     response = await full_client.post(
-        f"/upload-access/users/{ID_OF_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}",
+        f"{URL_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}",
         json=VALIDITY,
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -284,13 +264,11 @@ async def test_grant_upload_access_without_iva(full_client: FullClient):
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == []
 
-    response = await full_client.get(
-        f"/upload-access/users/{ID_OF_JOHN}/boxes/{TEST_BOX_ID}"
-    )
+    response = await full_client.get(f"{URL_JOHN}/boxes/{TEST_BOX_ID}")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() is None
 
-    response = await full_client.get(f"/upload-access/users/{ID_OF_JOHN}/boxes")
+    response = await full_client.get(f"{URL_JOHN}/boxes")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {}
 
@@ -303,14 +281,12 @@ async def test_check_upload_access_with_unverified_iva(full_client: FullClient):
     full_client.app.dependency_overrides[get_iva_dao] = lambda: iva_dao
 
     # post valid upload access permission for UNVERIFIED_IVA_ID and TEST_BOX_ID
-    url = f"/upload-access/users/{ID_OF_JOHN}/ivas/{UNVERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}"
+    url = f"{URL_JOHN}/ivas/{UNVERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}"
     response = await full_client.post(url, json=VALIDITY)
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # check that access is not given when the IVA is not verified
-    response = await full_client.get(
-        f"/upload-access/users/{ID_OF_JOHN}/boxes/{TEST_BOX_ID}"
-    )
+    response = await full_client.get(f"{URL_JOHN}/boxes/{TEST_BOX_ID}")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() is None
 
@@ -328,50 +304,33 @@ async def test_revoke_grant(full_client: FullClient):
     iva_dao = DummyIvaDao([VERIFIED_IVA])
     full_client.app.dependency_overrides[get_iva_dao] = lambda: iva_dao
 
-    url = (
-        f"/upload-access/users/{ID_OF_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}"
-    )
+    url = f"{URL_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}"
     response = await full_client.post(url, json=VALIDITY)
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # Verify that the claim was added by looking for a claim with matching details
-    claims = [
-        x
-        async for x in claim_dao.find_all(
-            mapping={
-                "visa_type": VisaType.GHGA_UPLOAD,
-            }
-        )
-    ]
-    assert len(claims) == 1
-    assert str(claims[0].visa_value).endswith(str(TEST_BOX_ID))
-    assert not claims[0].revocation_date
+    claim = await claim_dao.find_one(mapping={"visa_type": VisaType.GHGA_UPLOAD})
+    assert str(claim.visa_value).endswith(str(TEST_BOX_ID))
+    assert not claim.revocation_date
 
     # Now try to revoke the claim
-    url = f"/upload-access/grants/{claims[0].id}"
+    url = f"/upload-access/grants/{claim.id}"
     response = await full_client.delete(url)
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # Make sure the claim was revoked
-    claims = [
-        x
-        async for x in claim_dao.find_all(
-            mapping={
-                "visa_type": VisaType.GHGA_UPLOAD,
-            }
-        )
-    ]
-    assert len(claims) == 1
-    assert str(claims[0].visa_value).endswith(str(TEST_BOX_ID))
-    assert claims[0].revocation_date
-    assert now_utc_ms_prec() - claims[0].revocation_date < timedelta(seconds=5)
+    claim = await claim_dao.find_one(mapping={"visa_type": VisaType.GHGA_UPLOAD})
+
+    assert str(claim.visa_value).endswith(str(TEST_BOX_ID))
+    assert claim.revocation_date
+    assert now_utc_ms_prec() - claim.revocation_date < timedelta(seconds=5)
 
     # Now revoke the grant again and make sure the endpoint returns a 404
-    response = await full_client.delete(f"/upload-access/grants/{claims[0].id}")
+    response = await full_client.delete(f"/upload-access/grants/{claim.id}")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
     # And ensure that the claim is not returned when queried
-    url = f"/upload-access/users/{ID_OF_JOHN}/boxes/{TEST_BOX_ID}"
+    url = f"{URL_JOHN}/boxes/{TEST_BOX_ID}"
     response = await full_client.get(url)
     assert response.json() is None
 
@@ -384,9 +343,7 @@ async def test_revoke_non_existent_grant(full_client: FullClient):
 
 async def test_grant_access_for_invalid_dates(full_client: FullClient):
     """Test granting upload access for invalid dates"""
-    url = (
-        f"/upload-access/users/{ID_OF_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}"
-    )
+    url = f"{URL_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}"
     validity = {
         "valid_from": now.isoformat(),
         "valid_until": (now - timedelta(hours=1)).isoformat(),
@@ -419,21 +376,17 @@ async def test_with_past_or_future_validity(
     }
 
     # Grant access using that validity period
-    url = (
-        f"/upload-access/users/{ID_OF_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}"
-    )
+    url = f"{URL_JOHN}/ivas/{VERIFIED_IVA_ID}/boxes/{TEST_BOX_ID}"
     response = await full_client.post(url, json=validity)
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # Check boxes with upload access for the user - should be empty
-    response = await full_client.get(f"/upload-access/users/{ID_OF_JOHN}/boxes")
+    response = await full_client.get(f"{URL_JOHN}/boxes")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {}
 
     # Check if the user has access to this box specifically
-    response = await full_client.get(
-        f"/upload-access/users/{ID_OF_JOHN}/boxes/{TEST_BOX_ID}"
-    )
+    response = await full_client.get(f"{URL_JOHN}/boxes/{TEST_BOX_ID}")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() is None
 
