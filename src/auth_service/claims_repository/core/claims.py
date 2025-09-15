@@ -224,7 +224,7 @@ def create_upload_access_claim(
         valid_until=valid_until,
         source=INTERNAL_SOURCE,
         sub_source=None,
-        asserted_by=AuthorityLevel.DAC,
+        asserted_by=AuthorityLevel.SYSTEM,
         conditions=None,
         user_id=user_id,
         iva_id=iva_id,

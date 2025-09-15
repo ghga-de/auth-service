@@ -65,7 +65,7 @@ UPLOAD_BOX_CLAIM_DATA = {
     "visa_value": f"https://ghga.de/uploads/{TEST_BOX_ID}",
     "source": "https://ghga.de",
     "assertion_date": now.isoformat(),
-    "asserted_by": "dac",  # TODO: who asserts the claim?
+    "asserted_by": "system",
 }
 
 VALIDITY: dict[str, Any] = {
