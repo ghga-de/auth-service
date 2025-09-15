@@ -101,10 +101,10 @@ VALIDITY: dict[str, Any] = {
         "GetBoxesForUserBadUserId",
     ],
 )
-async def test_invalid_params_for_grant_upload_access(
+async def test_invalid_params_for_upload_access_endpoints(
     http_method: str, url: str, full_client: FullClient
 ):
-    """Test calling the 'grant upload access' endpoint with invalid path parameters"""
+    """Test calling variousupload access endpoints with invalid path parameters"""
     response = await full_client.request(http_method, url, json=VALIDITY)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
