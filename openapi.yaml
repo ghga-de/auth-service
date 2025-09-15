@@ -1576,7 +1576,7 @@ paths:
           - type: 'null'
           description: The ID of the IVA
           title: Iva Id
-      - description: The ID of the upload box
+      - description: The ID of the research data upload box
         in: query
         name: box_id
         required: false
@@ -1585,7 +1585,7 @@ paths:
           - format: uuid4
             type: string
           - type: 'null'
-          description: The ID of the upload box
+          description: The ID of the research data upload box
           title: Box Id
       - description: Whether the grant is currently valid
         in: query
@@ -1695,12 +1695,12 @@ paths:
           format: uuid4
           title: User Id
           type: string
-      - description: Internal ID of the upload box
+      - description: Internal ID of the research data upload box
         in: path
         name: box_id
         required: true
         schema:
-          description: Internal ID of the upload box
+          description: Internal ID of the research data upload box
           format: uuid4
           title: Box Id
           type: string
@@ -1747,12 +1747,12 @@ paths:
           format: uuid4
           title: Iva Id
           type: string
-      - description: The ID of the upload box
+      - description: The ID of the research data upload box
         in: path
         name: box_id
         required: true
         schema:
-          description: The ID of the upload box
+          description: The ID of the research data upload box
           format: uuid4
           title: Box Id
           type: string

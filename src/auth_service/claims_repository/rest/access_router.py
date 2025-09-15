@@ -480,7 +480,7 @@ async def grant_upload_access(  # noqa: PLR0913
         Path(
             ...,
             alias="box_id",
-            description="The ID of the upload box",
+            description="The ID of the research data upload box",
         ),
     ],
     user_dao: UserDaoDependency,
@@ -550,7 +550,7 @@ async def get_upload_access_grants(  # noqa: PLR0913
         Query(
             ...,
             alias="box_id",
-            description="The ID of the upload box",
+            description="The ID of the research data upload box",
         ),
     ] = None,
     valid: Annotated[
@@ -640,7 +640,7 @@ async def check_upload_access(
         Path(
             ...,
             alias="box_id",
-            description="Internal ID of the upload box",
+            description="Internal ID of the research data upload box",
         ),
     ],
     user_dao: UserDaoDependency,
