@@ -241,7 +241,7 @@ class BaseGrant(BaseDto):
 
 
 class DownloadGrant(BaseGrant):
-    """An access grant based on a corresponding claim."""
+    """A download access grant for a dataset based on a corresponding claim."""
 
     dataset_id: Accession = Field(
         default=..., description="ID of the dataset this grant is for"
@@ -249,7 +249,7 @@ class DownloadGrant(BaseGrant):
 
 
 class UploadGrant(BaseGrant):
-    """An upload access grant based on a corresponding claim."""
+    """An upload access grant for research data based on a corresponding claim."""
 
     box_id: UUID4 = Field(
         default=..., description="ID of the research data upload box this grant is for"

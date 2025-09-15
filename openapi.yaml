@@ -316,7 +316,8 @@ components:
       type: object
     DownloadGrant:
       additionalProperties: false
-      description: An access grant based on a corresponding claim.
+      description: A download access grant for a dataset based on a corresponding
+        claim.
       properties:
         created:
           description: Date of creation of this grant
@@ -627,7 +628,8 @@ components:
       type: object
     UploadGrant:
       additionalProperties: false
-      description: An upload access grant based on a corresponding claim.
+      description: An upload access grant for research data based on a corresponding
+        claim.
       properties:
         box_id:
           description: ID of the research data upload box this grant is for
