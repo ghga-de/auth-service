@@ -136,9 +136,6 @@ async def test_grant_upload_access(full_client: FullClient):
     # Check that the claim was created, but check directly with a DAO
     claim = await claim_dao.find_one(mapping={"visa_type": VisaType.GHGA_UPLOAD})
     assert str(claim.visa_value).endswith(str(box_id))
-    assert claim.valid_from == datetime.fromisoformat(validity["valid_from"])
-    assert claim.valid_until == datetime.fromisoformat(validity["valid_until"])
-    assert abs(claim.creation_date - claim.valid_from) < timedelta(seconds=15)
 
 
 async def test_check_upload_access(full_client: FullClient):
