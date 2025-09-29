@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # BASE: a base image with updated packages
-FROM python:3.12-alpine AS base
+FROM python:3.13-alpine AS base
 RUN apk upgrade --no-cache --available
 
 # BUILDER: a container to build the service wheel
@@ -36,8 +36,8 @@ RUN pip install --no-deps -r requirements.txt
 # RUNNER: a container to run the service
 FROM base AS runner
 WORKDIR /service
-RUN rm -rf /usr/local/lib/python3.12
-COPY --from=dep-builder /usr/local/lib/python3.12 /usr/local/lib/python3.12
+RUN rm -rf /usr/local/lib/python3.13
+COPY --from=dep-builder /usr/local/lib/python3.13 /usr/local/lib/python3.13
 COPY --from=dep-builder /usr/local/bin/opentelemetry-instrument /usr/local/bin
 COPY --from=builder /service/dist/ /service
 RUN pip install --no-deps *.whl
