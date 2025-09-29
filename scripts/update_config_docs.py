@@ -76,17 +76,16 @@ def get_schema() -> str:
     """Returns a JSON schema generated from a Config class."""
 
     config = get_dev_config()
-    return config.schema_json(indent=2)  # change eventually to .model_json_schema(...)
+    schema_dict = type(config).model_json_schema()
+    return json.dumps(schema_dict, indent=2)
 
 
 def get_example() -> str:
     """Returns an example config YAML."""
 
     config = get_dev_config()
-    normalized_config_dict = json.loads(
-        config.json()  # change eventually to .model_dump_json()
-    )
-    return yaml.dump(normalized_config_dict)  # pyright: ignore
+    normalized_config_dict = config.model_dump(mode="json", by_alias=True)
+    return yaml.dump(normalized_config_dict, indent=2, sort_keys=True)
 
 
 def update_docs():
