@@ -151,7 +151,7 @@ def read_design_description() -> str:
 
 
 def generate_config_docs() -> str:
-    """Generate markdown-formatted documentation for the configration parameters
+    """Generate markdown-formatted documentation for the configuration parameters
     listed in the config schema."""
 
     parser = jsonschema2md.Parser(
@@ -167,7 +167,7 @@ def generate_config_docs() -> str:
     properties_index = md_lines.index("## Properties\n\n")
     md_lines = md_lines[properties_index + 1 :]
 
-    return "\n".join(md_lines)
+    return "".join(md_lines).rstrip()
 
 
 def generate_openapi_docs() -> str:
