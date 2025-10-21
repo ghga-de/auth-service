@@ -1374,7 +1374,6 @@ typing-extensions==4.15.0 \
     # via
     #   -c lock/requirements-dev.txt
     #   aiokafka
-    #   anyio
     #   fastapi
     #   grpcio
     #   jwcrypto
@@ -1386,8 +1385,6 @@ typing-extensions==4.15.0 \
     #   opentelemetry-semantic-conventions
     #   pydantic
     #   pydantic-core
-    #   referencing
-    #   starlette
     #   typing-inspection
 typing-inspection==0.4.2 \
     --hash=sha256:4ed1cacbdc298c220f1bd249ed5287caa16f34d44ef4e9c3d0cbad5b521545e7 \
