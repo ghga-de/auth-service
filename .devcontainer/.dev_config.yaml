@@ -19,6 +19,7 @@ second_factor_recreated_type: second_factor_recreated
 user_topic: users
 iva_state_changed_topic: ivas
 iva_state_changed_type: iva_state_changed
+iva_send_code_type: iva_send_code
 
 enable_opentelemetry: false
 

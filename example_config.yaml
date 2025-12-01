@@ -41,6 +41,7 @@ docs_url: /docs
 enable_opentelemetry: false
 generate_correlation_id: true
 host: 0.0.0.0
+iva_send_code_type: iva_send_code
 iva_state_changed_topic: ivas
 iva_state_changed_type: iva_state_changed
 ivas_collection: ivas

@@ -47,13 +47,13 @@ We recommend using the provided Docker container.
 
 A pre-built version is available on [Docker Hub](https://hub.docker.com/repository/docker/ghga/auth-service):
 ```bash
-docker pull ghga/auth-service:8.1.2
+docker pull ghga/auth-service:8.2.0
 ```
 
 Or you can build the container yourself from the [`./Dockerfile`](./Dockerfile):
 ```bash
 # Execute in the repo's root dir:
-docker build -t ghga/auth-service:8.1.2 .
+docker build -t ghga/auth-service:8.2.0 .
 ```
 
 For production-ready deployment, we recommend using Kubernetes.
@@ -61,7 +61,7 @@ However for simple use cases, you could execute the service using docker
 on a single server:
 ```bash
 # The entrypoint is pre-configured:
-docker run -p 8080:8080 ghga/auth-service:8.1.2 --help
+docker run -p 8080:8080 ghga/auth-service:8.2.0 --help
 ```
 
 If you prefer not to use containers, you may install the service from source:
@@ -101,11 +101,18 @@ The service requires the following configuration parameters:
   "ivas"
   ```
 
-- <a id="properties/iva_state_changed_type"></a>**`iva_state_changed_type`** *(string, required)*: The type to use for iva state changed events.
+- <a id="properties/iva_state_changed_type"></a>**`iva_state_changed_type`** *(string, required)*: The type to use for IVA state changed events.
 
   Examples:
   ```json
   "iva_state_changed"
+  ```
+
+- <a id="properties/iva_send_code_type"></a>**`iva_send_code_type`** *(string, required)*: The type to use for IVA send code events.
+
+  Examples:
+  ```json
+  "iva_send_code"
   ```
 
 - <a id="properties/dataset_change_topic"></a>**`dataset_change_topic`** *(string)*: the topic of the event announcing dataset deletions. Default: `"metadata_datasets"`.
