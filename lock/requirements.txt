@@ -506,9 +506,9 @@ fastapi==0.120.4 \
     # via
     #   -c lock/requirements-dev.txt
     #   ghga-service-commons
-ghga-event-schemas==11.1.0 \
-    --hash=sha256:0034efc058d6ef573968edb24ac557ca18bf6908dadba5e2c2312eff2b747b88 \
-    --hash=sha256:9f1c43e0e2afa18813cac80d818d4c84f639781943ae43b3fd1afa021e424a4a
+ghga-event-schemas==11.1.1 \
+    --hash=sha256:13a50b76ea9d828763c1395aa213c88f12d31b2bd40c18c79922c817d9b916b8 \
+    --hash=sha256:c618c015d18f244e658cc187bd2d2a7e544f1a3b40d23ae2b6ab528b0ed7904d
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)

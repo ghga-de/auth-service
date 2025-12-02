@@ -524,12 +524,18 @@ async def test_unverify_non_existing_iva():
     assert not registry.published_events
 
 
-async def test_request_iva_verification_code():
-    """Test that a verification code for an IVA can be requested."""
+async def test_request_iva_verification_code_manual():
+    """Test that a verification code for an IVA can be requested manually."""
     now = now_utc_ms_prec()
     before = now - timedelta(hours=3)
     registry = MockUserRegistry()
-    registry.add_dummy_iva(state=IvaState.UNVERIFIED, created=before, changed=before)
+    # register a postal address IVA where verification is not done automatically
+    registry.add_dummy_iva(
+        state=IvaState.UNVERIFIED,
+        type_=IvaType.POSTAL_ADDRESS,
+        created=before,
+        changed=before,
+    )
     ivas = registry.dummy_ivas
     assert len(ivas) == 1
     from_iva = ivas[0]
@@ -548,6 +554,49 @@ async def test_request_iva_verification_code():
     assert registry.published_events == [("iva_state_changed", iva)]
 
 
+async def test_request_iva_verification_code_automatic():
+    """Test that a verification code for an IVA can be requested automatically."""
+    now = now_utc_ms_prec()
+    before = now - timedelta(hours=3)
+    registry = MockUserRegistry()
+    events = registry.published_events
+    # register a phone IVA where verification is done automatically via SMS
+    registry.add_dummy_iva(
+        state=IvaState.UNVERIFIED,
+        type_=IvaType.PHONE,
+        created=before,
+        changed=before,
+    )
+    ivas = registry.dummy_ivas
+    assert len(ivas) == 1
+    await registry.request_iva_verification_code(IVA_IDS[0], user_id=ID_OF_JOHN)
+    assert len(ivas) == 1
+    iva = ivas[0]
+    changed = iva.changed
+    assert 0 <= (changed - now).total_seconds() < 3
+    assert iva.state == IvaState.CODE_TRANSMITTED
+    code_hash = iva.verification_code_hash
+    assert code_hash is not None
+    assert len(events) == 2
+    assert len(events[0]) == 3
+    code = events[0][2]
+    assert isinstance(code, str)
+    assert validate_code(code, code_hash)
+    assert [event[0] for event in events] == ["iva_send_code", "iva_state_changed"]
+    for i, event in enumerate(events):
+        iva = event[1]
+        assert isinstance(iva, Iva)
+        assert iva.id == iva.id
+        assert iva.type == iva.type
+        assert iva.value == iva.value
+        if i:
+            assert iva.state == IvaState.CODE_TRANSMITTED
+            assert iva.verification_code_hash == code_hash
+        else:
+            assert iva.state == IvaState.CODE_REQUESTED
+            assert iva.verification_code_hash is None
+
+
 async def test_request_verification_code_for_non_existing_iva():
     """Test requesting a verification code for a non-existing IVA."""
     registry = MockUserRegistry()
@@ -563,7 +612,7 @@ async def test_request_verification_code_for_non_existing_iva():
 async def test_request_verification_code_for_different_user():
     """Test requesting a verification code for a different user."""
     registry = MockUserRegistry()
-    registry.add_dummy_iva(state=IvaState.UNVERIFIED)
+    registry.add_dummy_iva(state=IvaState.UNVERIFIED, type_=IvaType.POSTAL_ADDRESS)
     assert len(registry.dummy_ivas) == 1
     # first test with a different user ID
     with pytest.raises(
@@ -983,7 +1032,8 @@ async def test_reset_verified_ivas():
 async def test_iva_verification_happy_path():
     """Test happy path of a complete IVA verification."""
     registry = MockUserRegistry()
-    iva_data = IvaBasicData(type=IvaType.PHONE, value="123456")
+    events = registry.published_events
+    iva_data = IvaBasicData(type=IvaType.POSTAL_ADDRESS, value="Abbey Road")
     user_id = ID_OF_JOHN
     iva_id = await registry.create_iva(user_id, iva_data)
     assert iva_id
@@ -1001,8 +1051,8 @@ async def test_iva_verification_happy_path():
     assert iva.state == IvaState.CODE_REQUESTED
     assert iva.verification_code_hash is None
     assert iva.verification_attempts == 0
-    assert registry.published_events == [("iva_state_changed", iva)]
-    registry.published_events.clear()
+    assert events == [("iva_state_changed", iva)]
+    events.clear()
     # create code
     code = await registry.create_iva_verification_code(iva_id)
     assert isinstance(code, str)
@@ -1015,7 +1065,7 @@ async def test_iva_verification_happy_path():
     assert iva.state == IvaState.CODE_CREATED
     assert iva.verification_code_hash is not None
     assert iva.verification_attempts == 0
-    assert not registry.published_events
+    assert not events
     # transmit code
     await registry.confirm_iva_code_transmission(iva_id)
     assert len(ivas) == 1
@@ -1023,8 +1073,8 @@ async def test_iva_verification_happy_path():
     assert iva.state == IvaState.CODE_TRANSMITTED
     assert iva.verification_code_hash is not None
     assert iva.verification_attempts == 0
-    assert registry.published_events == [("iva_state_changed", iva)]
-    registry.published_events.clear()
+    assert events == [("iva_state_changed", iva)]
+    events.clear()
     # validate code
     validated = await registry.validate_iva_verification_code(
         iva_id, code, user_id=user_id
@@ -1035,4 +1085,53 @@ async def test_iva_verification_happy_path():
     assert iva.state == IvaState.VERIFIED
     assert iva.verification_code_hash is None
     assert iva.verification_attempts == 0
-    assert registry.published_events == [("iva_state_changed", iva)]
+    assert events == [("iva_state_changed", iva)]
+
+
+async def test_iva_verification_happy_path_auto_code():
+    """Test happy path of a complete IVA verification with auto code sending."""
+    registry = MockUserRegistry()
+    events = registry.published_events
+    iva_data = IvaBasicData(type=IvaType.PHONE, value="123456")
+    user_id = ID_OF_JOHN
+    iva_id = await registry.create_iva(user_id, iva_data)
+    assert iva_id
+    ivas = registry.dummy_ivas
+    assert len(ivas) == 1
+    iva = ivas[0]
+    assert iva.id == iva_id
+    assert iva.state == IvaState.UNVERIFIED
+    assert iva.verification_code_hash is None
+    assert iva.verification_attempts == 0
+    # request code
+    # and check that this automatically transmits the code
+    await registry.request_iva_verification_code(iva_id, user_id=user_id)
+    assert len(ivas) == 1
+    iva = ivas[0]
+    assert iva.state == IvaState.CODE_TRANSMITTED
+    code_hash = iva.verification_code_hash
+    assert code_hash is not None
+    assert iva.verification_attempts == 0
+    assert [event[0] for event in events] == ["iva_send_code", "iva_state_changed"]
+    assert events[1][1] is iva
+    iva = events[0][1]
+    assert isinstance(iva, Iva)
+    assert iva.id == iva_id
+    assert iva.type is IvaType.PHONE
+    assert iva.value == "123456"
+    assert iva.verification_code_hash is None
+    code = events[0][2]
+    assert isinstance(code, str)
+    assert validate_code(code, code_hash)
+    events.clear()
+    # validate code
+    validated = await registry.validate_iva_verification_code(
+        iva_id, code, user_id=user_id
+    )
+    assert len(ivas) == 1
+    iva = ivas[0]
+    assert validated is True
+    assert iva.state == IvaState.VERIFIED
+    assert iva.verification_code_hash is None
+    assert iva.verification_attempts == 0
+    assert events == [("iva_state_changed", iva)]

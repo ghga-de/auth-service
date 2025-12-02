@@ -115,9 +115,27 @@ The service requires the following configuration parameters:
   "iva_send_code"
   ```
 
-- <a id="properties/dataset_change_topic"></a>**`dataset_change_topic`** *(string)*: the topic of the event announcing dataset deletions. Default: `"metadata_datasets"`.
-- <a id="properties/dataset_deletion_type"></a>**`dataset_deletion_type`** *(string)*: the type of the event announcing dataset deletions. Default: `"dataset_deleted"`.
-- <a id="properties/dataset_upsertion_type"></a>**`dataset_upsertion_type`** *(string)*: the type of the event announcing dataset upsertions. Default: `"dataset_created"`.
+- <a id="properties/dataset_change_topic"></a>**`dataset_change_topic`** *(string, required)*: Name of the topic announcing, among other things, the list of files included in a new dataset.
+
+  Examples:
+  ```json
+  "metadata_datasets"
+  ```
+
+- <a id="properties/dataset_deletion_type"></a>**`dataset_deletion_type`** *(string, required)*: Event type used for communicating dataset deletions.
+
+  Examples:
+  ```json
+  "dataset_deleted"
+  ```
+
+- <a id="properties/dataset_upsertion_type"></a>**`dataset_upsertion_type`** *(string, required)*: Event type used for communicating dataset upsertions.
+
+  Examples:
+  ```json
+  "dataset_upserted"
+  ```
+
 - <a id="properties/claims_collection"></a>**`claims_collection`** *(string)*: Name of the collection for user claims. Default: `"claims"`.
 - <a id="properties/user_topic"></a>**`user_topic`** *(string)*: The name of the topic containing user events. Default: `"users"`.
 - <a id="properties/users_collection"></a>**`users_collection`** *(string)*: Name of the collection for users. Default: `"users"`.
@@ -359,6 +377,8 @@ The service requires the following configuration parameters:
 
 - <a id="properties/log_traceback"></a>**`log_traceback`** *(boolean)*: Whether to include exception tracebacks in log messages. Default: `true`.
 - <a id="properties/max_iva_verification_attempts"></a>**`max_iva_verification_attempts`** *(integer)*: Maximum number of verification attempts for an IVA. Default: `10`.
+- <a id="properties/auto_send_iva_code_for_types"></a>**`auto_send_iva_code_for_types`** *(array)*: IVA types for which verification codes are sent automatically. Default: `["Phone"]`.
+  - <a id="properties/auto_send_iva_code_for_types/items"></a>**Items**: Refer to *[#/$defs/IvaType](#%24defs/IvaType)*.
 - <a id="properties/totp_issuer"></a>**`totp_issuer`** *(string)*: Issuer name for TOTP provisioning URIs. Default: `"GHGA"`.
 - <a id="properties/totp_image"></a>**`totp_image`**: URL of the PNG image provided in the TOTP provisioning URIs. Default: `null`.
   - **Any of**
