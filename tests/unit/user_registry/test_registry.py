@@ -1033,8 +1033,8 @@ async def test_reset_verified_ivas():
     assert registry.published_events == [("ivas_reset", ID_OF_JOHN)]
 
 
-async def test_iva_verification_happy_path_manual_code():
-    """Test happy path of a complete IVA verification with manual code creation."""
+async def test_iva_verification_happy_path_manual():
+    """Test happy path of a complete IVA verification with manual code transmission."""
     registry = MockUserRegistry()
     events = registry.published_events
     # create an IVA with a type that does not triggers automatic code transmission
@@ -1093,8 +1093,8 @@ async def test_iva_verification_happy_path_manual_code():
     assert events == [("iva_state_changed", iva)]
 
 
-async def test_iva_verification_happy_path_auto_code():
-    """Test happy path of a complete IVA verification with auto code sending."""
+async def test_iva_verification_happy_path_auto():
+    """Test happy path of a complete IVA verification with auto code transmission."""
     registry = MockUserRegistry()
     events = registry.published_events
     # create an IVA with a type that triggers automatic code transmission
