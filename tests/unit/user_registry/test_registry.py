@@ -577,24 +577,28 @@ async def test_request_iva_verification_code_automatic():
     assert iva.state == IvaState.CODE_TRANSMITTED
     code_hash = iva.verification_code_hash
     assert code_hash is not None
+    # should create two events (transmit code, state after transmission)
     assert len(events) == 2
+    assert [event[0] for event in events] == ["iva_send_code", "iva_state_changed"]
+    # the first event should publish the code using an extra argument
     assert len(events[0]) == 3
     code = events[0][2]
     assert isinstance(code, str)
     assert validate_code(code, code_hash)
-    assert [event[0] for event in events] == ["iva_send_code", "iva_state_changed"]
-    for i, event in enumerate(events):
+    for event in events:
         iva = event[1]
         assert isinstance(iva, Iva)
         assert iva.id == iva.id
         assert iva.type == iva.type
         assert iva.value == iva.value
-        if i:
-            assert iva.state == IvaState.CODE_TRANSMITTED
-            assert iva.verification_code_hash == code_hash
-        else:
+        if event[0] == "iva_send_code":
+            # this is before the code was transmitted
             assert iva.state == IvaState.CODE_REQUESTED
             assert iva.verification_code_hash is None
+        else:
+            # this is after the code was transmitted
+            assert iva.state == IvaState.CODE_TRANSMITTED
+            assert iva.verification_code_hash == code_hash
 
 
 async def test_request_verification_code_for_non_existing_iva():
@@ -1029,10 +1033,11 @@ async def test_reset_verified_ivas():
     assert registry.published_events == [("ivas_reset", ID_OF_JOHN)]
 
 
-async def test_iva_verification_happy_path():
-    """Test happy path of a complete IVA verification."""
+async def test_iva_verification_happy_path_manual_code():
+    """Test happy path of a complete IVA verification with manual code creation."""
     registry = MockUserRegistry()
     events = registry.published_events
+    # create an IVA with a type that does not triggers automatic code transmission
     iva_data = IvaBasicData(type=IvaType.POSTAL_ADDRESS, value="Abbey Road")
     user_id = ID_OF_JOHN
     iva_id = await registry.create_iva(user_id, iva_data)
@@ -1092,6 +1097,7 @@ async def test_iva_verification_happy_path_auto_code():
     """Test happy path of a complete IVA verification with auto code sending."""
     registry = MockUserRegistry()
     events = registry.published_events
+    # create an IVA with a type that triggers automatic code transmission
     iva_data = IvaBasicData(type=IvaType.PHONE, value="123456")
     user_id = ID_OF_JOHN
     iva_id = await registry.create_iva(user_id, iva_data)
@@ -1112,14 +1118,20 @@ async def test_iva_verification_happy_path_auto_code():
     code_hash = iva.verification_code_hash
     assert code_hash is not None
     assert iva.verification_attempts == 0
+    # should create two events (transmit code, state after transmission)
+    assert len(events) == 2
     assert [event[0] for event in events] == ["iva_send_code", "iva_state_changed"]
+    # the second event should publish the IVA in its current state
     assert events[1][1] is iva
+    # the first even published the IVA before changing its state
     iva = events[0][1]
     assert isinstance(iva, Iva)
     assert iva.id == iva_id
     assert iva.type is IvaType.PHONE
     assert iva.value == "123456"
     assert iva.verification_code_hash is None
+    # the verification code should be sent as extra argument with the first event
+    assert len(events[0]) == 3
     code = events[0][2]
     assert isinstance(code, str)
     assert validate_code(code, code_hash)
