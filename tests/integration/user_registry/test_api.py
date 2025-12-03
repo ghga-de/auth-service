@@ -1427,12 +1427,15 @@ async def test_deleting_non_existing_iva_for_existing_user_as_data_steward(
     assert error["detail"] == "The IVA was not found."
 
 
-async def test_happy_path_for_verifying_an_iva_manually(
+async def test_happy_path_for_verifying_an_iva_manual(
     full_client: FullClient,
     new_user_headers: dict[str, str],
     steward_headers: dict[str, str],
 ):
-    """Test the happy path for the creation and manual verification of an IVA."""
+    """Test the happy path for the creation and manual verification of an IVA.
+
+    Tests that an IVA can be verified when the code is transmitted manually.
+    """
     # Create a user
     user_data = MIN_USER_DATA
     response = await full_client.post(
@@ -1540,12 +1543,15 @@ async def test_happy_path_for_verifying_an_iva_manually(
     assert iva["state"] == "Verified"
 
 
-async def test_happy_path_for_verifying_an_iva_automatically(
+async def test_happy_path_for_verifying_an_iva_automated(
     full_client: FullClient,
     new_user_headers: dict[str, str],
     steward_headers: dict[str, str],
 ):
-    """Test the happy path for the creation and manual verification of an IVA."""
+    """Test the happy path for the creation and automated verification of an IVA.
+
+    Tests that an IVA can be verified when the code is transmitted automatically.
+    """
     # Create a user
     user_data = MIN_USER_DATA
     response = await full_client.post(
