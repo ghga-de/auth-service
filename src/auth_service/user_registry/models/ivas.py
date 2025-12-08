@@ -49,10 +49,10 @@ class IvaBasicData(BaseDto):
 
     @field_validator("value")
     @classmethod
-    def validate_phone_value(cls, value: str, info: ValidationInfo) -> str:
-        """Validate and normalize phone IVAs."""
+    def validate_phone_numbers(cls, value: str, info: ValidationInfo) -> str:
+        """Validate and normalize phone and fax IVAs."""
         iva_type = info.data.get("type")
-        if iva_type == IvaType.PHONE:
+        if iva_type in (IvaType.PHONE, IvaType.FAX):
             return validate_phone_number(value)
         return value
 
