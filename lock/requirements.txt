@@ -512,9 +512,9 @@ ghga-event-schemas==11.1.1 \
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)
-ghga-service-commons==6.0.1 \
-    --hash=sha256:3671d0117a583db9659711ab2a093951916b688e39b51320f3566d945b64c5bb \
-    --hash=sha256:70bc72949b9825edc0d31a86142f66f3949c6c7b32fa8b2df13ac4ad5d3a7b25
+ghga-service-commons==6.0.2 \
+    --hash=sha256:db95792faf8268f31c1e4bd79d82a28c2a32e47141e276e4b32692ae957cbd0d \
+    --hash=sha256:de26a9c65a79f3e6727b6baa751a6447056c5c3d4d82a8c7cb4a92a9657df3d7
     # via
     #   -c lock/requirements-dev.txt
     #   auth-service (pyproject.toml)
