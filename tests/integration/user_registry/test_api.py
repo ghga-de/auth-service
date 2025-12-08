@@ -1385,6 +1385,29 @@ async def test_create_iva_for_non_existing_user_as_data_steward(
     assert error["detail"] == "The user was not found."
 
 
+async def test_create_iva_with_invalid_phone_number(
+    full_client: FullClient,
+    new_user_headers: dict[str, str],
+):
+    """Test creating an IVA with an invalid phone number."""
+    user_data = MIN_USER_DATA
+    response = await full_client.post(
+        "/users", json=user_data, headers=new_user_headers
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    user = response.json()
+    user_id = user["id"]
+
+    headers = get_headers_for(id=user_id, name=user["name"], email=user["email"])
+    data = {"type": "Phone", "value": "foo bar"}
+    response = await full_client.post(
+        f"/users/{user_id}/ivas", json=data, headers=headers
+    )
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    error = response.json()
+    assert "Invalid phone number" in str(error["detail"])
+
+
 async def test_get_ivas_for_non_existing_user_as_data_steward(
     full_client: FullClient, steward_headers: dict[str, str]
 ):

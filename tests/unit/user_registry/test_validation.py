@@ -26,6 +26,8 @@ from auth_service.user_registry.core.validation import (
 def test_invalid_number_format():
     """Test that phone numbers with invalid characters or format are rejected."""
     with pytest.raises(InvalidPhoneNumberError):
+        validate_phone_number("foo bar")
+    with pytest.raises(InvalidPhoneNumberError):
         validate_phone_number("++123456abc")
     with pytest.raises(InvalidPhoneNumberError):
         validate_phone_number("+49 0221/4710?123")

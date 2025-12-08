@@ -77,9 +77,10 @@ def test_iva_with_valid_phone_number(iva_type) -> None:
 @pytest.mark.parametrize(
     "number",
     [
+        "foo bar",  # invalid format
         "(0221) 4710 123",  # missing country code
         "+99 12345678",  # invalid country code
-        "+49-0221-XYZ-123",  # invalid characters
+        "+49 123456 7890",  # invalid area code
     ],
 )
 def test_iva_with_invalid_phone_number(iva_type: IvaType, number: str) -> None:
@@ -94,3 +95,19 @@ def test_iva_with_invalid_phone_number(iva_type: IvaType, number: str) -> None:
             created=now,
             changed=now,
         )
+
+
+@pytest.mark.parametrize("iva_type", [IvaType.IN_PERSON, IvaType.POSTAL_ADDRESS])
+def test_iva_with_other_types(iva_type) -> None:
+    """Test creating an IVA with other types."""
+    now = now_utc_ms_prec()
+    iva = Iva(
+        user_id=ID_OF_JOHN,
+        type=iva_type,
+        value="foo bar",
+        state=IvaState.VERIFIED,
+        created=now,
+        changed=now,
+    )
+    assert isinstance(iva.id, UUID)
+    assert iva.value == "foo bar"
