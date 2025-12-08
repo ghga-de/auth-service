@@ -30,6 +30,7 @@ dependencies = [
     "pynacl>=1.6,<2",
     "pyotp>=2.9,<3",
     "httpx>=0.28,<0.29",
+    "phonenumbers>=9,<10",
 ]
 
 [project.license]
