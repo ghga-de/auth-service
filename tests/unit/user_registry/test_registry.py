@@ -415,7 +415,7 @@ async def test_get_selected_ivas_with_user():
 async def test_delete_existing_iva():
     """Test deleting an existing IVA."""
     registry = MockUserRegistry()
-    registry.add_dummy_iva(value=PHONE_OF_JOHN)
+    registry.add_dummy_iva()
     registry.add_dummy_iva(value=PHONE_OF_JANE, user_id=ID_OF_JANE)
     ivas = registry.dummy_ivas
     assert len(ivas) == 2
