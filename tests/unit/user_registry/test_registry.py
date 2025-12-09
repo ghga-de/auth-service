@@ -307,7 +307,7 @@ async def test_get_ivas_of_non_existing_user():
 
 
 async def test_get_ivas_of_an_existing_user_without_ivas():
-    """Test getting all IVAs of an existing user without IVAS."""
+    """Test getting all IVAs of an existing user without IVAs."""
     registry = MockUserRegistry()
     ivas = await registry.get_ivas(ID_OF_JOHN)
     assert isinstance(ivas, list)
@@ -315,7 +315,7 @@ async def test_get_ivas_of_an_existing_user_without_ivas():
 
 
 async def test_get_ivas_of_an_existing_user_with_ivas():
-    """Test getting all IVAs of an existing user without IVAS."""
+    """Test getting all IVAs of an existing user without IVAs."""
     registry = MockUserRegistry()
     registry.add_dummy_iva(value=PHONE_OF_JOHN)
     registry.add_dummy_iva(value=PHONE_OF_JANE, user_id=ID_OF_JANE)
@@ -334,7 +334,7 @@ async def test_get_ivas_of_an_existing_user_with_ivas():
 
 
 async def test_get_ivas_of_an_existing_user_filtering_by_state():
-    """Test getting all IVAs of an existing user without IVAS."""
+    """Test getting all IVAs of an existing user without IVAs."""
     registry = MockUserRegistry()
     registry.add_dummy_iva(value=PHONE_OF_JOHN)
     registry.add_dummy_iva(value=PHONE_OF_JAMES, state=IvaState.VERIFIED)
@@ -398,6 +398,7 @@ async def test_get_selected_ivas_with_user():
     add_iva = registry.add_dummy_iva
     add_iva(value=PHONE_OF_JOHN, user_id=john.id)
     add_iva(value=PHONE_OF_JANE, user_id=jane.id)
+    # add a second IVA for John, but with a different phone number
     add_iva(value=PHONE_OF_JAMES, user_id=john.id, state=IvaState.VERIFIED)
     get_ivas = registry.get_ivas_with_users
     ivas = await get_ivas(user_id=jane.id)
