@@ -396,7 +396,7 @@ async def test_get_selected_ivas_with_user():
     jane = john.model_copy(update={"id": ID_OF_JANE})
     registry.dummy_users.append(jane)
     add_iva = registry.add_dummy_iva
-    add_iva(value=PHONE_OF_JOHN, user_id=john.id)
+    add_iva(user_id=john.id)
     add_iva(value=PHONE_OF_JANE, user_id=jane.id)
     # add a second IVA for John, but with a different phone number
     add_iva(value=PHONE_OF_JAMES, user_id=john.id, state=IvaState.VERIFIED)
