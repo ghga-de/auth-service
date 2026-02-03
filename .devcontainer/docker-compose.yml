@@ -15,7 +15,6 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
 
-
     volumes:
       - ..:/workspace:cached
 
@@ -34,7 +33,7 @@ services:
       AUTH_SERVICE_CONFIG_YAML: /workspace/.devcontainer/.dev_config.yaml
 
   mongodb:
-    image: mongo:8.0.14
+    image: mongo:8.2.4
     restart: unless-stopped
     volumes:
       - mongo_fs:/data/db
@@ -51,14 +50,14 @@ services:
       ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.8.4
+    image: confluentinc/cp-zookeeper:7.9.5
     environment:
       ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka:
-    image: confluentinc/cp-server:7.8.4
+    image: confluentinc/cp-server:7.9.5
     depends_on:
       - zookeeper
     environment:
