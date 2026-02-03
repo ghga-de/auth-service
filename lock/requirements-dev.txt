@@ -587,9 +587,9 @@ email-validator==2.3.0 \
     --hash=sha256:80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4 \
     --hash=sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426
     # via pydantic
-fastapi==0.120.4 \
-    --hash=sha256:2d856bc847893ca4d77896d4504ffdec0fb04312b705065fca9104428eca3868 \
-    --hash=sha256:9bdf192308676480d3593e10fd05094e56d6fdc7d9283db26053d8104d5f82a0
+fastapi==0.128.0 \
+    --hash=sha256:1cc179e1cef10a6be60ffe429f79b829dce99d8de32d7acb7e6c8dfdf7f2645a \
+    --hash=sha256:aebd93f9716ee3b4f4fcfe13ffb7cf308d99c9f3ab5622d8877441072561582d
     # via ghga-service-commons
 filelock==3.20.3 \
     --hash=sha256:18c57ee915c7ec61cff0ecf7f0f869936c7c30191bb0cf406f1341778d0834e1 \
@@ -599,9 +599,9 @@ ghga-event-schemas==11.1.1 \
     --hash=sha256:13a50b76ea9d828763c1395aa213c88f12d31b2bd40c18c79922c817d9b916b8 \
     --hash=sha256:c618c015d18f244e658cc187bd2d2a7e544f1a3b40d23ae2b6ab528b0ed7904d
     # via auth-service (pyproject.toml)
-ghga-service-commons==6.1.0 \
-    --hash=sha256:5ae3af599be98db35f2d4dad365eae3a850443598ba8f8e2bc270b27b5b9ef75 \
-    --hash=sha256:999d455696a9fb3e62ec0b46b6c667ac89c3c7293b82e72c87fef0675235cc5d
+ghga-service-commons==7.0.0 \
+    --hash=sha256:7336920f472a202d2afc052ec357473119c7c2a5fac6b1dc9c93a6102e57e95a \
+    --hash=sha256:d7decdb2635c79b2beb53405390ad065734406bb401a4a0d5678ef4163753fd3
     # via
     #   auth-service (pyproject.toml)
     #   ghga-event-schemas
@@ -680,9 +680,9 @@ h11==0.16.0 \
     # via
     #   httpcore
     #   uvicorn
-hexkit==7.3.0 \
-    --hash=sha256:4412482d30edf7714d95144457cbdb11cdb3277f45ae1bc728cbe981181b40ec \
-    --hash=sha256:f0cd36f5974bc32546cd504b0e26efd0c37b7ef11211511cce68969bafd6c8a6
+hexkit==8.0.0 \
+    --hash=sha256:aef4c7264d784eca6e6549a2981cadbc3f68a8a40776db919fef80576fb81150 \
+    --hash=sha256:e07631f82f41436efac20939717ab8012aaae8cdde387230b7f82ea81820f059
     # via
     #   auth-service (pyproject.toml)
     #   ghga-service-commons
@@ -1595,13 +1595,13 @@ snakeviz==2.2.2 \
     --hash=sha256:08028c6f8e34a032ff14757a38424770abb8662fb2818985aeea0d9bc13a7d83 \
     --hash=sha256:77e7b9c82f6152edc330040319b97612351cd9b48c706434c535c2df31d10ac5
     # via -r lock/requirements-dev-template.in
-starlette==0.49.3 \
-    --hash=sha256:1c14546f299b5901a1ea0e34410575bc33bbd741377a10484a54445588d00284 \
-    --hash=sha256:b579b99715fdc2980cf88c8ec96d3bf1ce16f5a8051a7c2b84ef9b1cdecaea2f
+starlette==0.50.0 \
+    --hash=sha256:9e5391843ec9b6e472eed1365a78c8098cfceb7a74bfd4d6b1c0c0095efb3bca \
+    --hash=sha256:a2a17b22203254bcbc2e1f926d2d55f3f9497f769416b3190768befe598fa3ca
     # via fastapi
-testcontainers==4.12.0 \
-    --hash=sha256:13ee89cae995e643f225665aad8b200b25c4f219944a6f9c0b03249ec3f31b8d \
-    --hash=sha256:26caef57e642d5e8c5fcc593881cf7df3ab0f0dc9170fad22765b184e226ab15
+testcontainers==4.14.1 \
+    --hash=sha256:03dfef4797b31c82e7b762a454b6afec61a2a512ad54af47ab41e4fa5415f891 \
+    --hash=sha256:316f1bb178d829c003acd650233e3ff3c59a833a08d8661c074f58a4fbd42a64
     # via -r lock/requirements-dev.in
 tomli-w==1.2.0 \
     --hash=sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90 \
@@ -1680,9 +1680,9 @@ uv==0.9.28 \
     --hash=sha256:d5cb780d5b821f837f63e7fd14e2bf75f01824b4575a1e89639888771bfd9efd \
     --hash=sha256:e479cc5cbfd72ebdbea3c909d0ab997162e0dfa1ee622b50e2f9dc8d07d4eee3
     # via -r lock/requirements-dev-template.in
-uvicorn==0.38.0 \
-    --hash=sha256:48c0afd214ceb59340075b4a052ea1ee91c16fbc2a9b1469cca0e54566977b02 \
-    --hash=sha256:fd97093bdd120a2609fc0d3afe931d4d4ad688b6e75f0f929fde1bc36fe0e91d
+uvicorn==0.40.0 \
+    --hash=sha256:839676675e87e73694518b5574fd0f24c9d97b46bea16df7b8c05ea1a51071ea \
+    --hash=sha256:c6c8f55bc8bf13eb6fa9ff87ad62308bbbc33d0b67f84293151efe87e0d5f2ee
     # via ghga-service-commons
 uvloop==0.22.1 \
     --hash=sha256:017bd46f9e7b78e81606329d07141d3da446f8798c6baeec124260e22c262772 \
