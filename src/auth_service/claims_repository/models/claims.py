@@ -217,7 +217,7 @@ class Claim(ClaimCreation):
 
 
 class GrantId(BaseDto):
-    """The ID of an access grant"""
+    """The ID of an upload or download grant"""
 
     id: UUID4 = Field(..., description="Internal grant ID (same as claim ID)")
 
