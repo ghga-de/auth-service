@@ -384,7 +384,7 @@ components:
       type: object
     GrantId:
       additionalProperties: false
-      description: The ID of an access grant
+      description: The ID of an upload or download grant
       properties:
         id:
           description: Internal grant ID (same as claim ID)
