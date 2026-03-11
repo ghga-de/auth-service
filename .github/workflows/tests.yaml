@@ -31,8 +31,8 @@ jobs:
 
       - name: Upload coverage to coveralls
         id: coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pip install --upgrade coveralls
-          coveralls --service=github
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: coverage.xml
+          fail-on-error: false
