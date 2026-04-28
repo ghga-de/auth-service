@@ -18,6 +18,7 @@
 """Generate documentation for this package using different sources."""
 
 import json
+import re
 import subprocess  # nosec
 import sys
 import tomllib
@@ -40,6 +41,8 @@ README_TEMPLATE_PATH = README_GENERATION_DIR / "readme_template.md"
 CONFIG_SCHEMA_PATH = ROOT_DIR / "config_schema.json"
 OPENAPI_YAML_REL_PATH = "./openapi.yaml"
 README_PATH = ROOT_DIR / "README.md"
+
+ACRONYMS = ["GHGA", "GRZ", "DLQ", "API", "CLI"]
 
 
 class PackageHeader(BaseModel):
@@ -128,6 +131,8 @@ def read_package_name() -> PackageName:
         else repo_name
     )
     title = titlecase(name)
+    for acronym in ACRONYMS:
+        title = re.sub(rf"\b{titlecase(acronym.lower())}\b", acronym, title)
 
     return PackageName(repo_name=repo_name, name=name, title=title)
 
