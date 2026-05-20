@@ -38,6 +38,7 @@ from auth_service.user_registry.models.ivas import (
 )
 from auth_service.user_registry.models.users import (
     AcademicTitle,
+    PeriodCounter,
     UserBasicData,
     UserModifiableData,
     UserRegisteredData,
@@ -283,6 +284,7 @@ async def test_create_new_iva():
     assert iva.verification_code_hash is None
     assert iva.verification_attempts == 0
     assert iva.verification_until is None
+    assert iva.codes_created_today is None
     assert 0 <= (now_utc_ms_prec() - iva.created).total_seconds() < 3
     assert 0 <= (now_utc_ms_prec() - iva.changed).total_seconds() < 3
 
@@ -561,6 +563,9 @@ async def test_request_iva_verification_code_manual():
     expected_iva = from_iva.model_copy(
         update={
             "state": IvaState.CODE_REQUESTED,
+            "codes_created_today": PeriodCounter(
+                date=changed.replace(hour=0, minute=0, second=0, microsecond=0), count=1
+            ),
             "changed": changed,
         }
     )
@@ -624,6 +629,27 @@ async def test_request_verification_code_for_non_existing_iva():
         match=f"IVA with ID {random_iva_id} does not exist",
     ):
         await registry.request_iva_verification_code(random_iva_id)
+    assert not registry.published_events
+
+
+async def test_request_verification_code_too_often_in_one_day():
+    """Test that requesting a verification code too often in one day is blocked."""
+    registry = MockUserRegistry()
+    now = now_utc_ms_prec()
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    registry.add_dummy_iva(
+        state=IvaState.UNVERIFIED,
+        type_=IvaType.POSTAL_ADDRESS,
+        codes_created_today=PeriodCounter(date=today, count=3),
+    )
+    with pytest.raises(
+        registry.IvaTooManyVerificationCodesError,
+        match=f"Too many verification code requests for IVA with ID {IVA_IDS[0]}",
+    ):
+        await registry.request_iva_verification_code(IVA_IDS[0], user_id=ID_OF_JOHN)
+    iva = registry.dummy_ivas[0]
+    assert iva.state == IvaState.UNVERIFIED
+    assert iva.codes_created_today == PeriodCounter(date=today, count=3)
     assert not registry.published_events
 
 

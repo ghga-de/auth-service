@@ -554,6 +554,7 @@ async def unverify_iva(
         401: {"description": "Not authorized to request verification codes for IVAs."},
         404: {"description": "The IVA was not found."},
         409: {"description": "The IVA does not have the proper state."},
+        429: {"description": "Too many verification code requests for this IVA today."},
     },
     status_code=204,
 )
@@ -580,6 +581,11 @@ async def request_code_for_iva(
     except user_registry.IvaUnexpectedStateError as error:
         raise HTTPException(
             status_code=409, detail="The IVA does not have the proper state."
+        ) from error
+    except user_registry.IvaTooManyVerificationCodesError as error:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many verification code requests for this IVA today.",
         ) from error
     except user_registry.UserRegistryIvaError as error:
         raise HTTPException(

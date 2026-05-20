@@ -664,9 +664,9 @@ filelock==3.29.0 \
     # via
     #   python-discovery
     #   virtualenv
-ghga-event-schemas==12.0.0 \
-    --hash=sha256:3eccaa70212eb3a91193d35564689aa6852b0086ff38ef85656e26c9e8b98397 \
-    --hash=sha256:45471c0acceb04fed62fa439c8b02786cbe9a41f4ddde05b970feb8deb3c67d2
+ghga-event-schemas==13.0.0 \
+    --hash=sha256:12a9db7627377a2c069591b7e8f902d46d60cae02d41e77dac1723bb2f4599e6 \
+    --hash=sha256:814a634e26465413e095a76e6fbe2f4a669fff6bebf0b02bd4068f5293286c6c
     # via auth-service (pyproject.toml)
 ghga-service-commons==7.0.2 \
     --hash=sha256:c3710e1f8aa628e760335732e676d9716a83a2166fc3799b5df1dd8b8952b3c5 \

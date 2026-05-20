@@ -1559,6 +1559,52 @@ async def test_deleting_non_existing_iva_for_existing_user_as_data_steward(
     assert error["detail"] == "The IVA was not found."
 
 
+async def test_requesting_iva_code_too_often_in_one_day(
+    full_client: FullClient,
+    new_user_headers: dict[str, str],
+    steward_headers: dict[str, str],
+):
+    """Test that IVA verification code requests are limited per day."""
+    # Create a user
+    user_data = MIN_USER_DATA
+    response = await full_client.post(
+        "/users", json=user_data, headers=new_user_headers
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    user = response.json()
+    user_id = user["id"]
+    headers = get_headers_for(id=user_id, name=user["name"], email=user["email"])
+
+    # Create an IVA with manual verification flow
+    data = {"type": "PostalAddress", "value": "Sesame Street"}
+    response = await full_client.post(
+        f"/users/{user_id}/ivas", json=data, headers=headers
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    iva_id = response.json()["id"]
+
+    # Request a code and unverify the IVA three times - all should work
+    for _ in range(3):
+        response = await full_client.post(
+            f"/rpc/ivas/{iva_id}/request-code", headers=headers
+        )
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        response = await full_client.post(
+            f"/rpc/ivas/{iva_id}/unverify", headers=steward_headers
+        )
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Fourth request on the same day is rejected
+    response = await full_client.post(
+        f"/rpc/ivas/{iva_id}/request-code", headers=headers
+    )
+    assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+    error = response.json()
+    assert error == {
+        "detail": "Too many verification code requests for this IVA today."
+    }
+
+
 async def test_happy_path_for_verifying_an_iva_manual(
     full_client: FullClient,
     new_user_headers: dict[str, str],

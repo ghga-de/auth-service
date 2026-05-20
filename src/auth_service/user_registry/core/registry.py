@@ -77,6 +77,7 @@ class UserRegistry(UserRegistryPort):
         self._max_ivas = config.max_ivas
         self._max_iva_verification_attempts = config.max_iva_verification_attempts
         self._max_iva_verification_days = config.max_iva_verification_days
+        self._max_iva_codes_per_day = config.max_iva_codes_per_day
         self._auto_send_iva_code_for_types = set(config.auto_send_iva_code_for_types)
         self._user_dao = user_dao
         self._iva_dao = iva_dao
@@ -468,7 +469,8 @@ class UserRegistry(UserRegistryPort):
         Also notifies the user and a data steward if not specified otherwise.
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
-        an IvaRetrievalError, an IvaUnexpectedStateError or an IvaModificationError.
+        an IvaRetrievalError, an IvaUnexpectedStateError,
+        an IvaTooManyVerificationCodesError, or an IvaModificationError.
 
         If a user ID is specified, and the IVA does not belong to the user,
         then an IvaDoesNotExistError is raised.
@@ -476,7 +478,20 @@ class UserRegistry(UserRegistryPort):
         iva = await self.get_iva(iva_id, user_id=user_id)
         if iva.state is not IvaState.UNVERIFIED:
             raise self.IvaUnexpectedStateError(iva_id=iva_id, state=iva.state)
-        iva = await self.update_iva(iva, state=IvaState.CODE_REQUESTED)
+        today = now_utc_ms_prec().replace(hour=0, minute=0, second=0, microsecond=0)
+        codes_created_today = iva.codes_created_today or PeriodCounter(
+            date=today, count=0
+        )
+        code_requests = (
+            codes_created_today.count if codes_created_today.date == today else 0
+        )
+        if code_requests >= self._max_iva_codes_per_day:
+            raise self.IvaTooManyVerificationCodesError(iva_id=iva_id)
+        iva = await self.update_iva(
+            iva,
+            state=IvaState.CODE_REQUESTED,
+            codes_created_today=PeriodCounter(date=today, count=code_requests + 1),
+        )
         if iva.type in self._auto_send_iva_code_for_types:
             code = await self.create_iva_verification_code(iva_id)
             await self._event_pub.publish_iva_send_code(iva=iva, code=code)

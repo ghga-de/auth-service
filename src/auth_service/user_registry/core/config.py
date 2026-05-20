@@ -42,6 +42,10 @@ class UserRegistryConfig(BaseSettings):
         default=7,
         description="Maximum number of days an IVA verification code is valid",
     )
+    max_iva_codes_per_day: int = Field(
+        default=3,
+        description="Maximum number of verification code requests per IVA and day",
+    )
     auto_send_iva_code_for_types: list[IvaType] = Field(
         default=[IvaType.PHONE],
         description="IVA types for which verification codes are sent automatically",
