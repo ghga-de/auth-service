@@ -282,6 +282,7 @@ async def test_create_new_iva():
     assert iva.state == IvaState.UNVERIFIED
     assert iva.verification_code_hash is None
     assert iva.verification_attempts == 0
+    assert iva.verification_until is None
     assert 0 <= (now_utc_ms_prec() - iva.created).total_seconds() < 3
     assert 0 <= (now_utc_ms_prec() - iva.changed).total_seconds() < 3
 
@@ -501,6 +502,7 @@ async def test_unverify_iva(from_state: IvaState):
         state=from_state,
         verification_code_hash="some-hash",
         verification_attempts=3,
+        verification_until=now + timedelta(days=1),
         created=before,
         changed=before,
     )
@@ -516,6 +518,7 @@ async def test_unverify_iva(from_state: IvaState):
             "state": IvaState.UNVERIFIED,
             "verification_code_hash": None,
             "verification_attempts": 0,
+            "verification_until": None,
             "changed": changed,
         }
     )
@@ -699,6 +702,7 @@ async def test_create_iva_verification_code(from_state: IvaState):
             "state": IvaState.CODE_CREATED,
             "verification_code_hash": verification_code_hash,
             "changed": changed,
+            "verification_until": changed + timedelta(days=7),
         }
     )
     assert iva == expected_iva
@@ -809,6 +813,7 @@ async def test_validate_iva_verification_code(from_state: IvaState, attempts: in
         state=from_state,
         verification_attempts=attempts,
         verification_code_hash=verification_code_hash,
+        verification_until=now + timedelta(days=1),
         created=before,
         changed=before,
     )
@@ -828,6 +833,7 @@ async def test_validate_iva_verification_code(from_state: IvaState, attempts: in
             "state": IvaState.VERIFIED,
             "verification_attempts": 0,
             "verification_code_hash": None,
+            "verification_until": None,
             "changed": changed,
         }
     )
@@ -856,6 +862,7 @@ async def test_validate_iva_with_invalid_verification_code(
         state=from_state,
         verification_attempts=attempts,
         verification_code_hash=verification_code_hash,
+        verification_until=now + timedelta(days=1),
         created=before,
         changed=before,
     )
@@ -903,6 +910,7 @@ async def test_validate_iva_verification_code_too_often(
         state=from_state,
         verification_attempts=attempts,
         verification_code_hash=verification_code_hash,
+        verification_until=now + timedelta(days=1),
         created=before,
         changed=before,
     )
@@ -925,6 +933,7 @@ async def test_validate_iva_verification_code_too_often(
             "state": IvaState.UNVERIFIED,
             "verification_attempts": 0,
             "verification_code_hash": None,
+            "verification_until": None,
             "changed": changed,
         }
     )
@@ -1060,6 +1069,7 @@ async def test_iva_verification_happy_path_manual():
     assert iva.state == IvaState.UNVERIFIED
     assert iva.verification_code_hash is None
     assert iva.verification_attempts == 0
+    assert iva.verification_until is None
     # request code
     await registry.request_iva_verification_code(iva_id, user_id=user_id)
     assert len(ivas) == 1
@@ -1067,6 +1077,7 @@ async def test_iva_verification_happy_path_manual():
     assert iva.state == IvaState.CODE_REQUESTED
     assert iva.verification_code_hash is None
     assert iva.verification_attempts == 0
+    assert iva.verification_until is None
     assert events == [("iva_state_changed", iva)]
     events.clear()
     # create code
@@ -1081,6 +1092,7 @@ async def test_iva_verification_happy_path_manual():
     assert iva.state == IvaState.CODE_CREATED
     assert iva.verification_code_hash is not None
     assert iva.verification_attempts == 0
+    assert iva.verification_until is not None
     assert not events
     # transmit code
     await registry.confirm_iva_code_transmission(iva_id)
@@ -1089,6 +1101,7 @@ async def test_iva_verification_happy_path_manual():
     assert iva.state == IvaState.CODE_TRANSMITTED
     assert iva.verification_code_hash is not None
     assert iva.verification_attempts == 0
+    assert iva.verification_until is not None
     assert events == [("iva_state_changed", iva)]
     events.clear()
     # validate code
@@ -1101,6 +1114,7 @@ async def test_iva_verification_happy_path_manual():
     assert iva.state == IvaState.VERIFIED
     assert iva.verification_code_hash is None
     assert iva.verification_attempts == 0
+    assert iva.verification_until is None
     assert events == [("iva_state_changed", iva)]
 
 
@@ -1120,6 +1134,7 @@ async def test_iva_verification_happy_path_auto():
     assert iva.state == IvaState.UNVERIFIED
     assert iva.verification_code_hash is None
     assert iva.verification_attempts == 0
+    assert iva.verification_until is None
     # request code
     # and check that this automatically transmits the code
     await registry.request_iva_verification_code(iva_id, user_id=user_id)
@@ -1157,4 +1172,5 @@ async def test_iva_verification_happy_path_auto():
     assert iva.state == IvaState.VERIFIED
     assert iva.verification_code_hash is None
     assert iva.verification_attempts == 0
+    assert iva.verification_until is None
     assert events == [("iva_state_changed", iva)]

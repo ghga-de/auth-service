@@ -84,6 +84,9 @@ class IvaInternalData(BaseDto):
         default=0,
         description="Number of failed verification attempts for the verification code",
     )
+    verification_until: UTCDatetime | None = Field(
+        default=None, description="The date and time when the verification code expires"
+    )
 
 
 class IvaAutomaticData(BaseDto):

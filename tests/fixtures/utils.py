@@ -599,6 +599,7 @@ class MockUserRegistry(UserRegistry):
         state: IvaState = IvaState.UNVERIFIED,
         verification_code_hash: str | None = None,
         verification_attempts: int = 0,
+        verification_until: UTCDatetime | None = None,
         created: UTCDatetime | None = None,
         changed: UTCDatetime | None = None,
     ):
@@ -612,6 +613,7 @@ class MockUserRegistry(UserRegistry):
                 user_id=user_id or self.dummy_user.id,
                 verification_code_hash=verification_code_hash,
                 verification_attempts=verification_attempts,
+                verification_until=verification_until,
                 created=created or now_utc_ms_prec(),
                 changed=changed or now_utc_ms_prec(),
             )

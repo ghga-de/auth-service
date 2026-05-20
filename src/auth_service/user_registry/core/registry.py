@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import suppress
+from datetime import timedelta
 from typing import Any
 from uuid import UUID
 
@@ -75,6 +76,7 @@ class UserRegistry(UserRegistryPort):
         """Initialize the user registry."""
         self._max_ivas = config.max_ivas
         self._max_iva_verification_attempts = config.max_iva_verification_attempts
+        self._max_iva_verification_days = config.max_iva_verification_days
         self._auto_send_iva_code_for_types = set(config.auto_send_iva_code_for_types)
         self._user_dao = user_dao
         self._iva_dao = iva_dao
@@ -452,6 +454,7 @@ class UserRegistry(UserRegistryPort):
             state=IvaState.UNVERIFIED,
             verification_code_hash=None,
             verification_attempts=0,
+            verification_until=None,
         )
         if notify:
             # send a notification to the user
@@ -500,6 +503,8 @@ class UserRegistry(UserRegistryPort):
             state=IvaState.CODE_CREATED,
             verification_code_hash=hash_code(code),
             verification_attempts=0,
+            verification_until=now_utc_ms_prec()
+            + timedelta(days=self._max_iva_verification_days),
         )
         return code
 
@@ -537,7 +542,8 @@ class UserRegistry(UserRegistryPort):
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
         an IvaRetrievalError, an IvaUnexpectedStateError,
-        an IvaTooManyVerificationAttemptsError or an IvaModificationError.
+        an IvaTooManyVerificationAttemptsError, an IvaVerificationTooLateError,
+        or an IvaModificationError.
 
         If a user ID is specified, and the IVA does not belong to the user,
         then an IvaDoesNotExistError is raised.
@@ -549,22 +555,33 @@ class UserRegistry(UserRegistryPort):
         ):
             raise self.IvaUnexpectedStateError(iva_id=iva_id, state=iva.state)
         too_many = iva.verification_attempts >= self._max_iva_verification_attempts
+        too_late = (
+            iva.verification_until < now_utc_ms_prec()
+            if iva.verification_until
+            else False
+        )
         validated = not too_many and validate_code(code, iva.verification_code_hash)
         change: dict[str, Any] = {}
-        if too_many:
+        if too_many or too_late:
             change.update(state=IvaState.UNVERIFIED)
         elif validated:
             change.update(state=IvaState.VERIFIED)
-        if too_many or validated:
-            change.update(verification_code_hash=None, verification_attempts=0)
+        if too_many or too_late or validated:
+            change.update(
+                verification_code_hash=None,
+                verification_attempts=0,
+                verification_until=None,
+            )
         else:
             change.update(verification_attempts=iva.verification_attempts + 1)
         iva = await self.update_iva(iva, **change)
-        if notify and (too_many or validated):
+        if notify and (too_many or too_late or validated):
             # send a notification to the data steward
             await self._event_pub.publish_iva_state_changed(iva=iva)
         if too_many:
             raise self.IvaTooManyVerificationAttemptsError(iva_id=iva_id)
+        if too_late:
+            raise self.IvaVerificationTooLateError(iva_id=iva_id)
         return validated
 
     async def reset_verified_ivas(self, user_id: UUID4, *, notify: bool = True) -> None:

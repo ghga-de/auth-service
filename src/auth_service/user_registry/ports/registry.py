@@ -161,6 +161,13 @@ class UserRegistryPort(ABC):
             message = f"Too many verification attempts for IVA with ID {iva_id}"
             super().__init__(message)
 
+    class IvaVerificationTooLateError(UserRegistryIvaError):
+        """Raised when a verification code is verified too late."""
+
+        def __init__(self, *, iva_id: UUID4):
+            message = f"Verification attempt for IVA with ID {iva_id} was too late"
+            super().__init__(message)
+
     @staticmethod
     @abstractmethod
     def is_internal_user_id(id_: str) -> bool:
@@ -384,7 +391,8 @@ class UserRegistryPort(ABC):
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
         an IvaRetrievalError, an IvaUnexpectedStateError,
-        an IvaTooManyVerificationAttemptsError or an IvaModificationError.
+        an IvaTooManyVerificationAttemptsError, and IvaVerificationTooLateError,
+        or an IvaModificationError.
 
         If a user ID is specified, and the IVA does not belong to the user,
         then an IvaDoesNotExistError is raised.
