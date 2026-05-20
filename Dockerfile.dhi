@@ -1,0 +1,58 @@
+# Copyright 2021 - 2026 Universität Tübingen, DKFZ, EMBL, and Universität zu Köln
+# for the German Human Genome-Phenome Archive (GHGA)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Define the non-dev base-image
+ARG BASE=dhi.io/python:3.13-alpine3.23
+
+# BUILDER-BASE: a base image with updated packages using the socket firewall dev variant
+FROM ${BASE}-sfw-dev AS builder-base
+RUN apk upgrade --no-cache --available
+
+# BUILDER: a container to build the service wheel
+FROM builder-base AS builder
+RUN pip install build
+COPY . /service
+WORKDIR /service
+RUN python -m build
+
+# DEP-BUILDER: a container to (build and) install dependencies
+FROM builder-base AS dep-builder
+RUN apk update && \
+    apk add build-base gcc g++ libffi-dev zlib-dev python3-dev && \
+    apk upgrade --available
+WORKDIR /service
+COPY --from=builder /service/lock/requirements.txt /service
+RUN pip install --no-deps -r requirements.txt
+COPY --from=builder /service/dist/ /service
+RUN pip install --no-cache-dir --no-deps *.whl && rm *.whl
+# Binaries that are needed at runtime
+RUN mkdir -p /opt/runtime-bin
+RUN cp /usr/local/bin/opentelemetry-instrument /opt/runtime-bin/ 2>/dev/null || true
+
+# RUNNER: a container to run the service
+FROM ${BASE} AS runner
+COPY --from=dep-builder /usr/lib/python3.13 /usr/lib/python3.13
+COPY --from=dep-builder /opt/runtime-bin/ /usr/local/bin/
+
+# Base image already runs as non-root (65532), but we use 1000 to be consistent
+USER 1000
+
+# Please adapt to package name
+COPY --from=dep-builder /usr/bin/auth-service /usr/local/bin/auth-service
+
+ENV PYTHONUNBUFFERED=1
+
+# Please adapt to package name:
+ENTRYPOINT ["opentelemetry-instrument", "auth-service"]
