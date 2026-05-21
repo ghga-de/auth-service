@@ -148,7 +148,7 @@ class UserRegistry(UserRegistryPort):
         return user
 
     async def get_user_with_roles(self, user_id: UUID4) -> UserWithRoles:
-        """Get user data including all roles.
+        """Get user data including all roles, independent of IVAs.
 
         The roles are returned even if the user is inactive or has no IVAs.
 
@@ -470,7 +470,7 @@ class UserRegistry(UserRegistryPort):
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
         an IvaRetrievalError, an IvaUnexpectedStateError,
-        an IvaTooManyVerificationCodesError, or an IvaModificationError.
+        an IvaTooManyCodesError, or an IvaModificationError.
 
         If a user ID is specified, and the IVA does not belong to the user,
         then an IvaDoesNotExistError is raised.
@@ -486,7 +486,7 @@ class UserRegistry(UserRegistryPort):
             codes_created_today.count if codes_created_today.date == today else 0
         )
         if code_requests >= self._max_iva_codes_per_day:
-            raise self.IvaTooManyVerificationCodesError(iva_id=iva_id)
+            raise self.IvaTooManyCodesError(iva_id=iva_id)
         iva = await self.update_iva(
             iva,
             state=IvaState.CODE_REQUESTED,

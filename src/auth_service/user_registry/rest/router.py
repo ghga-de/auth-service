@@ -582,7 +582,7 @@ async def request_code_for_iva(
         raise HTTPException(
             status_code=409, detail="The IVA does not have the proper state."
         ) from error
-    except user_registry.IvaTooManyVerificationCodesError as error:
+    except user_registry.IvaTooManyCodesError as error:
         raise HTTPException(
             status_code=429,
             detail="Too many verification code requests for this IVA today.",

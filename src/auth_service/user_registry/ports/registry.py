@@ -168,7 +168,7 @@ class UserRegistryPort(ABC):
             message = f"Verification attempt for IVA with ID {iva_id} was too late"
             super().__init__(message)
 
-    class IvaTooManyVerificationCodesError(UserRegistryIvaError):
+    class IvaTooManyCodesError(UserRegistryIvaError):
         """Raised when too many verification codes were requested for an IVA."""
 
         def __init__(self, *, iva_id: UUID4):
@@ -351,7 +351,7 @@ class UserRegistryPort(ABC):
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
         an IvaRetrievalError, an IvaUnexpectedStateError,
-        an IvaTooManyVerificationCodesError, or an IvaModificationError.
+        an IvaTooManyCodesError, or an IvaModificationError.
 
         If a user ID is specified, and the IVA does not belong to the user,
         then an IvaDoesNotExistError is raised.
@@ -399,7 +399,7 @@ class UserRegistryPort(ABC):
 
         May raise a UserRegistryIvaError, which can be an IvaDoesNotExistError,
         an IvaRetrievalError, an IvaUnexpectedStateError,
-        an IvaTooManyVerificationAttemptsError, and IvaVerificationTooLateError,
+        an IvaTooManyVerificationAttemptsError, an IvaVerificationTooLateError,
         or an IvaModificationError.
 
         If a user ID is specified, and the IVA does not belong to the user,

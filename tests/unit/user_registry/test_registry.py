@@ -643,7 +643,7 @@ async def test_request_verification_code_too_often_in_one_day():
         codes_created_today=PeriodCounter(date=today, count=3),
     )
     with pytest.raises(
-        registry.IvaTooManyVerificationCodesError,
+        registry.IvaTooManyCodesError,
         match=f"Too many verification code requests for IVA with ID {IVA_IDS[0]}",
     ):
         await registry.request_iva_verification_code(IVA_IDS[0], user_id=ID_OF_JOHN)
