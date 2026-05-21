@@ -76,7 +76,7 @@ class UserRegistry(UserRegistryPort):
         """Initialize the user registry."""
         self._max_ivas = config.max_ivas
         self._max_iva_verification_attempts = config.max_iva_verification_attempts
-        self._max_iva_verification_days = config.max_iva_verification_days
+        self._max_iva_code_validity_days = config.max_iva_code_validity_days
         self._max_iva_codes_per_day = config.max_iva_codes_per_day
         self._auto_send_iva_code_for_types = set(config.auto_send_iva_code_for_types)
         self._user_dao = user_dao
@@ -519,7 +519,7 @@ class UserRegistry(UserRegistryPort):
             verification_code_hash=hash_code(code),
             verification_attempts=0,
             verification_until=now_utc_ms_prec()
-            + timedelta(days=self._max_iva_verification_days),
+            + timedelta(days=self._max_iva_code_validity_days),
         )
         return code
 

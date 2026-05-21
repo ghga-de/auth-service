@@ -446,24 +446,28 @@
     "max_ivas": {
       "default": 5,
       "description": "Maximum number of IVAs a user can create per day and in total",
+      "exclusiveMinimum": 0,
       "title": "Max Ivas",
       "type": "integer"
     },
     "max_iva_verification_attempts": {
       "default": 10,
       "description": "Maximum number of verification attempts for an IVA",
+      "exclusiveMinimum": 0,
       "title": "Max Iva Verification Attempts",
       "type": "integer"
     },
-    "max_iva_verification_days": {
+    "max_iva_code_validity_days": {
       "default": 7,
       "description": "Maximum number of days an IVA verification code is valid",
-      "title": "Max Iva Verification Days",
+      "exclusiveMinimum": 0,
+      "title": "Max Iva Code Validity Days",
       "type": "integer"
     },
     "max_iva_codes_per_day": {
       "default": 3,
       "description": "Maximum number of verification code requests per IVA and day",
+      "exclusiveMinimum": 0,
       "title": "Max Iva Codes Per Day",
       "type": "integer"
     },
