@@ -702,7 +702,7 @@ async def confirm_code_for_iva_transmitted(
         403: {"description": "The submitted verification code was invalid."},
         404: {"description": "The IVA was not found."},
         409: {"description": "The IVA does not have the proper state."},
-        410: {"description": "The verification attempt for the IVA was too late."},
+        410: {"description": "The verification request for this IVA has expired."},
         422: {"description": "Validation error in submitted verification data."},
         429: {"description": "Too many attempts, IVA was reset to unverified state."},
     },
@@ -741,7 +741,7 @@ async def validate_code_for_iva(
     except user_registry.IvaVerificationTooLateError as error:
         raise HTTPException(
             status_code=410,
-            detail="The verification attempt for the IVA was too late.",
+            detail="The verification request for this IVA has expired.",
         ) from error
     except user_registry.UserRegistryIvaError as error:
         raise HTTPException(

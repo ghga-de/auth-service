@@ -2116,7 +2116,7 @@ async def test_correctly_verifying_an_iva_but_too_late(
         )
     assert response.status_code == status.HTTP_410_GONE
     error = response.json()
-    assert error == {"detail": "The verification attempt for the IVA was too late."}
+    assert error == {"detail": "The verification request for this IVA has expired."}
     # Try another time, the state has been reset now
     data = {"verification_code": code}
     response = await full_client.post(

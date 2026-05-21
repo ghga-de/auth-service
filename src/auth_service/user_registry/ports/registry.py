@@ -165,7 +165,7 @@ class UserRegistryPort(ABC):
         """Raised when a verification code is verified too late."""
 
         def __init__(self, *, iva_id: UUID4):
-            message = f"Verification attempt for IVA with ID {iva_id} was too late"
+            message = f"Verification request for IVA with ID {iva_id} has expired"
             super().__init__(message)
 
     class IvaTooManyCodesError(UserRegistryIvaError):

@@ -1480,7 +1480,7 @@ paths:
         '409':
           description: The IVA does not have the proper state.
         '410':
-          description: The verification attempt for the IVA was too late.
+          description: The verification request for this IVA has expired.
         '422':
           description: Validation error in submitted verification data.
         '429':
