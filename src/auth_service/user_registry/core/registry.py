@@ -575,7 +575,11 @@ class UserRegistry(UserRegistryPort):
             if iva.verification_until
             else False
         )
-        validated = not too_many and validate_code(code, iva.verification_code_hash)
+        validated = (
+            not too_many
+            and not too_late
+            and validate_code(code, iva.verification_code_hash)
+        )
         change: dict[str, Any] = {}
         if too_many or too_late:
             change.update(state=IvaState.UNVERIFIED)
