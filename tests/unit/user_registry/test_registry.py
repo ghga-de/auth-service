@@ -289,6 +289,26 @@ async def test_create_new_iva():
     assert 0 <= (now_utc_ms_prec() - iva.changed).total_seconds() < 3
 
 
+@pytest.mark.parametrize("previous_day_count", [2, 4])
+async def test_create_iva_resets_daily_counter_on_new_day(previous_day_count: int):
+    """Test that the daily IVA counter resets when the date has changed."""
+    registry = MockUserRegistry()
+    today = now_utc_ms_prec().replace(hour=0, minute=0, second=0, microsecond=0)
+    yesterday = today - timedelta(days=1)
+    registry.mock_user_dao.users[-1] = registry.dummy_user.model_copy(
+        update={
+            "ivas_created_today": PeriodCounter(
+                date=yesterday, count=previous_day_count
+            )
+        }
+    )
+
+    iva_data = IvaBasicData(type=IvaType.PHONE, value=PHONE_OF_JOHN)
+    await registry.create_iva(ID_OF_JOHN, iva_data)
+
+    assert registry.dummy_user.ivas_created_today == PeriodCounter(date=today, count=1)
+
+
 async def test_create_iva_for_non_existing_user():
     """Test creating an IVA for a non-existing user."""
     registry = MockUserRegistry()

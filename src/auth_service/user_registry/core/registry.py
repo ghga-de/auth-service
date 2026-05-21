@@ -280,7 +280,8 @@ class UserRegistry(UserRegistryPort):
         # then first check the daily limit
         today = now_utc_ms_prec().replace(hour=0, minute=0, second=0, microsecond=0)
         created_today = user.ivas_created_today or PeriodCounter(date=today, count=0)
-        if created_today.date == today and created_today.count >= self._max_ivas:
+        iva_count_today = created_today.count if created_today.date == today else 0
+        if iva_count_today >= self._max_ivas:
             raise self.TooManyIVAsError(user_id=user_id)
         # then also check the total limit
         try:
@@ -293,7 +294,7 @@ class UserRegistry(UserRegistryPort):
         if any(iva.type == data.type and iva.value == data.value for iva in ivas):
             raise self.TooManyIVAsError(user_id=user_id)
         # update the counter
-        created_today = PeriodCounter(date=today, count=created_today.count + 1)
+        created_today = PeriodCounter(date=today, count=iva_count_today + 1)
         await self._user_dao.update(
             user.model_copy(update={"ivas_created_today": created_today})
         )
