@@ -6,20 +6,20 @@ pytest-cov>=7.1
 snakeviz>=2.2
 logot>=1.5
 
-pre-commit>=4.5
+pre-commit>=4.6
 
-mypy>=1.20
+mypy>=2.1.0
 
-ruff>=0.15.11
+ruff>=0.15.13
 
-click>=8.3
-typer>=0.24.1
+click>=8.4
+typer>=0.25.1
 
 httpx>=0.28.1
 pytest-httpx>=0.36
 
-urllib3>=2.6.3
-requests>=2.32.5
+urllib3>=2.7.0
+requests>=2.34.2
 
 casefy>=1.1
 jsonschema2md>=1.7
@@ -28,4 +28,4 @@ setuptools>=82
 # required since switch to pyproject.toml and pip-tools
 tomli_w>=1.2
 
-uv>=0.11.7
+uv>=0.11.14

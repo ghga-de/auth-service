@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        flavor: ["", "debian"]
+        flavor: ["", "dhi"]
 
     runs-on: ubuntu-latest
 
