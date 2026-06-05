@@ -21,7 +21,7 @@ classifiers = [
     "Intended Audience :: Developers",
 ]
 name = "auth_service"
-version = "9.0.1"
+version = "9.1.0"
 description = "Authentication adapter and services used for the GHGA data portal"
 dependencies = [
     "ghga-event-schemas~=12.0.0",
