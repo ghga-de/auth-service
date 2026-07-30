@@ -136,7 +136,7 @@ class SessionStore(SessionStorePort[Session]):
         """Generate a random CSRF token."""
         return secrets.token_urlsafe(self.config.csrf_token_bytes)
 
-    def _create_session(  # noqa: PLR0913
+    def _create_session(  # noqa: PLR0913, PLR0917
         self,
         ext_id: str,
         user_name: str,

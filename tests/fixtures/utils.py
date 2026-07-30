@@ -131,7 +131,7 @@ signing_keys = SigningKeys()
 def create_access_token(
     key: jwk.JWK | None = None,
     expired: bool = False,
-    **kwargs: None | int | str,
+    **kwargs: int | str | None,
 ) -> str:
     """Create an external access token that can be used for testing.
 
@@ -143,7 +143,7 @@ def create_access_token(
     kty = key["kty"]
     assert kty in ("EC", "RSA")
     header = {"alg": "ES256" if kty == "EC" else "RS256", "typ": "JWT"}
-    claims: dict[str, None | str | int] = {
+    claims: dict[str, str | int | None] = {
         "jti": "123-456-789-0",
         "sub": EXT_ID_OF_JOHN,
         "iss": str(CONFIG.oidc_authority_url),
@@ -530,9 +530,7 @@ class MockClaimDao:
 
     async def find_one(self, *, mapping: Mapping[str, Any]) -> Claim:
         """Find a dummy user claim."""
-        claims = []
-        async for claim in self.find_all(mapping=mapping):
-            claims.append(claim)
+        claims = [claim async for claim in self.find_all(mapping=mapping)]
         if not claims:
             raise NoHitsFoundError(mapping=mapping)
         if len(claims) > 1:

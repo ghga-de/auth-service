@@ -96,7 +96,7 @@ TAGS: list[str | Enum] = ["access"]
     status_code=200,
 )
 @TRACER.start_as_current_span("access_router.get_download_access_grants")
-async def get_download_access_grants(  # noqa: PLR0913
+async def get_download_access_grants(  # noqa: PLR0913, PLR0917
     claim_dao: ClaimDaoDependency,
     user_dao: UserDaoDependency,
     user_id: Annotated[
@@ -243,7 +243,7 @@ async def revoke_download_access_grant(
     status_code=201,
 )
 @TRACER.start_as_current_span("access_router.grant_download_access")
-async def grant_download_access(  # noqa: PLR0913
+async def grant_download_access(  # noqa: PLR0913, PLR0917
     validity: ClaimValidity,
     user_id: Annotated[
         UUID4,
@@ -462,7 +462,7 @@ upload_grant_not_found_error = HTTPException(
     status_code=200,
 )
 @TRACER.start_as_current_span("access_router.get_upload_access_grants")
-async def get_upload_access_grants(  # noqa: PLR0913
+async def get_upload_access_grants(  # noqa: PLR0913, PLR0917
     claim_dao: ClaimDaoDependency,
     user_dao: UserDaoDependency,
     user_id: Annotated[
@@ -607,7 +607,7 @@ async def revoke_upload_access_grant(
     status_code=201,
 )
 @TRACER.start_as_current_span("access_router.grant_upload_access")
-async def grant_upload_access(  # noqa: PLR0913
+async def grant_upload_access(  # noqa: PLR0913, PLR0917
     validity: ClaimValidity,
     user_id: Annotated[
         UUID4,
