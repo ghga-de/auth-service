@@ -8,7 +8,6 @@ dependencies = [
     "hexkit[mongodb,akafka,opentelemetry-akafka,opentelemetry-mongodb,opentelemetry-fastapi]>=9, <10",
     "pynacl>=1.6,<2",
     "pyotp>=2.9,<3",
-    "httpx2>=2.9.1,<3",
     "phonenumbers>=9,<10",
 ]
 

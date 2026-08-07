@@ -15,9 +15,7 @@
 
 """Test configuration for the auth adapter"""
 
-import httpx2
 import pytest
-from ghga_service_commons.api.mock_router import MockRouter
 
 from ...fixtures import auth_keys
 
@@ -26,12 +24,3 @@ from ...fixtures import auth_keys
 def config_for_auth_adapter() -> None:
     """Set the environment for the auth adapter"""
     auth_keys.reload_auth_key_config(auth_adapter=True)
-
-
-@pytest.fixture
-def mock_router(monkeypatch: pytest.MonkeyPatch) -> MockRouter:
-    """Provide a MockRouter that intercepts the requests made with httpx2."""
-    router: MockRouter = MockRouter()
-    client = httpx2.Client(transport=router.as_transport())
-    monkeypatch.setattr(httpx2, "get", client.get)
-    return router

@@ -660,7 +660,6 @@ httpx2==2.9.1 \
     --hash=sha256:1932a768737e3666291582833da748cc4e563c337cf96706fccc04fa6e58764a
     # via
     #   -c lock/requirements-dev.txt
-    #   auth-service (pyproject.toml)
     #   ghga-service-commons
 idna==3.18 \
     --hash=sha256:7f952cbe720b688055e3f87de14f5c3e5fdaa8bc3928985c4077ca689de849a2 \
@@ -990,9 +989,9 @@ pydantic-core==2.46.4 \
     # via
     #   -c lock/requirements-dev.txt
     #   pydantic
-pydantic-settings==2.14.2 \
-    --hash=sha256:a20c97b37910b6550d5ea50fbcc2d4187defe58cd57070b73863d069419c9440 \
-    --hash=sha256:c19dd64b19097f1de80184f0cc7b0272a13ae6e170cbf240a3e27e381ed14a5f
+pydantic-settings==2.15.0 \
+    --hash=sha256:0ba092c291c94baceb5eff768aa0d56400a457585bc0175925a5a5510303da42 \
+    --hash=sha256:694b793e84f766ba76a90ebdefc01d0a9a045dab0382bee70393da93712ad117
     # via
     #   -c lock/requirements-dev.txt
     #   ghga-event-schemas
