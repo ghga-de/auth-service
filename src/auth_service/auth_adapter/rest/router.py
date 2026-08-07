@@ -126,7 +126,8 @@ add_allowed_routes()
     status_code=status.HTTP_204_NO_CONTENT,
 )
 @TRACER.start_as_current_span("router.login")
-async def login(  # noqa: C901, PLR0913, PLR0917
+async def login(  # noqa: C901, PLR0913
+    *,
     request: Request,
     session_store: SessionStoreDependency,
     user_dao: UserDaoDependency,
@@ -366,7 +367,8 @@ async def create_new_totp_token(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 @TRACER.start_as_current_span("router.rpc_verify_totp")
-async def rpc_verify_totp(  # noqa: PLR0913, PLR0917
+async def rpc_verify_totp(  # noqa: PLR0913
+    *,
     session_store: SessionStoreDependency,
     session: SessionDependency,
     totp_handler: TOTPHandlerDependency,
