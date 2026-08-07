@@ -61,9 +61,7 @@ def get_config_class():
 
     # import the Config class from the microservice package:
     config_module: Any = importlib.import_module(f"{package_name}.config")
-    config_class = config_module.Config
-
-    return config_class
+    return config_module.Config
 
 
 def get_dev_config():
