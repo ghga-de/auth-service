@@ -1,0 +1,5 @@
+# List of all files that are exempted from the static files list.
+# These files are not synchronized with the template repository.
+
+# contains the archival notice for this retired repository
+.readme_generation/readme_template.md
